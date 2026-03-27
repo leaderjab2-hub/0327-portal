@@ -402,7 +402,7 @@ export default function CustomerLookupPageClient({
     };
   }, [isUnassigned, loadedMembersTenantId, tenant?.id, tenantLoading]);
 
-  const displayMembers = useMemo(() => {
+  const displayMembers = useMemo<CustomerMember[]>(() => {
     if (isUnassigned) {
       return [];
     }
@@ -413,7 +413,11 @@ export default function CustomerLookupPageClient({
       .map((member) => {
         const subtenantName = member.subtenantId ? subtenantNameMap.get(member.subtenantId) ?? null : null;
         const isTenantAdmin = member.role === 'tenant_admin';
-        const roleLabel = isTenantAdmin ? 'tenant_admin' : member.memberRole ?? 'member';
+        const roleLabel: CustomerMember['role'] = isTenantAdmin
+          ? 'tenant_admin'
+          : member.memberRole === 'pm'
+            ? 'pm'
+            : 'member';
 
         return {
           id: member.id,
