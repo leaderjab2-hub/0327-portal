@@ -107,7 +107,7 @@ export async function POST(request: Request) {
 
     const { data, error } = await supabaseAdmin
       .from("billings")
-      .insert(payload)
+      .insert(payload as never)
       .select("*")
       .single();
 
@@ -126,7 +126,7 @@ export async function POST(request: Request) {
         note: `빌링 ${periodLabel} 크레딧 차감`,
       };
 
-      const { error: creditError } = await supabaseAdmin.from("credits").insert(creditPayload);
+      const { error: creditError } = await supabaseAdmin.from("credits").insert(creditPayload as never);
 
       if (creditError) {
         throw creditError;
