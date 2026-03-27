@@ -25,7 +25,7 @@ export async function GET() {
       throw error;
     }
 
-    const admins: AdminRecord[] = (data ?? []).map((user) => ({
+    const admins: AdminRecord[] = ((data ?? []) as Array<Record<string, unknown>>).map((user) => ({
       id: typeof user.id === "string" ? user.id : "",
       email: typeof user.email === "string" ? user.email : null,
       name: typeof user.name === "string" ? user.name : null,
