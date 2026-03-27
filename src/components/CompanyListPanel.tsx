@@ -26,15 +26,15 @@ export default function CompanyListPanel({ companies, activeIndex, onCompanyClic
   return (
     <>
       {/* ── Mobile: horizontal scrollable tab strip (hidden on md+) ── */}
-      <div className="md:hidden w-full bg-white border border-gray-200 rounded-[10px] overflow-hidden mb-3 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.02)]">
-        <div className="flex overflow-x-auto gap-2 p-3 scrollbar-none">
+      <div className="mb-3 w-full overflow-hidden rounded-[10px] border border-gray-200 bg-white shadow-[0_2px_10px_-3px_rgba(0,0,0,0.02)] md:hidden">
+        <div className="flex gap-2 overflow-x-auto p-2.5 scrollbar-none snap-x snap-mandatory">
           {companies.map((c, idx) => {
             const isActive = idx === activeIndex;
             return (
               <button
                 key={c.id}
                 onClick={() => onCompanyClick(idx)}
-                className={`shrink-0 px-3 py-2 rounded-[8px] text-[12px] font-bold whitespace-nowrap transition-colors ${
+                className={`shrink-0 snap-start whitespace-nowrap rounded-[8px] px-3 py-2 text-[12px] font-bold transition-colors ${
                   isActive
                     ? 'bg-primary-500 text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -48,8 +48,8 @@ export default function CompanyListPanel({ companies, activeIndex, onCompanyClic
       </div>
 
       {/* ── Desktop: vertical panel (hidden below md) ── */}
-      <div className="hidden md:flex w-[260px] bg-white border border-gray-200 rounded-[10px] flex-col overflow-hidden h-full shrink-0 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.02)]">
-        <div className="p-4 border-b border-gray-100 flex flex-col gap-3 flex-none">
+      <div className="hidden h-full w-60 shrink-0 flex-col overflow-hidden rounded-[12px] border border-gray-200 bg-white shadow-[0_6px_20px_-12px_rgba(15,23,42,0.12)] md:flex">
+        <div className="flex flex-none flex-col gap-3 border-b border-gray-100 p-4 lg:gap-4 lg:p-5">
           <div className="flex justify-between items-center mb-1">
             <h2 className="text-[14px] font-semibold text-gray-900">{title}</h2>
           </div>
@@ -85,7 +85,7 @@ export default function CompanyListPanel({ companies, activeIndex, onCompanyClic
                 <div
                   key={c.id}
                   onClick={() => onCompanyClick(originalIndex)}
-                  className={`flex items-center justify-between p-4 border-b border-gray-100 cursor-pointer transition-colors ${
+                  className={`flex cursor-pointer items-center justify-between border-b border-gray-100 p-4 transition-colors lg:px-5 lg:py-4 ${
                     isActive ? 'bg-primary-50 border-l-[3px] border-l-primary-500' : 'hover:bg-[#F9FAFB] border-l-[3px] border-l-transparent'
                   }`}
                 >

@@ -66,17 +66,6 @@ export interface GpuNode {
   power: number;               // W
 }
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  subtenantId: string | null;
-  tenantId: string;
-  role: 'pm' | 'member';
-  isContractor: boolean;
-  lastLogin: string;
-}
-
 export interface Incident {
   id: string;
   type: IncidentType;
@@ -315,17 +304,6 @@ export const gpuNodes: GpuNode[] = Array.from({ length: 127 }, (_, i) => {
     power:    isAssigned ? Math.floor(280 + (num % 40)) : 0,
   };
 });
-
-// ── 구성원 ──────────────────────────────────────────────────
-
-export const users: User[] = [
-  { id: 'u1', name: '김동주', email: 'dongjoo.kim@lge.com',   subtenantId: 'sub-lg-전자',    tenantId: 'tenant-lg',      role: 'pm',     isContractor: true,  lastLogin: '2026-03-19 14:22:01' },
-  { id: 'u2', name: '이영희', email: 'younghee.lee@lge.com',  subtenantId: 'sub-lg-전자',    tenantId: 'tenant-lg',      role: 'member', isContractor: false, lastLogin: '2026-03-18 09:15:30' },
-  { id: 'u3', name: '박민수', email: 'minsoo.park@lge.com',   subtenantId: 'sub-lg-생명',    tenantId: 'tenant-lg',      role: 'pm',     isContractor: false, lastLogin: '2026-03-17 18:40:11' },
-  { id: 'u4', name: '최지훈', email: 'jihoon.choi@lge.com',   subtenantId: 'sub-lg-생명',    tenantId: 'tenant-lg',      role: 'member', isContractor: false, lastLogin: '2026-03-15 11:10:05' },
-  { id: 'u5', name: '정수민', email: 'sumin@upstage.ai',      subtenantId: 'sub-upstage',    tenantId: 'tenant-upstage', role: 'pm',     isContractor: true,  lastLogin: '2026-03-19 10:05:44' },
-  { id: 'u6', name: '홍길동', email: 'gildong@email.com',     subtenantId: null,             tenantId: 'tenant-lg',      role: 'member', isContractor: false, lastLogin: '2026-03-10 09:00:00' },
-];
 
 // ── 장애/PM 이력 ────────────────────────────────────────────
 

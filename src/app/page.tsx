@@ -8,7 +8,15 @@ import {
 import Link from 'next/link';
 import { tenants, gpuNodes } from '@/lib/mockData';
 
-function KPICard({ title, value, subtext, percentage, status }: any) {
+type KpiCardProps = {
+  title: string;
+  value: string;
+  subtext: string;
+  percentage: number;
+  status: 'normal' | 'warning' | 'danger';
+};
+
+function KPICard({ title, value, subtext, percentage, status }: KpiCardProps) {
   const getGradient = (status: string) => {
     if (status === 'danger') return 'bg-danger';
     if (status === 'warning') return 'bg-warning';
@@ -22,15 +30,15 @@ function KPICard({ title, value, subtext, percentage, status }: any) {
   };
 
   return (
-    <div className="bg-white border text-left border-gray-200 rounded-[10px] p-3 sm:p-[16px_20px] shadow-sm">
+    <div className="bg-white border text-left border-gray-200 rounded-[12px] p-3 shadow-sm sm:p-[16px_20px] lg:rounded-[14px] lg:p-[18px_22px] lg:shadow-[0_8px_24px_-16px_rgba(15,23,42,0.15)]">
       <div className="flex justify-between items-start mb-1 sm:mb-2">
         <div>
-          <h3 className="text-[10px] sm:text-[11px] font-semibold text-gray-400 uppercase tracking-wide">{title}</h3>
-          <p className="hidden sm:block text-[12px] text-gray-400 mt-1">{subtext}</p>
+          <h3 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide sm:text-[11px] lg:text-[12px]">{title}</h3>
+          <p className="mt-1 hidden text-[12px] text-gray-400 sm:block lg:text-[13px]">{subtext}</p>
         </div>
       </div>
       <div className="mt-2 sm:mt-4">
-        <div className={`text-[18px] sm:text-[28px] font-bold font-mono ${getColorText(status)} leading-none`}>
+        <div className={`text-[18px] font-bold font-mono leading-none sm:text-[28px] lg:text-[26px] ${getColorText(status)}`}>
           {value}
         </div>
         <div className="w-full h-[4px] sm:h-[5px] bg-gray-100 rounded-[3px] mt-3 sm:mt-4 overflow-hidden">
@@ -87,8 +95,8 @@ export default function HomeDashboard() {
   const memUsage = "62.8";
 
   return (
-    <div className="flex flex-col gap-6 w-full min-w-0">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+    <div className="flex w-full min-w-0 flex-col gap-6 lg:gap-7">
+      <div className="grid grid-cols-2 gap-3 md:gap-4 lg:gap-5 xl:grid-cols-4">
         <KPICard title="GPU 점유율" value={`${gpuOccupancy}%`} subtext="할당된 GPU 중 활성화 비율" percentage={parseFloat(gpuOccupancy)} status="normal" />
         <KPICard title="AI 스토리지" value={`${tenant.contract.storage.capacity}${tenant.contract.storage.unit}`} subtext="계약 용량" percentage={45.2} status="normal" />
         <KPICard title="CPU 사용률" value={`${cpuUsage}%`} subtext="전체 클러스터 vCPU 사용" percentage={parseFloat(cpuUsage)} status="normal" />
@@ -113,12 +121,12 @@ export default function HomeDashboard() {
         </div>
       </div>
 
-      <div className="flex flex-col lg:grid lg:grid-cols-[300px_1fr_1fr] gap-4 items-stretch relative">
-        <div className="bg-white border border-gray-200 rounded-[10px] p-6 flex flex-col relative overflow-visible h-full min-h-[450px] lg:min-h-0">
-          <h2 className="text-[14px] font-semibold text-gray-900 mb-6">GPU 사용 현황</h2>
+      <div className="relative flex flex-col gap-4 items-stretch xl:grid xl:grid-cols-[260px_minmax(0,1fr)_minmax(0,1fr)] lg:gap-5">
+        <div className="relative flex h-full min-h-[420px] flex-col overflow-visible rounded-[10px] border border-gray-200 bg-white p-5 md:p-6 lg:rounded-[12px] lg:p-7 xl:min-h-0">
+          <h2 className="mb-6 text-[14px] font-semibold text-gray-900 lg:text-[15px]">GPU 사용 현황</h2>
 
           <div className="flex flex-col items-center mb-8 flex-1 justify-center">
-            <div className="w-[180px] h-[180px] flex justify-center items-center">
+            <div className="flex h-[160px] w-[160px] items-center justify-center md:h-[180px] md:w-[180px]">
               <svg viewBox="0 0 120 120" className="w-full h-full">
                 <circle
                   cx="60" cy="60" r="48"
@@ -166,9 +174,9 @@ export default function HomeDashboard() {
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-[10px] p-6 flex flex-col relative overflow-hidden h-full min-h-[400px] lg:min-h-0 shadow-sm">
+        <div className="relative flex h-full min-h-[380px] flex-col overflow-hidden rounded-[10px] border border-gray-200 bg-white p-5 shadow-sm md:p-6 lg:rounded-[12px] lg:p-7 lg:shadow-[0_8px_24px_-16px_rgba(15,23,42,0.15)] xl:min-h-0">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-[14px] font-semibold text-gray-900">인스턴스 내비게이터</h2>
+            <h2 className="text-[14px] font-semibold text-gray-900 lg:text-[15px]">인스턴스 내비게이터</h2>
             <Link href="/monitoring/gpu" className="text-[12px] font-semibold text-gray-600 border border-gray-200 px-3 py-1.5 rounded-[5px] hover:bg-gray-50 flex items-center gap-1 transition-all">
               상세 보기 <span className="text-[10px]">→</span>
             </Link>
@@ -208,7 +216,7 @@ export default function HomeDashboard() {
               </div>
             ) : (
               <div
-                className="grid gap-[6px] w-full max-w-[320px] mx-auto lg:mx-0"
+                className="grid gap-[6px] w-full max-w-[320px] mx-auto xl:mx-0"
                 style={{ gridTemplateColumns: 'repeat(8, 1fr)' }}
               >
                 {filteredInstances.map((inst, i) => {
@@ -240,9 +248,9 @@ export default function HomeDashboard() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-4 relative h-full lg:min-h-0">
-          <div className="bg-white border border-gray-200 rounded-[10px] p-6 relative flex flex-col flex-none md:flex-1 h-full min-h-[350px] shadow-sm">
-            <h2 className="text-[14px] font-semibold text-gray-900 mb-6">주간 GPU 사용률</h2>
+        <div className="relative flex h-full flex-col gap-4 lg:min-h-0 lg:gap-5">
+          <div className="relative flex h-full min-h-[320px] flex-col flex-none rounded-[10px] border border-gray-200 bg-white p-5 shadow-sm md:flex-1 md:p-6 lg:rounded-[12px] lg:p-7 lg:shadow-[0_8px_24px_-16px_rgba(15,23,42,0.15)]">
+            <h2 className="mb-6 text-[14px] font-semibold text-gray-900 lg:text-[15px]">주간 GPU 사용률</h2>
             <div className="h-[250px] md:h-auto md:flex-1 w-full min-h-0 relative">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={gpuUsageData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
@@ -264,7 +272,7 @@ export default function HomeDashboard() {
             </div>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-[10px] py-6 relative flex-none flex flex-col overflow-hidden min-h-[400px] lg:min-h-0 shadow-sm">
+          <div className="bg-white border border-gray-200 rounded-[10px] py-5 md:py-6 relative flex-none flex flex-col overflow-hidden min-h-[360px] xl:min-h-0 shadow-sm">
             <div className="px-6 flex justify-between items-center mb-4">
               <h2 className="text-[14px] font-semibold text-gray-900">리소스 사용 TOP3 인스턴스</h2>
               <div className="flex gap-2">
@@ -306,12 +314,12 @@ export default function HomeDashboard() {
           <table className="w-full text-left border-collapse flex-1 inline-table">
             <thead className="hidden md:table-header-group">
               <tr className="bg-[#FAFAFA] border-b border-gray-100 text-gray-400">
-                <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider">유형</th>
-                <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider">티켓 ID</th>
-                <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-left">제목</th>
-                <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-center">상태</th>
-                <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider">작성자</th>
-                <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider">등록 일시</th>
+                <th className="whitespace-nowrap px-5 py-3 text-[11px] font-bold uppercase tracking-wider">유형</th>
+                <th className="whitespace-nowrap px-5 py-3 text-[11px] font-bold uppercase tracking-wider">티켓 ID</th>
+                <th className="whitespace-nowrap px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-left">제목</th>
+                <th className="whitespace-nowrap px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-center">상태</th>
+                <th className="whitespace-nowrap px-5 py-3 text-[11px] font-bold uppercase tracking-wider">작성자</th>
+                <th className="whitespace-nowrap px-5 py-3 text-[11px] font-bold uppercase tracking-wider">등록 일시</th>
               </tr>
             </thead>
             <tbody className="flex flex-col md:table-row-group">
@@ -324,7 +332,7 @@ export default function HomeDashboard() {
                   <td className="px-0 py-1 md:px-5 md:py-3.5">
                     <span className={`px-2 py-0.5 rounded text-[10px] md:text-[11px] font-bold ${row.statusColor} border border-current opacity-80 md:opacity-100`}>{row.type}</span>
                   </td>
-                  <td className="px-0 py-1 md:px-5 md:py-3.5 font-mono text-[11px] text-gray-400">
+                  <td className="px-0 py-1 md:px-5 md:py-3.5 font-mono text-[11px] text-gray-400 whitespace-nowrap">
                     <span className="md:hidden text-[10px] text-gray-300 mr-2 uppercase">ID</span>
                     {row.id}
                   </td>
@@ -337,11 +345,11 @@ export default function HomeDashboard() {
                       <span className={`px-2 py-0.5 rounded-[4px] text-[10px] md:text-[11px] font-bold ${row.statusColor}`}>{row.status}</span>
                     </div>
                   </td>
-                  <td className="px-0 py-1 md:px-5 md:py-3.5 text-[12px] text-gray-500">
+                  <td className="px-0 py-1 md:px-5 md:py-3.5 text-[12px] text-gray-500 whitespace-nowrap">
                     <span className="md:hidden text-[10px] text-gray-300 mr-2 uppercase">작성자</span>
                     {row.user}
                   </td>
-                  <td className="px-0 py-1 md:px-5 md:py-3.5 font-mono text-[11px] text-gray-400">
+                  <td className="px-0 py-1 md:px-5 md:py-3.5 font-mono text-[11px] text-gray-400 whitespace-nowrap">
                     <span className="md:hidden text-[10px] text-gray-300 mr-2 uppercase">등록일</span>
                     {row.date}
                   </td>
