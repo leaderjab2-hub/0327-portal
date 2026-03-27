@@ -18,6 +18,7 @@ type IncidentRow = Database["public"]["Tables"]["incidents"]["Row"];
 type IncidentCustomerRow = Database["public"]["Tables"]["incident_customers"]["Row"];
 type UserProfileSubtenantRow = { subtenant_id?: string | null };
 type SubtenantNameRow = { id: string; name: string };
+type IncidentIdRow = { incident_id: number };
 
 export async function getScopedTenants(currentUser: CurrentUser) {
   let query = supabaseAdmin.from("tenants").select("*").order("created_at", { ascending: false });
@@ -322,7 +323,7 @@ export async function getIncidentsForTenant(currentUser: CurrentUser, tenantId: 
   if (customerError) {
     throw customerError;
   }
-  incidentIds = Array.from(new Set((incidentRowsByCustomer ?? []).map((row) => row.incident_id)));
+  incidentIds = Array.from(new Set(((incidentRowsByCustomer ?? []) as IncidentIdRow[]).map((row) => row.incident_id)));
   if (incidentIds.length === 0) {
     return [];
   }
