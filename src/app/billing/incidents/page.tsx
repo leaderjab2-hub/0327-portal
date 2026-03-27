@@ -20,7 +20,12 @@ export default async function Page() {
     const currentUser = await requireCurrentUser();
     initialTenants = await getScopedTenants(currentUser);
     initialTenantId = initialTenants[0]?.id ?? null;
-    const creditsPayload = initialTenantId
+    const creditsPayload: [
+      Awaited<ReturnType<typeof getScopedSubtenants>>,
+      Awaited<ReturnType<typeof getScopedAllocations>>,
+      Awaited<ReturnType<typeof getIncidentsForTenant>>,
+      Awaited<ReturnType<typeof getCreditsForTenant>>,
+    ] = initialTenantId
       ? await Promise.all([
           getScopedSubtenants(currentUser, initialTenantId),
           getScopedAllocations(currentUser, initialTenantId),
