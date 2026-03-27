@@ -1,15 +1,18 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
-import { usePathname } from "next/navigation";
+import { useEffect, useState, type ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
 import MobileHeader from "@/components/MobileHeader";
+import { useAuth } from "@/contexts/AuthContext";
 
 const AUTH_LAYOUT_ROUTES = ["/login", "/signup", "/pending"];
 
 export default function AppShell({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const pathname = usePathname();
+  const { currentUser, loading } = useAuth();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     if (typeof window === "undefined") {
       return false;
@@ -21,8 +24,28 @@ export default function AppShell({ children }: { children: ReactNode }) {
     (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
 
+  useEffect(() => {
+    if (isAuthRoute || loading) {
+      return;
+    }
+
+    if (!currentUser) {
+      const next = pathname && pathname !== "/" ? `?next=${encodeURIComponent(pathname)}` : "";
+      router.replace(`/login${next}`);
+      return;
+    }
+
+    if (currentUser.role === "pending" && pathname !== "/pending") {
+      router.replace("/pending");
+    }
+  }, [currentUser, isAuthRoute, loading, pathname, router]);
+
   if (isAuthRoute) {
     return <div className="min-h-screen bg-[#F5F7FB]">{children}</div>;
+  }
+
+  if (loading || !currentUser) {
+    return <div className="min-h-screen bg-[#F5F7FB]" />;
   }
 
   return (

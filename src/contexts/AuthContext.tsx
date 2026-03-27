@@ -99,7 +99,7 @@ export function AuthProvider({
       const normalizedUser = normalizeCurrentUser(user);
 
       if (mounted) {
-        setCurrentUser((previousUser) => normalizedUser ?? previousUser);
+        setCurrentUser(normalizedUser);
         setLoading(false);
       }
     };
