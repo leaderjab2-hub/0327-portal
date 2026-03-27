@@ -41,7 +41,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     const { data, error } = await supabaseAdmin
       .from("notices")
-      .update(payload)
+      .update(payload as never)
       .eq("id", noticeId)
       .select("*")
       .single();

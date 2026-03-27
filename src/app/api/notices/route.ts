@@ -53,7 +53,7 @@ export async function POST(request: Request) {
       updated_at: new Date().toISOString(),
     };
 
-    const { data, error } = await supabaseAdmin.from("notices").insert(payload).select("*").single();
+    const { data, error } = await supabaseAdmin.from("notices").insert(payload as never).select("*").single();
 
     if (error) {
       throw error;
