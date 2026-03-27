@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import AuthCard from "@/components/auth/AuthCard";
 import SignupForm from "@/components/auth/SignupForm";
 
@@ -19,7 +20,9 @@ export default async function SignupPage({
             : "가입 시 기본 역할은 pending으로 저장되며, 승인 후 포털 접근이 가능합니다."
         }
       >
-        <SignupForm />
+        <Suspense fallback={<div className="py-6 text-center text-[14px] text-gray-500">회원가입 화면을 준비 중입니다.</div>}>
+          <SignupForm />
+        </Suspense>
       </AuthCard>
     </div>
   );
