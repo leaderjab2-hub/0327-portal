@@ -16,6 +16,7 @@ type TicketRow = Database["public"]["Tables"]["tickets"]["Row"];
 type CreditRow = Database["public"]["Tables"]["credits"]["Row"];
 type IncidentRow = Database["public"]["Tables"]["incidents"]["Row"];
 type IncidentCustomerRow = Database["public"]["Tables"]["incident_customers"]["Row"];
+type UserProfileSubtenantRow = { subtenant_id?: string | null };
 
 export async function getScopedTenants(currentUser: CurrentUser) {
   let query = supabaseAdmin.from("tenants").select("*").order("created_at", { ascending: false });
@@ -68,7 +69,7 @@ export async function getScopedSubtenants(currentUser: CurrentUser, tenantId?: s
     throw memberError;
   }
 
-  const memberCountById = (memberRows ?? []).reduce<Record<string, number>>((acc, row) => {
+  const memberCountById = ((memberRows ?? []) as UserProfileSubtenantRow[]).reduce<Record<string, number>>((acc, row) => {
     const subtenantId = typeof row.subtenant_id === "string" ? row.subtenant_id : null;
     if (subtenantId) {
       acc[subtenantId] = (acc[subtenantId] ?? 0) + 1;
