@@ -89,14 +89,16 @@ export async function POST(request: Request) {
         throw new Error("Tenant Pool에 존재하지 않는 노드입니다.");
       }
 
-      if (existingTenantPool.subtenant_id) {
+      const tenantPoolAllocation = existingTenantPool as NodeAllocationRow;
+
+      if (tenantPoolAllocation.subtenant_id) {
         throw new Error("이미 Subtenant에 분배된 노드입니다.");
       }
 
       const { data, error } = await supabaseAdmin
         .from("node_allocations")
-        .update({ subtenant_id: subtenantId })
-        .eq("id", existingTenantPool.id)
+        .update({ subtenant_id: subtenantId } as never)
+        .eq("id", tenantPoolAllocation.id)
         .select("id, tenant_id, subtenant_id, node_id, allocated_at")
         .single();
 
@@ -138,7 +140,7 @@ export async function POST(request: Request) {
 
     const { data, error } = await supabaseAdmin
       .from("node_allocations")
-      .insert(payload)
+      .insert(payload as never)
       .select("id, tenant_id, subtenant_id, node_id, allocated_at")
       .single();
 

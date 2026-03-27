@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { canAccessTenant, handleAuthError, requireCurrentUser } from "@/lib/auth";
 import { getNodeById } from "@/lib/nodeAllocations";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import type { Database } from "@/types/database";
+
+type NodeAllocationRow = Database["public"]["Tables"]["node_allocations"]["Row"];
 
 async function loadAllocation(id: string) {
   const { data, error } = await supabaseAdmin
@@ -14,7 +17,7 @@ async function loadAllocation(id: string) {
     throw error;
   }
 
-  return data;
+  return data as NodeAllocationRow;
 }
 
 export async function DELETE(
@@ -52,7 +55,7 @@ export async function DELETE(
 
       const { data, error } = await supabaseAdmin
         .from("node_allocations")
-        .update({ subtenant_id: null })
+        .update({ subtenant_id: null } as never)
         .eq("id", allocation.id)
         .select("id, tenant_id, subtenant_id, node_id, allocated_at")
         .single();
@@ -63,8 +66,8 @@ export async function DELETE(
 
       return NextResponse.json({
         data: {
-          ...data,
-          node: getNodeById(data.node_id),
+          ...(data as NodeAllocationRow),
+          node: getNodeById((data as NodeAllocationRow).node_id),
         },
       });
     }
