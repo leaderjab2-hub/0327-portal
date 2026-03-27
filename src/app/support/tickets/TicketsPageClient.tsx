@@ -25,6 +25,10 @@ type Ticket = {
   updated_at: string | null;
 };
 
+type TicketLike = Omit<Ticket, 'status'> & {
+  status: string | null;
+};
+
 type TicketComment = {
   id: number;
   ticket_id: number;
@@ -71,6 +75,21 @@ function getStatusBadgeClass(status: string | null) {
   }
 
   return 'bg-[#FFFBEB] text-[#D97706]';
+}
+
+function normalizeTicketStatus(status: string | null | undefined): TicketStatus {
+  if (status === '처리중' || status === '완료') {
+    return status;
+  }
+
+  return '대기중';
+}
+
+function normalizeTicket(ticket: TicketLike): Ticket {
+  return {
+    ...ticket,
+    status: normalizeTicketStatus(ticket.status),
+  };
 }
 
 function TicketModal({
@@ -188,7 +207,7 @@ function TicketModal({
 
 type TicketsPageClientProps = {
   initialTenants?: Tenant[];
-  initialTickets?: Ticket[];
+  initialTickets?: TicketLike[];
   initialTenantId?: string | null;
 };
 
@@ -202,7 +221,7 @@ export default function TicketsPageClient({
   const canCreateTicket = Boolean(currentUser);
 
   const [tenants, setTenants] = useState<Tenant[]>(initialTenants);
-  const [tickets, setTickets] = useState<Ticket[]>(initialTickets);
+  const [tickets, setTickets] = useState<Ticket[]>(initialTickets.map(normalizeTicket));
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [comments, setComments] = useState<TicketComment[]>([]);
   const [commentDraft, setCommentDraft] = useState('');
@@ -255,13 +274,13 @@ export default function TicketsPageClient({
       }
 
       const response = await fetch(`/api/tickets${params.size > 0 ? `?${params.toString()}` : ''}`);
-      const payload = (await response.json()) as { data?: Ticket[]; error?: string };
+      const payload = (await response.json()) as { data?: TicketLike[]; error?: string };
 
       if (!response.ok) {
         throw new Error(payload.error ?? '티켓을 불러오지 못했습니다.');
       }
 
-      setTickets(payload.data ?? []);
+      setTickets((payload.data ?? []).map(normalizeTicket));
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : '티켓을 불러오지 못했습니다.');
       setTickets([]);
