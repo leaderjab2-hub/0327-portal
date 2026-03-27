@@ -17,6 +17,7 @@ type CreditRow = Database["public"]["Tables"]["credits"]["Row"];
 type IncidentRow = Database["public"]["Tables"]["incidents"]["Row"];
 type IncidentCustomerRow = Database["public"]["Tables"]["incident_customers"]["Row"];
 type UserProfileSubtenantRow = { subtenant_id?: string | null };
+type SubtenantNameRow = { id: string; name: string };
 
 export async function getScopedTenants(currentUser: CurrentUser) {
   let query = supabaseAdmin.from("tenants").select("*").order("created_at", { ascending: false });
@@ -272,7 +273,7 @@ export async function getCreditsForTenant(currentUser: CurrentUser, tenantId: st
     if (subtenantError) {
       throw subtenantError;
     }
-    subtenantNameById = (subtenants ?? []).reduce<Record<string, string>>((acc, subtenant) => {
+    subtenantNameById = ((subtenants ?? []) as SubtenantNameRow[]).reduce<Record<string, string>>((acc, subtenant) => {
       acc[subtenant.id] = subtenant.name;
       return acc;
     }, {});
