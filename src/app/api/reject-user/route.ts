@@ -8,6 +8,10 @@ import {
 } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
+type TenantNameRow = {
+  name?: string | null;
+};
+
 export async function POST(request: Request) {
   try {
     const currentUser = await requireCurrentUser();
@@ -35,7 +39,8 @@ export async function POST(request: Request) {
       }
 
       const matchesTenantId = canAccessTenant(currentUser, targetTenantId);
-      const matchesTenantName = tenantData?.name && targetTenantName === tenantData.name;
+      const tenant = tenantData as TenantNameRow | null;
+      const matchesTenantName = tenant?.name && targetTenantName === tenant.name;
 
       if (!matchesTenantId && !matchesTenantName) {
         throw new Error("FORBIDDEN");

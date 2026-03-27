@@ -11,6 +11,7 @@ import type { Database } from "@/types/database";
 
 type NodeAllocationRow = Database["public"]["Tables"]["node_allocations"]["Row"];
 type NodeAllocationInsert = Database["public"]["Tables"]["node_allocations"]["Insert"];
+type NodeAllocationIdRow = { id: number };
 
 type CreateAllocationBody = {
   nodeId: string;
@@ -128,7 +129,7 @@ export async function POST(request: Request) {
       throw existingAllocationError;
     }
 
-    if (existingAllocation) {
+    if ((existingAllocation as NodeAllocationIdRow | null)?.id) {
       throw new Error("이미 할당된 노드입니다.");
     }
 

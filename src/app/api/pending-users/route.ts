@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { assertRole, handleAuthError, requireCurrentUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
+type TenantNameRow = {
+  name?: string | null;
+};
+
 type PendingUserRecord = {
   id: string;
   email: string | null;
@@ -45,7 +49,7 @@ export async function GET() {
       throw tenantError;
     }
 
-    const companyName = tenantData?.name ?? null;
+    const companyName = (tenantData as TenantNameRow | null)?.name ?? null;
     const pendingUsers: PendingUserRecord[] = [];
     let page = 1;
     const perPage = 200;

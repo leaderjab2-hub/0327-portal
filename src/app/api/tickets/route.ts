@@ -5,6 +5,7 @@ import type { Database } from "@/types/database";
 
 type TicketRow = Database["public"]["Tables"]["tickets"]["Row"];
 type TicketInsert = Database["public"]["Tables"]["tickets"]["Insert"];
+type TicketNumberRow = { ticket_number?: string | null };
 
 async function getNextTicketNumber() {
   const { data, error } = await supabaseAdmin
@@ -18,7 +19,7 @@ async function getNextTicketNumber() {
     throw error;
   }
 
-  const currentValue = data?.ticket_number?.match(/(\d+)$/)?.[1];
+  const currentValue = (data as TicketNumberRow | null)?.ticket_number?.match(/(\d+)$/)?.[1];
   const nextValue = (currentValue ? Number(currentValue) : 0) + 1;
 
   return `TKT-${String(nextValue).padStart(5, "0")}`;
