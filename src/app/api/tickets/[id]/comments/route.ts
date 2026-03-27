@@ -64,7 +64,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       throw error;
     }
 
-    return NextResponse.json({ data: data ?? [] });
+    return NextResponse.json({ data: (data ?? []) as Database["public"]["Tables"]["ticket_comments"]["Row"][] });
   } catch (error) {
     return handleAuthError(error);
   }
@@ -90,7 +90,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     const { data, error } = await supabaseAdmin
       .from("ticket_comments")
-      .insert(payload)
+      .insert(payload as never)
       .select("*")
       .single();
 

@@ -24,7 +24,7 @@ export async function PUT(
     const body = (await request.json()) as TenantUpdate;
     const { data, error } = await supabaseAdmin
       .from("tenants")
-      .update(body)
+      .update(body as never)
       .eq("id", id)
       .select("*")
       .single();

@@ -7,6 +7,7 @@ import {
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import type { Database } from "@/types/database";
 
+type SubtenantRow = Database["public"]["Tables"]["subtenants"]["Row"];
 type SubtenantUpdate = Database["public"]["Tables"]["subtenants"]["Update"];
 
 async function loadSubtenant(id: string) {
@@ -20,7 +21,7 @@ async function loadSubtenant(id: string) {
     throw error;
   }
 
-  return data;
+  return data as SubtenantRow;
 }
 
 export async function PUT(
@@ -43,7 +44,7 @@ export async function PUT(
     const body = (await request.json()) as SubtenantUpdate;
     const { data, error } = await supabaseAdmin
       .from("subtenants")
-      .update(body)
+      .update(body as never)
       .eq("id", id)
       .select("*")
       .single();

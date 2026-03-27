@@ -35,7 +35,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     const { data, error } = await supabaseAdmin
       .from("tickets")
-      .update(payload)
+      .update(payload as never)
       .eq("id", ticketId)
       .select("*")
       .single();

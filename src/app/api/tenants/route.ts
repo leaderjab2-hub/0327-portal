@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     assertRole(currentUser, ["admin"]);
 
     const body = (await request.json()) as TenantInsert;
-    const { data, error } = await supabaseAdmin.from("tenants").insert(body).select("*").single();
+    const { data, error } = await supabaseAdmin.from("tenants").insert(body as never).select("*").single();
 
     if (error) {
       throw error;
