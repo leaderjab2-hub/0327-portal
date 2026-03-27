@@ -3,8 +3,8 @@ import { getScopedSubtenants, getScopedTenants } from "@/lib/serverPageData";
 import ContractsPageClient from "./ContractsPageClient";
 
 export default async function Page() {
-  let initialTenantRecords = [];
-  let initialSubtenantRecords = [];
+  let initialTenantRecords: Awaited<ReturnType<typeof getScopedTenants>> = [];
+  let initialSubtenantRecords: Awaited<ReturnType<typeof getScopedSubtenants>> = [];
 
   try {
     const currentUser = await requireCurrentUser();

@@ -3,10 +3,10 @@ import { getMembersForTenant, getScopedSubtenants, getScopedTenants } from "@/li
 import CustomerListPageClient from "./CustomerListPageClient";
 
 export default async function Page() {
-  let initialTenantRecords = [];
-  let initialSubtenantRecords = [];
-  let initialMembers = [];
-  let initialMembersTenantId = null;
+  let initialTenantRecords: Awaited<ReturnType<typeof getScopedTenants>> = [];
+  let initialSubtenantRecords: Awaited<ReturnType<typeof getScopedSubtenants>> = [];
+  let initialMembers: Awaited<ReturnType<typeof getMembersForTenant>> = [];
+  let initialMembersTenantId: string | null = null;
 
   try {
     const currentUser = await requireCurrentUser();

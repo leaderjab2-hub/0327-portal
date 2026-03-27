@@ -27,10 +27,10 @@ function toBillingRecord(row: BillingRow) {
 }
 
 export default async function Page() {
-  let initialTenantRecords = [];
-  let initialSubtenantRecords = [];
-  let initialBillings = [];
-  let initialTenantId = null;
+  let initialTenantRecords: Awaited<ReturnType<typeof getScopedTenants>> = [];
+  let initialSubtenantRecords: Awaited<ReturnType<typeof getScopedSubtenants>> = [];
+  let initialBillings: Array<ReturnType<typeof toBillingRecord>> = [];
+  let initialTenantId: string | null = null;
 
   try {
     const currentUser = await requireCurrentUser();

@@ -3,9 +3,9 @@ import { getMeteringForTenant, getScopedTenants } from "@/lib/serverPageData";
 import MeteringPageClient from "./MeteringPageClient";
 
 export default async function Page() {
-  let initialTenants = [];
-  let initialTenantId = null;
-  let initialMetering = null;
+  let initialTenants: Awaited<ReturnType<typeof getScopedTenants>> = [];
+  let initialTenantId: string | null = null;
+  let initialMetering: Awaited<ReturnType<typeof getMeteringForTenant>> | null = null;
 
   try {
     const currentUser = await requireCurrentUser();

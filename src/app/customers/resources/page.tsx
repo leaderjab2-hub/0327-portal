@@ -3,9 +3,9 @@ import { getScopedAllocations, getScopedSubtenants, getScopedTenants } from "@/l
 import ResourcesPageClient from "./ResourcesPageClient";
 
 export default async function Page() {
-  let initialTenantRecords = [];
-  let initialSubtenantRecords = [];
-  let initialAllocationRecords = [];
+  let initialTenantRecords: Awaited<ReturnType<typeof getScopedTenants>> = [];
+  let initialSubtenantRecords: Awaited<ReturnType<typeof getScopedSubtenants>> = [];
+  let initialAllocationRecords: Awaited<ReturnType<typeof getScopedAllocations>> = [];
 
   try {
     const currentUser = await requireCurrentUser();

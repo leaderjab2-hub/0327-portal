@@ -3,10 +3,10 @@ import { getCreditsForTenant, getScopedTenants } from "@/lib/serverPageData";
 import CreditsPageClient from "./CreditsPageClient";
 
 export default async function Page() {
-  let initialTenants = [];
-  let initialItems = [];
-  let initialGroups = [];
-  let initialTenantId = null;
+  let initialTenants: Awaited<ReturnType<typeof getScopedTenants>> = [];
+  let initialItems: Awaited<ReturnType<typeof getCreditsForTenant>>["items"] = [];
+  let initialGroups: Awaited<ReturnType<typeof getCreditsForTenant>>["groups"] = [];
+  let initialTenantId: string | null = null;
 
   try {
     const currentUser = await requireCurrentUser();

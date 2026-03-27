@@ -9,12 +9,12 @@ import {
 import IncidentsPageClient from "./IncidentsPageClient";
 
 export default async function Page() {
-  let initialTenants = [];
-  let initialSubtenants = [];
-  let initialAllocations = [];
-  let initialIncidents = [];
-  let initialCredits = [];
-  let initialTenantId = null;
+  let initialTenants: Awaited<ReturnType<typeof getScopedTenants>> = [];
+  let initialSubtenants: Awaited<ReturnType<typeof getScopedSubtenants>> = [];
+  let initialAllocations: Awaited<ReturnType<typeof getScopedAllocations>> = [];
+  let initialIncidents: Awaited<ReturnType<typeof getIncidentsForTenant>> = [];
+  let initialCredits: Awaited<ReturnType<typeof getCreditsForTenant>>["items"] = [];
+  let initialTenantId: string | null = null;
 
   try {
     const currentUser = await requireCurrentUser();

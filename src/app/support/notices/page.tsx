@@ -3,7 +3,7 @@ import { getNotices } from "@/lib/serverPageData";
 import NoticesPageClient from "./NoticesPageClient";
 
 export default async function Page() {
-  let initialNotices = [];
+  let initialNotices: Awaited<ReturnType<typeof getNotices>> = [];
 
   try {
     await requireCurrentUser();

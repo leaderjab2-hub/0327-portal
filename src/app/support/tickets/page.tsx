@@ -3,9 +3,9 @@ import { getScopedTenants, getTickets } from "@/lib/serverPageData";
 import TicketsPageClient from "./TicketsPageClient";
 
 export default async function Page() {
-  let initialTenants = [];
-  let initialTickets = [];
-  let initialTenantId = null;
+  let initialTenants: Awaited<ReturnType<typeof getScopedTenants>> = [];
+  let initialTickets: Awaited<ReturnType<typeof getTickets>> = [];
+  let initialTenantId: string | null = null;
 
   try {
     const currentUser = await requireCurrentUser();
