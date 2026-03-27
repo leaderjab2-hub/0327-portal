@@ -9,6 +9,7 @@ type IncidentInsert = Database["public"]["Tables"]["incidents"]["Insert"];
 type IncidentCustomerRow = Database["public"]["Tables"]["incident_customers"]["Row"];
 type IncidentCustomerInsert = Database["public"]["Tables"]["incident_customers"]["Insert"];
 type CreditInsert = Database["public"]["Tables"]["credits"]["Insert"];
+type IncidentIdRow = { incident_id: number };
 
 type IncidentType = "incident" | "urgent_pm" | "regular_pm";
 
@@ -115,7 +116,9 @@ export async function GET(request: Request) {
         throw customerError;
       }
 
-      incidentIdsByTenant = Array.from(new Set((customerRows ?? []).map((row) => row.incident_id)));
+      incidentIdsByTenant = Array.from(
+        new Set(((customerRows ?? []) as IncidentIdRow[]).map((row) => row.incident_id)),
+      );
     } else if (currentUser.role !== "admin") {
       const scopedTenantId = currentUser.tenantId ?? "";
       const customerQuery = supabaseAdmin
@@ -132,7 +135,9 @@ export async function GET(request: Request) {
         throw customerError;
       }
 
-      incidentIdsByTenant = Array.from(new Set((customerRows ?? []).map((row) => row.incident_id)));
+      incidentIdsByTenant = Array.from(
+        new Set(((customerRows ?? []) as IncidentIdRow[]).map((row) => row.incident_id)),
+      );
     }
 
     if (incidentIdsByTenant && incidentIdsByTenant.length === 0) {
@@ -216,7 +221,7 @@ export async function POST(request: Request) {
 
     const { data: incidentData, error: incidentError } = await supabaseAdmin
       .from("incidents")
-      .insert(incidentPayload)
+      .insert(incidentPayload as never)
       .select("*")
       .single();
 
@@ -235,7 +240,7 @@ export async function POST(request: Request) {
 
     const { data: customerData, error: customerError } = await supabaseAdmin
       .from("incident_customers")
-      .insert(customerPayloads)
+      .insert(customerPayloads as never)
       .select("*");
 
     if (customerError) {
@@ -255,7 +260,7 @@ export async function POST(request: Request) {
             : `긴급 PM #${incident.id} 크레딧 발생`,
       }));
 
-      const { error: creditError } = await supabaseAdmin.from("credits").insert(creditPayloads);
+      const { error: creditError } = await supabaseAdmin.from("credits").insert(creditPayloads as never);
 
       if (creditError) {
         throw creditError;
