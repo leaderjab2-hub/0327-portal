@@ -3,6 +3,10 @@ import { canAccessTenant, handleAuthError, requireCurrentUser } from "@/lib/auth
 import { compareNodeIds, getNodeById } from "@/lib/nodeAllocations";
 import { mockGpuNodes } from "@/lib/mockMonitoringData";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import type { Database } from "@/types/database";
+
+type NodeAllocationRow = Database["public"]["Tables"]["node_allocations"]["Row"];
+type NodeIdRow = { node_id: string };
 
 export async function GET(request: Request) {
   try {
@@ -27,7 +31,7 @@ export async function GET(request: Request) {
       }
 
       return NextResponse.json({
-        data: (data ?? []).map((allocation) => ({
+        data: ((data ?? []) as NodeAllocationRow[]).map((allocation) => ({
           ...allocation,
           node: getNodeById(allocation.node_id),
         })),
@@ -44,7 +48,7 @@ export async function GET(request: Request) {
       throw error;
     }
 
-    const allocatedNodeIds = new Set((data ?? []).map((row) => row.node_id));
+    const allocatedNodeIds = new Set(((data ?? []) as NodeIdRow[]).map((row) => row.node_id));
     const availableNodes = mockGpuNodes
       .filter((node) => !allocatedNodeIds.has(node.id))
       .sort((left, right) => compareNodeIds(left.id, right.id));
