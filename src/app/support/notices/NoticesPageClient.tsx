@@ -17,6 +17,10 @@ type Notice = {
   updated_at: string | null;
 };
 
+type NoticeLike = Omit<Notice, 'type'> & {
+  type: string | null;
+};
+
 type NoticeFormState = {
   type: NoticeType;
   title: string;
@@ -24,6 +28,21 @@ type NoticeFormState = {
 };
 
 const PAGE_SIZE = 10;
+
+function normalizeNoticeType(type: string | null | undefined): NoticeType {
+  if (type === '점검' || type === '업데이트') {
+    return type;
+  }
+
+  return '일반';
+}
+
+function normalizeNotice(notice: NoticeLike): Notice {
+  return {
+    ...notice,
+    type: normalizeNoticeType(notice.type),
+  };
+}
 
 function formatDate(value: string | null) {
   if (!value) {
@@ -154,14 +173,14 @@ function NoticeModal({
 }
 
 type NoticesPageClientProps = {
-  initialNotices?: Notice[];
+  initialNotices?: NoticeLike[];
 };
 
 export default function NoticesPageClient({ initialNotices = [] }: NoticesPageClientProps) {
   const { currentUser } = useAuth();
   const isAdmin = currentUser?.role === 'admin';
 
-  const [notices, setNotices] = useState<Notice[]>(initialNotices);
+  const [notices, setNotices] = useState<Notice[]>(initialNotices.map(normalizeNotice));
   const [selectedNotice, setSelectedNotice] = useState<Notice | null>(null);
   const [loading, setLoading] = useState(initialNotices.length === 0);
   const [saving, setSaving] = useState(false);
@@ -185,13 +204,13 @@ export default function NoticesPageClient({ initialNotices = [] }: NoticesPageCl
       }
 
       const response = await fetch(`/api/notices${params.size > 0 ? `?${params.toString()}` : ''}`);
-      const payload = (await response.json()) as { data?: Notice[]; error?: string };
+      const payload = (await response.json()) as { data?: NoticeLike[]; error?: string };
 
       if (!response.ok) {
         throw new Error(payload.error ?? '공지사항을 불러오지 못했습니다.');
       }
 
-      setNotices(payload.data ?? []);
+      setNotices((payload.data ?? []).map(normalizeNotice));
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : '공지사항을 불러오지 못했습니다.');
       setNotices([]);
