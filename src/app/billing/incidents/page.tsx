@@ -9,17 +9,32 @@ import {
 import IncidentsPageClient from "./IncidentsPageClient";
 
 export default async function Page() {
-  const currentUser = await requireCurrentUser();
-  const initialTenants = await getScopedTenants(currentUser);
-  const initialTenantId = initialTenants[0]?.id ?? null;
-  const [initialSubtenants, initialAllocations, initialIncidents, initialCredits] = initialTenantId
-    ? await Promise.all([
-        getScopedSubtenants(currentUser, initialTenantId),
-        getScopedAllocations(currentUser, initialTenantId),
-        getIncidentsForTenant(currentUser, initialTenantId),
-        getCreditsForTenant(currentUser, initialTenantId),
-      ])
-    : [[], [], [], { items: [], groups: [] }];
+  let initialTenants = [];
+  let initialSubtenants = [];
+  let initialAllocations = [];
+  let initialIncidents = [];
+  let initialCredits = [];
+  let initialTenantId = null;
+
+  try {
+    const currentUser = await requireCurrentUser();
+    initialTenants = await getScopedTenants(currentUser);
+    initialTenantId = initialTenants[0]?.id ?? null;
+    const creditsPayload = initialTenantId
+      ? await Promise.all([
+          getScopedSubtenants(currentUser, initialTenantId),
+          getScopedAllocations(currentUser, initialTenantId),
+          getIncidentsForTenant(currentUser, initialTenantId),
+          getCreditsForTenant(currentUser, initialTenantId),
+        ])
+      : [[], [], [], { items: [], groups: [] }];
+    initialSubtenants = creditsPayload[0];
+    initialAllocations = creditsPayload[1];
+    initialIncidents = creditsPayload[2];
+    initialCredits = creditsPayload[3].items;
+  } catch (error) {
+    console.error("[billing/incidents] failed to load page data", error);
+  }
 
   return (
     <IncidentsPageClient
@@ -27,7 +42,7 @@ export default async function Page() {
       initialSubtenants={initialSubtenants}
       initialAllocations={initialAllocations}
       initialIncidents={initialIncidents}
-      initialCredits={initialCredits.items}
+      initialCredits={initialCredits}
       initialTenantId={initialTenantId}
     />
   );

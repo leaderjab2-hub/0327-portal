@@ -15,7 +15,13 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const currentUser = await getCurrentUser();
+  let currentUser = null;
+
+  try {
+    currentUser = await getCurrentUser();
+  } catch (error) {
+    console.error("[layout] failed to load current user", error);
+  }
 
   return (
     <html lang="ko">

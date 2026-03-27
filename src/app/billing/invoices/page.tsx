@@ -27,20 +27,29 @@ function toBillingRecord(row: BillingRow) {
 }
 
 export default async function Page() {
-  const currentUser = await requireCurrentUser();
-  const [initialTenants, initialSubtenants] = await Promise.all([
-    getScopedTenants(currentUser),
-    getScopedSubtenants(currentUser),
-  ]);
-  const initialTenantId = initialTenants[0]?.id ?? null;
-  const initialBillings = initialTenantId
-    ? (await getBillingsForTenant(currentUser, initialTenantId)).map((row) => toBillingRecord(row as BillingRow))
-    : [];
+  let initialTenantRecords = [];
+  let initialSubtenantRecords = [];
+  let initialBillings = [];
+  let initialTenantId = null;
+
+  try {
+    const currentUser = await requireCurrentUser();
+    [initialTenantRecords, initialSubtenantRecords] = await Promise.all([
+      getScopedTenants(currentUser),
+      getScopedSubtenants(currentUser),
+    ]);
+    initialTenantId = initialTenantRecords[0]?.id ?? null;
+    initialBillings = initialTenantId
+      ? (await getBillingsForTenant(currentUser, initialTenantId)).map((row) => toBillingRecord(row as BillingRow))
+      : [];
+  } catch (error) {
+    console.error("[billing/invoices] failed to load page data", error);
+  }
 
   return (
     <InvoicesPageClient
-      initialTenantRecords={initialTenants}
-      initialSubtenantRecords={initialSubtenants}
+      initialTenantRecords={initialTenantRecords}
+      initialSubtenantRecords={initialSubtenantRecords}
       initialBillings={initialBillings}
       initialTenantId={initialTenantId}
     />

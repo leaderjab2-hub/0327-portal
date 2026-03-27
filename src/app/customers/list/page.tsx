@@ -3,20 +3,29 @@ import { getMembersForTenant, getScopedSubtenants, getScopedTenants } from "@/li
 import CustomerListPageClient from "./CustomerListPageClient";
 
 export default async function Page() {
-  const currentUser = await requireCurrentUser();
-  const [initialTenants, initialSubtenants] = await Promise.all([
-    getScopedTenants(currentUser),
-    getScopedSubtenants(currentUser),
-  ]);
-  const initialMembersTenantId = initialTenants[0]?.id ?? null;
-  const initialMembers = initialMembersTenantId
-    ? await getMembersForTenant(currentUser, initialMembersTenantId)
-    : [];
+  let initialTenantRecords = [];
+  let initialSubtenantRecords = [];
+  let initialMembers = [];
+  let initialMembersTenantId = null;
+
+  try {
+    const currentUser = await requireCurrentUser();
+    [initialTenantRecords, initialSubtenantRecords] = await Promise.all([
+      getScopedTenants(currentUser),
+      getScopedSubtenants(currentUser),
+    ]);
+    initialMembersTenantId = initialTenantRecords[0]?.id ?? null;
+    initialMembers = initialMembersTenantId
+      ? await getMembersForTenant(currentUser, initialMembersTenantId)
+      : [];
+  } catch (error) {
+    console.error("[customers/list] failed to load page data", error);
+  }
 
   return (
     <CustomerListPageClient
-      initialTenantRecords={initialTenants}
-      initialSubtenantRecords={initialSubtenants}
+      initialTenantRecords={initialTenantRecords}
+      initialSubtenantRecords={initialSubtenantRecords}
       initialMembers={initialMembers}
       initialMembersTenantId={initialMembersTenantId}
     />

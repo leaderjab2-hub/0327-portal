@@ -3,10 +3,18 @@ import { getScopedTenants, getTickets } from "@/lib/serverPageData";
 import TicketsPageClient from "./TicketsPageClient";
 
 export default async function Page() {
-  const currentUser = await requireCurrentUser();
-  const initialTenants = await getScopedTenants(currentUser);
-  const initialTenantId = initialTenants[0]?.id ?? null;
-  const initialTickets = await getTickets(currentUser, initialTenantId ?? undefined);
+  let initialTenants = [];
+  let initialTickets = [];
+  let initialTenantId = null;
+
+  try {
+    const currentUser = await requireCurrentUser();
+    initialTenants = await getScopedTenants(currentUser);
+    initialTenantId = initialTenants[0]?.id ?? null;
+    initialTickets = await getTickets(currentUser, initialTenantId ?? undefined);
+  } catch (error) {
+    console.error("[support/tickets] failed to load page data", error);
+  }
 
   return (
     <TicketsPageClient

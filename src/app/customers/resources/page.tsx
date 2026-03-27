@@ -3,18 +3,26 @@ import { getScopedAllocations, getScopedSubtenants, getScopedTenants } from "@/l
 import ResourcesPageClient from "./ResourcesPageClient";
 
 export default async function Page() {
-  const currentUser = await requireCurrentUser();
-  const [initialTenants, initialSubtenants, initialAllocations] = await Promise.all([
-    getScopedTenants(currentUser),
-    getScopedSubtenants(currentUser),
-    getScopedAllocations(currentUser),
-  ]);
+  let initialTenantRecords = [];
+  let initialSubtenantRecords = [];
+  let initialAllocationRecords = [];
+
+  try {
+    const currentUser = await requireCurrentUser();
+    [initialTenantRecords, initialSubtenantRecords, initialAllocationRecords] = await Promise.all([
+      getScopedTenants(currentUser),
+      getScopedSubtenants(currentUser),
+      getScopedAllocations(currentUser),
+    ]);
+  } catch (error) {
+    console.error("[customers/resources] failed to load page data", error);
+  }
 
   return (
     <ResourcesPageClient
-      initialTenantRecords={initialTenants}
-      initialSubtenantRecords={initialSubtenants}
-      initialAllocationRecords={initialAllocations}
+      initialTenantRecords={initialTenantRecords}
+      initialSubtenantRecords={initialSubtenantRecords}
+      initialAllocationRecords={initialAllocationRecords}
     />
   );
 }
