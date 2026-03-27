@@ -28,7 +28,10 @@ export async function GET(request: Request) {
       throw error;
     }
 
-    const balance = (data ?? []).reduce((sum, row) => sum + (row.amount ?? 0), 0);
+    const balance = ((data ?? []) as Array<{ amount?: number | null }>).reduce(
+      (sum, row) => sum + (row.amount ?? 0),
+      0,
+    );
 
     return NextResponse.json({
       data: {

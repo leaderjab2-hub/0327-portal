@@ -3,6 +3,7 @@ import { assertRole, handleAuthError, requireCurrentUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import type { Database } from "@/types/database";
 
+type SubtenantRow = Database["public"]["Tables"]["subtenants"]["Row"];
 type SubtenantInsert = Database["public"]["Tables"]["subtenants"]["Insert"];
 type UserProfileCountRow = {
   subtenant_id?: string | null;
@@ -40,7 +41,7 @@ export async function GET(request: Request) {
       throw error;
     }
 
-    const subtenants = data ?? [];
+    const subtenants = (data ?? []) as SubtenantRow[];
     const subtenantIds = subtenants.map((subtenant) => subtenant.id);
 
     if (subtenantIds.length === 0) {
@@ -91,7 +92,7 @@ export async function POST(request: Request) {
 
     const { data, error } = await supabaseAdmin
       .from("subtenants")
-      .insert(body)
+      .insert(body as never)
       .select("*")
       .single();
 
