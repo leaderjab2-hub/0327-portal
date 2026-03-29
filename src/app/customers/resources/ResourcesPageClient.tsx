@@ -5,11 +5,12 @@ import {
   Building2,
   Cpu,
   Package,
+  Search,
   Server,
   Trash2,
   X,
 } from 'lucide-react';
-import CompanyListPanel from '@/components/CompanyListPanel';
+
 import { useAuth } from '@/contexts/AuthContext';
 import { compareNodeIds, formatNodeRanges, toNodeChipLabel } from '@/lib/nodeAllocations';
 import type { Json } from '@/types/database';
@@ -99,24 +100,19 @@ function parseContractGpuQuantity(contract: Json | null) {
   if (!contract || Array.isArray(contract) || typeof contract !== 'object') {
     return 0;
   }
-
   const gpu = 'gpu' in contract ? contract.gpu : null;
-
   if (!gpu || Array.isArray(gpu) || typeof gpu !== 'object') {
     return 0;
   }
-
   const quantity = 'quantity' in gpu ? gpu.quantity : 0;
   return typeof quantity === 'number' ? quantity : 0;
 }
 
 async function readJson<T>(response: Response): Promise<T> {
   const payload = (await response.json().catch(() => ({}))) as T & { error?: string };
-
   if (!response.ok) {
     throw new Error(payload.error ?? '요청을 처리하지 못했습니다.');
   }
-
   return payload;
 }
 
@@ -124,11 +120,9 @@ function getRangeNodeIds(nodeChoices: NodeChoice[], startNodeId: string, endNode
   const sorted = [...nodeChoices].sort((left, right) => compareNodeIds(left.id, right.id));
   const startIndex = sorted.findIndex((node) => node.id === startNodeId);
   const endIndex = sorted.findIndex((node) => node.id === endNodeId);
-
   if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
     return [];
   }
-
   return sorted.slice(startIndex, endIndex + 1).map((node) => node.id);
 }
 
@@ -146,42 +140,39 @@ function RangeModal({
   const [endNodeId, setEndNodeId] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  if (!isOpen) {
-    return null;
-  }
+  useEffect(() => {
+    if (isOpen && nodeChoices.length > 0) {
+      if (!startNodeId) setStartNodeId(nodeChoices[0].id);
+      if (!endNodeId) setEndNodeId(nodeChoices[0].id);
+    }
+  }, [isOpen, nodeChoices, startNodeId, endNodeId]);
 
-  const safeStartNodeId =
-    nodeChoices.some((node) => node.id === startNodeId) ? startNodeId : (nodeChoices[0]?.id ?? '');
-  const safeEndNodeId =
-    nodeChoices.some((node) => node.id === endNodeId) ? endNodeId : (nodeChoices[0]?.id ?? '');
+  if (!isOpen) return null;
+
+  const safeStartNodeId = nodeChoices.some((node) => node.id === startNodeId) ? startNodeId : (nodeChoices[0]?.id ?? '');
+  const safeEndNodeId = nodeChoices.some((node) => node.id === endNodeId) ? endNodeId : (nodeChoices[0]?.id ?? '');
   const selectedNodeIds = getRangeNodeIds(nodeChoices, safeStartNodeId, safeEndNodeId);
   const disabled = saving || selectedNodeIds.length === 0;
-  const buttonClassName =
-    tone === 'emerald'
-      ? 'bg-emerald-600 hover:bg-emerald-700'
-      : 'bg-primary-600 hover:bg-primary-700';
+  
+  const isEmerald = tone === 'emerald';
 
   return (
-    <div className="fixed inset-0 z-50 mx-4 flex items-center justify-center bg-slate-950/45 backdrop-blur-sm">
-      <div className="flex w-full max-w-2xl flex-col overflow-hidden rounded-[18px] border border-gray-200 bg-white shadow-[0_30px_120px_rgba(15,23,42,0.22)]">
-        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-          <h2 className="text-[17px] font-bold text-gray-900">{title}</h2>
-          <button
-            className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
-            onClick={onClose}
-            type="button"
-          >
-            <X size={18} />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">
+      <div className="flex w-full max-w-lg flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl">
+        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+          <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+          <button className="rounded-full p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700" onClick={onClose} type="button">
+            <X size={20} />
           </button>
         </div>
 
-        <div className="space-y-5 px-6 py-5">
+        <div className="space-y-6 p-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <label className="block">
-              <span className="mb-2 block text-[12px] font-semibold text-gray-500">시작 노드</span>
-              <select
-                className="h-11 w-full rounded-[10px] border border-gray-200 px-4 text-[14px]"
-                value={safeStartNodeId}
+            <div>
+              <label className="mb-2 block text-xs font-bold text-gray-500 uppercase tracking-wider">시작 노드</label>
+              <select 
+                className="h-11 w-full rounded-lg border border-gray-200 px-4 text-sm focus:outline-none focus:border-blue-500 transition-colors" 
+                value={safeStartNodeId} 
                 onChange={(event) => setStartNodeId(event.target.value)}
               >
                 {nodeChoices.map((node) => (
@@ -190,12 +181,12 @@ function RangeModal({
                   </option>
                 ))}
               </select>
-            </label>
-            <label className="block">
-              <span className="mb-2 block text-[12px] font-semibold text-gray-500">종료 노드</span>
-              <select
-                className="h-11 w-full rounded-[10px] border border-gray-200 px-4 text-[14px]"
-                value={safeEndNodeId}
+            </div>
+            <div>
+              <label className="mb-2 block text-xs font-bold text-gray-500 uppercase tracking-wider">종료 노드</label>
+              <select 
+                className="h-11 w-full rounded-lg border border-gray-200 px-4 text-sm focus:outline-none focus:border-blue-500 transition-colors" 
+                value={safeEndNodeId} 
                 onChange={(event) => setEndNodeId(event.target.value)}
               >
                 {nodeChoices.map((node) => (
@@ -204,38 +195,42 @@ function RangeModal({
                   </option>
                 ))}
               </select>
-            </label>
+            </div>
           </div>
 
-          <div className="rounded-[14px] border border-gray-200 bg-[#FAFBFC] p-4">
-            <div className="mb-2 text-[13px] font-bold text-gray-700">선택 결과</div>
-            <div className="text-[14px] font-semibold text-gray-900">
+          <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-5">
+            <div className="mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">선택된 리소스 범위</div>
+            <div className="text-sm font-bold text-gray-900">
               {selectedNodeIds.length > 0
-                ? `${toNodeChipLabel(safeStartNodeId)} ~ ${toNodeChipLabel(safeEndNodeId)} / 총 ${selectedNodeIds.length}대`
+                ? `${toNodeChipLabel(safeStartNodeId)} ~ ${toNodeChipLabel(safeEndNodeId)} (총 ${selectedNodeIds.length}대)`
                 : '올바른 구간을 선택해 주세요.'}
             </div>
           </div>
 
-          {error ? <p className="text-[13px] font-medium text-rose-600">{error}</p> : null}
+          {error ? (
+            <div className="bg-red-50 border border-red-100 rounded-lg p-3">
+              <p className="text-xs font-medium text-red-600">{error}</p>
+            </div>
+          ) : null}
         </div>
 
-        <div className="flex justify-end gap-3 border-t border-gray-200 px-6 py-4">
-          <button
-            className="rounded-[10px] border border-gray-200 px-5 py-2.5 text-[14px] font-semibold text-gray-700"
-            onClick={onClose}
+        <div className="flex justify-end gap-3 bg-gray-50 border-t border-gray-100 px-6 py-4">
+          <button 
+            className="px-5 py-2.5 rounded-lg text-sm font-bold text-gray-600 hover:bg-white transition-colors" 
+            onClick={onClose} 
             type="button"
           >
             취소
           </button>
           <button
-            className={`rounded-[10px] px-5 py-2.5 text-[14px] font-semibold text-white disabled:bg-gray-400 ${buttonClassName}`}
+            className={`px-6 py-2.5 rounded-lg text-sm font-black uppercase tracking-wider text-white shadow-sm transition-all disabled:bg-gray-300 ${
+              isEmerald ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-600 hover:bg-blue-700'
+            }`}
             disabled={disabled}
             onClick={async () => {
               setError(null);
-
               try {
                 await onSubmit({ startNodeId: safeStartNodeId, endNodeId: safeEndNodeId });
-                setError(null);
               } catch (submitError) {
                 setError(submitError instanceof Error ? submitError.message : '처리에 실패했습니다.');
               }
@@ -264,19 +259,18 @@ function ReclaimModal({
   const [endNodeId, setEndNodeId] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  if (!isOpen) {
-    return null;
-  }
+  useEffect(() => {
+    if (isOpen && allocations.length > 0) {
+      if (!startNodeId) setStartNodeId(allocations[0].node_id);
+      if (!endNodeId) setEndNodeId(allocations[0].node_id);
+    }
+  }, [isOpen, allocations, startNodeId, endNodeId]);
+
+  if (!isOpen) return null;
 
   const sortedAllocations = [...allocations].sort((left, right) => compareNodeIds(left.node_id, right.node_id));
-  const safeStartNodeId =
-    sortedAllocations.some((allocation) => allocation.node_id === startNodeId)
-      ? startNodeId
-      : (sortedAllocations[0]?.node_id ?? '');
-  const safeEndNodeId =
-    sortedAllocations.some((allocation) => allocation.node_id === endNodeId)
-      ? endNodeId
-      : (sortedAllocations[0]?.node_id ?? '');
+  const safeStartNodeId = sortedAllocations.some((allocation) => allocation.node_id === startNodeId) ? startNodeId : (sortedAllocations[0]?.node_id ?? '');
+  const safeEndNodeId = sortedAllocations.some((allocation) => allocation.node_id === endNodeId) ? endNodeId : (sortedAllocations[0]?.node_id ?? '');
 
   const toggleAllocation = (allocationId: number) => {
     setSelectedIds((prev) =>
@@ -293,62 +287,48 @@ function ReclaimModal({
       safeStartNodeId,
       safeEndNodeId,
     );
-
     const rangeIds = sortedAllocations
       .filter((allocation) => rangeNodeIds.includes(allocation.node_id))
       .map((allocation) => allocation.id);
-
     setSelectedIds((prev) => Array.from(new Set([...prev, ...rangeIds])));
   };
 
   return (
-    <div className="fixed inset-0 z-50 mx-4 flex items-center justify-center bg-slate-950/45 backdrop-blur-sm">
-      <div className="flex w-full max-w-2xl flex-col overflow-hidden rounded-[18px] border border-gray-200 bg-white shadow-[0_30px_120px_rgba(15,23,42,0.22)]">
-        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-          <h2 className="text-[17px] font-bold text-gray-900">{title}</h2>
-          <button
-            className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
-            onClick={onClose}
-            type="button"
-          >
-            <X size={18} />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">
+      <div className="flex w-full max-w-xl flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl">
+        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+          <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+          <button className="rounded-full p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700" onClick={onClose} type="button">
+            <X size={20} />
           </button>
         </div>
 
-        <div className="space-y-5 px-6 py-5">
+        <div className="space-y-6 p-6">
           <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto]">
-            <label className="block">
-              <span className="mb-2 block text-[12px] font-semibold text-gray-500">시작 노드</span>
-              <select
-                className="h-11 w-full rounded-[10px] border border-gray-200 px-4 text-[14px]"
-                value={safeStartNodeId}
-                onChange={(event) => setStartNodeId(event.target.value)}
-              >
+            <div>
+              <label className="mb-2 block text-xs font-bold text-gray-500 uppercase tracking-wider">시작 노드</label>
+              <select className="h-10 w-full rounded-lg border border-gray-200 px-3 text-sm" value={safeStartNodeId} onChange={(event) => setStartNodeId(event.target.value)}>
                 {sortedAllocations.map((allocation) => (
                   <option key={allocation.id} value={allocation.node_id}>
                     {toNodeChipLabel(allocation.node_id)}
                   </option>
                 ))}
               </select>
-            </label>
-            <label className="block">
-              <span className="mb-2 block text-[12px] font-semibold text-gray-500">종료 노드</span>
-              <select
-                className="h-11 w-full rounded-[10px] border border-gray-200 px-4 text-[14px]"
-                value={safeEndNodeId}
-                onChange={(event) => setEndNodeId(event.target.value)}
-              >
+            </div>
+            <div>
+              <label className="mb-2 block text-xs font-bold text-gray-500 uppercase tracking-wider">종료 노드</label>
+              <select className="h-10 w-full rounded-lg border border-gray-200 px-3 text-sm" value={safeEndNodeId} onChange={(event) => setEndNodeId(event.target.value)}>
                 {sortedAllocations.map((allocation) => (
                   <option key={allocation.id} value={allocation.node_id}>
                     {toNodeChipLabel(allocation.node_id)}
                   </option>
                 ))}
               </select>
-            </label>
+            </div>
             <div className="flex items-end">
-              <button
-                className="h-11 w-full rounded-[10px] border border-gray-200 px-4 text-[13px] font-semibold text-gray-700 hover:bg-gray-50"
-                onClick={selectRange}
+              <button 
+                className="h-10 px-4 rounded-lg bg-gray-100 text-xs font-bold text-gray-700 hover:bg-gray-200 transition-colors" 
+                onClick={selectRange} 
                 type="button"
               >
                 범위 추가
@@ -356,68 +336,58 @@ function ReclaimModal({
             </div>
           </div>
 
-          <div className="rounded-[14px] border border-gray-200 bg-[#FAFBFC] p-4">
+          <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-5">
             <div className="mb-3 flex items-center justify-between">
-              <div className="text-[13px] font-bold text-gray-700">회수 대상 노드 목록</div>
-              <div className="text-[12px] font-semibold text-gray-500">{selectedIds.length}대 선택됨</div>
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">회수 대상 노드 목록</div>
+              <div className="text-xs font-bold text-red-500">{selectedIds.length}대 선택됨</div>
             </div>
-            <div className="grid max-h-[280px] gap-2 overflow-y-auto sm:grid-cols-2">
+            <div className="grid max-h-[250px] gap-2 overflow-y-auto sm:grid-cols-2 p-1">
               {sortedAllocations.map((allocation) => (
-                <label
-                  key={allocation.id}
-                  className="flex cursor-pointer items-center gap-3 rounded-[10px] border border-gray-200 bg-white px-3 py-2"
-                >
-                  <input
-                    checked={selectedIds.includes(allocation.id)}
-                    className="h-4 w-4 rounded border-gray-300"
-                    onChange={() => toggleAllocation(allocation.id)}
-                    type="checkbox"
+                <label key={allocation.id} className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors ${
+                  selectedIds.includes(allocation.id) ? 'bg-red-50 border-red-100' : 'bg-white border-gray-100 hover:border-gray-200'
+                }`}>
+                  <input 
+                    checked={selectedIds.includes(allocation.id)} 
+                    className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500" 
+                    onChange={() => toggleAllocation(allocation.id)} 
+                    type="checkbox" 
                   />
-                  <span className="font-mono text-[13px] font-semibold text-gray-900">{toNodeChipLabel(allocation.node_id)}</span>
+                  <span className="font-mono text-[13px] font-bold text-gray-900">{toNodeChipLabel(allocation.node_id)}</span>
                 </label>
               ))}
             </div>
           </div>
 
-          {error ? <p className="text-[13px] font-medium text-rose-600">{error}</p> : null}
+          {error ? (
+            <div className="bg-red-50 border border-red-100 rounded-lg p-3">
+              <p className="text-xs font-medium text-red-600">{error}</p>
+            </div>
+          ) : null}
         </div>
 
-        <div className="flex justify-between gap-3 border-t border-gray-200 px-6 py-4">
+        <div className="flex justify-between gap-3 bg-gray-50 border-t border-gray-100 px-6 py-4">
           <button
-            className="rounded-[10px] border border-rose-200 px-5 py-2.5 text-[14px] font-semibold text-rose-600 hover:bg-rose-50"
+            className="px-5 py-2.5 rounded-lg text-sm font-bold text-red-600 hover:bg-red-50 transition-colors"
             disabled={saving || allocations.length === 0}
             onClick={async () => {
-              setError(null);
-
-              try {
-                await onSubmitAll();
-              } catch (submitError) {
-                setError(submitError instanceof Error ? submitError.message : '전체 회수에 실패했습니다.');
+              if (confirm('전체 노드를 회수하시겠습니까?')) {
+                try { await onSubmitAll(); } catch (err) { setError(err instanceof Error ? err.message : '실패'); }
               }
             }}
             type="button"
           >
             전체 회수
           </button>
-          <div className="flex gap-3">
-            <button
-              className="rounded-[10px] border border-gray-200 px-5 py-2.5 text-[14px] font-semibold text-gray-700"
-              onClick={onClose}
-              type="button"
-            >
+          <div className="flex gap-2">
+            <button className="px-5 py-2.5 rounded-lg text-sm font-bold text-gray-600 hover:bg-white" onClick={onClose} type="button">
               취소
             </button>
             <button
-              className="rounded-[10px] bg-rose-600 px-5 py-2.5 text-[14px] font-semibold text-white disabled:bg-gray-400"
+              className="px-6 py-2.5 rounded-lg bg-red-600 text-sm font-black uppercase tracking-wider text-white shadow-sm hover:bg-red-700 disabled:opacity-40 transition-all"
               disabled={saving || selectedIds.length === 0}
               onClick={async () => {
                 setError(null);
-
-                try {
-                  await onSubmitSelected(selectedIds);
-                } catch (submitError) {
-                  setError(submitError instanceof Error ? submitError.message : '선택 회수에 실패했습니다.');
-                }
+                try { await onSubmitSelected(selectedIds); } catch (err) { setError(err instanceof Error ? err.message : '실패'); }
               }}
               type="button"
             >
@@ -436,37 +406,36 @@ export default function ResourcesPageClient({
   initialAllocationRecords = [],
 }: ResourcesPageClientProps) {
   const { currentUser } = useAuth();
+  
   const initialTenants = useMemo(
-    () =>
-      initialTenantRecords.map((tenant) => ({
-        id: tenant.id,
-        name: tenant.name,
-        contractCount: parseContractGpuQuantity(tenant.contract),
-      })),
-    [initialTenantRecords],
+    () => initialTenantRecords.map((t) => ({
+      id: t.id,
+      name: t.name,
+      contractCount: parseContractGpuQuantity(t.contract),
+    })),
+    [initialTenantRecords]
   );
+
   const initialSubtenants = useMemo(
-    () =>
-      initialSubtenantRecords.map((subtenant) => ({
-        id: subtenant.id,
-        tenantId: subtenant.tenant_id ?? '',
-        name: subtenant.name,
-        status: subtenant.status ?? '대기',
-        products: Array.isArray(subtenant.products)
-          ? subtenant.products.filter((product): product is string => typeof product === 'string')
-          : [],
-      })),
-    [initialSubtenantRecords],
+    () => initialSubtenantRecords.map((s) => ({
+      id: s.id,
+      tenantId: s.tenant_id ?? '',
+      name: s.name,
+      status: s.status ?? '대기',
+      products: Array.isArray(s.products) ? s.products.filter((p): p is string => typeof p === 'string') : [],
+    })),
+    [initialSubtenantRecords]
   );
+
   const [selectedTenantIndex, setSelectedTenantIndex] = useState(0);
   const [tenants, setTenants] = useState<TenantView[]>(initialTenants);
   const [subtenants, setSubtenants] = useState<SubtenantView[]>(initialSubtenants);
   const [allocations, setAllocations] = useState<AllocationRecord[]>(initialAllocationRecords);
-  const [loading, setLoading] = useState(
-    initialTenants.length === 0 && initialSubtenants.length === 0 && initialAllocationRecords.length === 0,
-  );
+  const [loading, setLoading] = useState(initialTenants.length === 0 && initialSubtenants.length === 0 && initialAllocationRecords.length === 0);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
   const [tenantModalTarget, setTenantModalTarget] = useState<TenantView | null>(null);
   const [subtenantModalTarget, setSubtenantModalTarget] = useState<SubtenantView | null>(null);
   const [tenantReclaimTarget, setTenantReclaimTarget] = useState<TenantView | null>(null);
@@ -477,10 +446,26 @@ export default function ResourcesPageClient({
   const isAdmin = currentUser?.role === 'admin';
   const canManageSubtenant = currentUser?.role === 'admin' || currentUser?.role === 'tenant_admin';
 
+  const companies = useMemo(() => [
+    { id: 'overview', name: '전체 (Overview)', subCount: subtenants.length },
+    ...tenants.map((t) => ({
+      id: t.id,
+      name: t.name,
+      subCount: subtenants.filter((s) => s.tenantId === t.id).length,
+    })),
+  ], [subtenants, tenants]);
+
+  const filteredCompanies = useMemo(() => {
+    if (!searchTerm) return companies;
+    return [
+      companies[0],
+      ...companies.slice(1).filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    ];
+  }, [companies, searchTerm]);
+
   const loadData = async () => {
     setLoading(true);
     setError(null);
-
     try {
       const [tenantsPayload, subtenantsPayload, allocationsPayload] = await Promise.all([
         readJson<{ data: TenantRecord[] }>(await fetch('/api/tenants', { cache: 'no-store' })),
@@ -488,85 +473,53 @@ export default function ResourcesPageClient({
         readJson<{ data: AllocationRecord[] }>(await fetch('/api/node-allocations', { cache: 'no-store' })),
       ]);
 
-      setTenants(
-        (tenantsPayload.data ?? []).map((tenant) => ({
-          id: tenant.id,
-          name: tenant.name,
-          contractCount: parseContractGpuQuantity(tenant.contract),
-        })),
-      );
+      setTenants((tenantsPayload.data ?? []).map(t => ({
+        id: t.id,
+        name: t.name,
+        contractCount: parseContractGpuQuantity(t.contract),
+      })));
 
-      setSubtenants(
-        (subtenantsPayload.data ?? []).map((subtenant) => ({
-          id: subtenant.id,
-          tenantId: subtenant.tenant_id ?? '',
-          name: subtenant.name,
-          status: subtenant.status ?? '대기',
-          products: Array.isArray(subtenant.products)
-            ? subtenant.products.filter((product): product is string => typeof product === 'string')
-            : [],
-        })),
-      );
+      setSubtenants((subtenantsPayload.data ?? []).map(s => ({
+        id: s.id,
+        tenantId: s.tenant_id ?? '',
+        name: s.name,
+        status: s.status ?? '대기',
+        products: Array.isArray(s.products) ? s.products.filter((p): p is string => typeof p === 'string') : [],
+      })));
 
       setAllocations(allocationsPayload.data ?? []);
-      setSelectedTenantIndex((prev) => {
-        const maxIndex = (tenantsPayload.data ?? []).length;
-        return prev > maxIndex ? 0 : prev;
-      });
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : '리소스 할당 정보를 불러오지 못했습니다.');
-      setTenants([]);
-      setSubtenants([]);
-      setAllocations([]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '데이터 로드 실패');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (initialTenants.length > 0 || initialSubtenants.length > 0 || initialAllocationRecords.length > 0) {
-      return;
+    if (initialTenants.length === 0 && initialSubtenants.length === 0) {
+      loadData();
     }
-
-    void loadData();
-  }, [initialAllocationRecords.length, initialSubtenants.length, initialTenants.length]);
-
-  const companies = useMemo(
-    () => [
-      { id: 'overview', name: '전체 (Overview)', subCount: subtenants.length },
-      ...tenants.map((tenant) => ({
-        id: tenant.id,
-        name: tenant.name,
-        subCount: subtenants.filter((subtenant) => subtenant.tenantId === tenant.id).length,
-      })),
-    ],
-    [subtenants, tenants],
-  );
+  }, []);
 
   const totalNodes = 127;
+  const totalAllocated = allocations.length;
   const selectedTenant = selectedTenantIndex === 0 ? null : tenants[selectedTenantIndex - 1] ?? null;
-  const overviewRows = useMemo(
-    () =>
-      tenants.map((tenant) => {
-        const tenantAllocations = allocations.filter((allocation) => allocation.tenant_id === tenant.id);
-        return {
-          ...tenant,
-          assignedCount: tenantAllocations.length,
-          rangeText: formatNodeRanges(tenantAllocations.map((allocation) => allocation.node_id)),
-        };
-      }),
-    [allocations, tenants],
-  );
+
+  const overviewRows = useMemo(() => tenants.map((tenant) => {
+    const tenantAllocations = allocations.filter((a) => a.tenant_id === tenant.id);
+    return {
+      ...tenant,
+      assignedCount: tenantAllocations.length,
+      rangeText: formatNodeRanges(tenantAllocations.map(a => a.node_id)),
+    };
+  }), [allocations, tenants]);
 
   const tenantDetail = useMemo(() => {
-    if (!selectedTenant) {
-      return null;
-    }
-
-    const tenantAllocations = allocations.filter((allocation) => allocation.tenant_id === selectedTenant.id);
-    const tenantPoolAllocations = tenantAllocations.filter((allocation) => !allocation.subtenant_id);
-    const distributedAllocations = tenantAllocations.filter((allocation) => Boolean(allocation.subtenant_id));
-    const tenantSubtenants = subtenants.filter((subtenant) => subtenant.tenantId === selectedTenant.id);
+    if (!selectedTenant) return null;
+    const tenantAllocations = allocations.filter(a => a.tenant_id === selectedTenant.id);
+    const tenantPoolAllocations = tenantAllocations.filter(a => !a.subtenant_id);
+    const distributedAllocations = tenantAllocations.filter(a => Boolean(a.subtenant_id));
+    const tenantSubtenants = subtenants.filter(s => s.tenantId === selectedTenant.id);
 
     return {
       ...selectedTenant,
@@ -574,523 +527,482 @@ export default function ResourcesPageClient({
       tenantPoolAllocations,
       distributedCount: distributedAllocations.length,
       poolCount: tenantPoolAllocations.length,
-      tenantRangeText: formatNodeRanges(tenantAllocations.map((allocation) => allocation.node_id)),
-      poolRangeText: formatNodeRanges(tenantPoolAllocations.map((allocation) => allocation.node_id)),
-      subtenants: tenantSubtenants.map((subtenant) => {
-        const subtenantAllocations = tenantAllocations.filter((allocation) => allocation.subtenant_id === subtenant.id);
+      tenantRangeText: formatNodeRanges(tenantAllocations.map(a => a.node_id)),
+      poolRangeText: formatNodeRanges(tenantPoolAllocations.map(a => a.node_id)),
+      subtenants: tenantSubtenants.map(sub => {
+        const subtenantAllocations = tenantAllocations.filter(a => a.subtenant_id === sub.id);
         const usageRatio = tenantAllocations.length > 0 ? (subtenantAllocations.length / tenantAllocations.length) * 100 : 0;
-
         return {
-          ...subtenant,
-          allocationIds: subtenantAllocations.map((allocation) => allocation.id),
+          ...sub,
+          allocationIds: subtenantAllocations.map(a => a.id),
           count: subtenantAllocations.length,
-          rangeText: formatNodeRanges(subtenantAllocations.map((allocation) => allocation.node_id)),
+          rangeText: formatNodeRanges(subtenantAllocations.map(a => a.node_id)),
           usageRatio,
         };
       }),
     };
   }, [allocations, selectedTenant, subtenants]);
 
-  const totalAllocated = allocations.length;
-
   const fetchGlobalAvailableNodes = async () => {
-    const payload = await readJson<{ data: AvailableNode[] }>(
-      await fetch('/api/node-allocations/available', { cache: 'no-store' }),
-    );
-
-    setTenantAvailableNodes(
-      (payload.data ?? [])
-        .map((node) => ({
-          id: node.id,
-          label: toNodeChipLabel(node.id),
-        }))
-        .sort((left, right) => compareNodeIds(left.id, right.id)),
-    );
+    const payload = await readJson<{ data: AvailableNode[] }>(await fetch('/api/node-allocations/available', { cache: 'no-store' }));
+    setTenantAvailableNodes((payload.data ?? []).map(n => ({ id: n.id, label: toNodeChipLabel(n.id) })).sort((a,b) => compareNodeIds(a.id, b.id)));
   };
 
   const fetchTenantPoolNodes = async (tenantId: string) => {
-    const payload = await readJson<{ data: AllocationRecord[] }>(
-      await fetch(`/api/node-allocations/available?tenantId=${tenantId}`, { cache: 'no-store' }),
-    );
-
-    setSubtenantAvailableNodes(
-      (payload.data ?? [])
-        .map((allocation) => ({
-          id: allocation.node_id,
-          label: toNodeChipLabel(allocation.node_id),
-        }))
-        .sort((left, right) => compareNodeIds(left.id, right.id)),
-    );
+    const payload = await readJson<{ data: AllocationRecord[] }>(await fetch(`/api/node-allocations/available?tenantId=${tenantId}`, { cache: 'no-store' }));
+    setSubtenantAvailableNodes((payload.data ?? []).map(a => ({ id: a.node_id, label: toNodeChipLabel(a.node_id) })).sort((a,b) => compareNodeIds(a.id, b.id)));
   };
 
   const allocateNodes = async (nodeIds: string[], tenantId: string, subtenantId?: string) => {
     for (const nodeId of nodeIds) {
-      const response = await fetch('/api/node-allocations', {
+      await fetch('/api/node-allocations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nodeId,
-          tenantId,
-          subtenantId: subtenantId ?? null,
-        }),
+        body: JSON.stringify({ nodeId, tenantId, subtenantId: subtenantId ?? null }),
       });
-
-      const payload = (await response.json().catch(() => ({}))) as { error?: string };
-
-      if (!response.ok) {
-        throw new Error(payload.error ?? '노드 할당에 실패했습니다.');
-      }
     }
   };
 
-  const reclaimAllocation = async (allocationId: number) => {
-    const response = await fetch(`/api/node-allocations/${allocationId}`, {
-      method: 'DELETE',
-    });
-
-    const payload = (await response.json().catch(() => ({}))) as { error?: string };
-
-    if (!response.ok) {
-      throw new Error(payload.error ?? '노드 회수에 실패했습니다.');
-    }
+  const reclaimManyAllocations = async (ids: number[]) => {
+    for (const id of ids) await fetch(`/api/node-allocations/${id}`, { method: 'DELETE' });
   };
 
-  const reclaimManyAllocations = async (allocationIds: number[]) => {
-    for (const allocationId of allocationIds) {
-      await reclaimAllocation(allocationId);
-    }
+  const reclaimManyTenantAllocations = async (ids: number[]) => {
+    for (const id of ids) await fetch(`/api/node-allocations/${id}?scope=tenant`, { method: 'DELETE' });
   };
 
-  const reclaimTenantAllocation = async (allocationId: number) => {
-    const response = await fetch(`/api/node-allocations/${allocationId}?scope=tenant`, {
-      method: 'DELETE',
-    });
-
-    const payload = (await response.json().catch(() => ({}))) as { error?: string };
-
-    if (!response.ok) {
-      throw new Error(payload.error ?? 'Tenant 노드 회수에 실패했습니다.');
-    }
-  };
-
-  const reclaimManyTenantAllocations = async (allocationIds: number[]) => {
-    for (const allocationId of allocationIds) {
-      await reclaimTenantAllocation(allocationId);
-    }
-  };
-
-  const content = loading ? (
-    <div className="flex h-full items-center justify-center text-[14px] font-medium text-gray-400">
-      리소스 할당 정보를 불러오는 중입니다.
-    </div>
-  ) : error ? (
-    <div className="rounded-[10px] border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] text-rose-700">{error}</div>
-  ) : (
-    <>
-      <div className="flex-none shrink-0">
-        {selectedTenant ? (
-          <div className="flex flex-col gap-5 lg:gap-6">
-            <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-              <h1 className="flex items-center gap-2 text-[18px] font-extrabold">
-                <Building2 className="h-5 w-5 text-primary-500" />
-                {selectedTenant.name} 상세 현황
-              </h1>
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-[12px] font-extrabold text-gray-600 shadow-sm">
-                  <Cpu size={14} />
-                  전체 할당 인스턴스:
-                  <span className="font-mono text-[14px] text-gray-900">총 {tenantDetail?.allocations.length ?? 0}대</span>
-                </div>
-                {isAdmin ? (
+  return (
+    <div className="flex h-full flex-col bg-[#F8FAFC]">
+      <div className="flex-1 overflow-y-auto w-full">
+        <div className="mx-auto w-full max-w-[1400px] px-6 py-8 space-y-6">
+          
+          <div className="flex h-[48px] shrink-0 items-center justify-between bg-white px-4 rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-1 min-w-0 flex-1">
+              {filteredCompanies.map((c, idx) => {
+                const originalIdx = companies.findIndex(comp => comp.id === c.id);
+                const isSelected = selectedTenantIndex === originalIdx;
+                return (
                   <button
-                    className="flex items-center gap-1.5 rounded-lg bg-primary-600 px-4 py-2 text-[13px] font-bold text-white shadow-sm transition-colors hover:bg-primary-700"
-                    onClick={async () => {
-                      setSaving(false);
-                      await fetchGlobalAvailableNodes();
-                      setTenantModalTarget(selectedTenant);
-                    }}
-                    type="button"
+                    key={c.id}
+                    onClick={() => setSelectedTenantIndex(originalIdx)}
+                    className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-bold transition-all ${
+                      isSelected ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50'
+                    }`}
                   >
-                    <Server size={14} />
-                    Tenant 노드 할당
+                    {c.name}
                   </button>
-                ) : null}
-                {isAdmin && (tenantDetail?.allocations.length ?? 0) > 0 ? (
-                  <button
-                    className="flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-4 py-2 text-[13px] font-bold text-rose-600 transition-colors hover:bg-rose-50"
-                    onClick={() => {
-                      setTenantReclaimTarget(selectedTenant);
-                    }}
-                    type="button"
-                  >
-                    <Trash2 size={14} />
-                    Tenant 노드 회수
-                  </button>
-                ) : null}
-              </div>
+                );
+              })}
             </div>
-
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-3 lg:gap-6">
-              <div className="rounded-[10px] border border-gray-200 bg-white p-5 text-left shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] lg:rounded-[12px] lg:p-6 lg:shadow-[0_10px_30px_-18px_rgba(15,23,42,0.18)]">
-                <div className="mb-2 text-sm font-bold text-gray-500">계약 수량</div>
-                <div className="mt-1 font-mono text-[26px] font-extrabold tracking-tight text-gray-900">{selectedTenant.contractCount}대</div>
-                <div className="mt-2 text-[12px] font-semibold text-gray-400">데이터센터 → Tenant 배정 목표치</div>
-              </div>
-              <div className="rounded-[10px] border border-gray-200 bg-white p-5 text-left shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] lg:rounded-[12px] lg:p-6 lg:shadow-[0_10px_30px_-18px_rgba(15,23,42,0.18)]">
-                <div className="mb-2 text-sm font-bold text-gray-500">Subtenant 분배 완료</div>
-                <div className="mt-1 font-mono text-[26px] font-extrabold tracking-tight text-emerald-600">{tenantDetail?.distributedCount ?? 0}대</div>
-                <div className="mt-2 text-[12px] font-semibold text-gray-400">산하 프로젝트에 지급 완료된 서버</div>
-              </div>
-              <div className="rounded-[10px] border border-gray-200 bg-gradient-to-br from-white to-amber-50/20 p-5 text-left shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] lg:rounded-[12px] lg:p-6 lg:shadow-[0_10px_30px_-18px_rgba(15,23,42,0.18)]">
-                <div className="mb-2 text-sm font-bold text-amber-700">미분배 (Tenant Pool)</div>
-                <div className="mt-1 font-mono text-[26px] font-extrabold tracking-tight text-amber-500">{tenantDetail?.poolCount ?? 0}대</div>
-                <div className="mt-2 text-[12px] font-semibold text-amber-600/60">추가로 분배 가능한 잔여 유휴 자원</div>
+            <div className="hidden md:flex items-center gap-4 pl-4 shrink-0">
+              <div className="h-4 w-px bg-gray-200 shrink-0" />
+              <div className="relative shrink-0">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={13} />
+                <input
+                  className="h-[30px] w-36 rounded-full border border-gray-200 bg-white pl-8 pr-4 text-[12px] transition-all focus:w-48 focus:border-blue-300 focus:outline-none"
+                  placeholder="Tenant 검색"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
             </div>
           </div>
-        ) : (
-          <div className="flex flex-col gap-5 lg:gap-6">
-            <h1 className="flex items-center gap-2 text-[18px] font-extrabold">
-              <Building2 className="h-5 w-5 text-primary-500" />
-              리소스 할당 현황
-            </h1>
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-3 lg:gap-6">
-              <div className="rounded-[10px] border border-gray-200 bg-white p-5 text-left shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] lg:rounded-[12px] lg:p-6 lg:shadow-[0_10px_30px_-18px_rgba(15,23,42,0.18)]">
-                <div className="mb-2 text-sm font-bold text-gray-500">데이터센터 전체 노드</div>
-                <div className="mt-1 font-mono text-[26px] font-extrabold tracking-tight text-gray-900">{totalNodes}대</div>
-                <div className="mt-2 text-[12px] font-semibold text-gray-400">Total Infrastructure Capacity</div>
-              </div>
-              <div className="rounded-[10px] border border-gray-200 bg-white p-5 text-left shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] lg:rounded-[12px] lg:p-6 lg:shadow-[0_10px_30px_-18px_rgba(15,23,42,0.18)]">
-                <div className="mb-2 text-sm font-bold text-gray-500">Tenant 할당 완료</div>
-                <div className="mt-1 font-mono text-[26px] font-extrabold tracking-tight text-primary-600">{totalAllocated}대</div>
-                <div className="mt-2 text-[12px] font-semibold text-gray-400">Tenant에 지급 완료된 노드 누계</div>
-              </div>
-              <div className="rounded-[10px] border border-gray-200 bg-white p-5 text-left shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] lg:rounded-[12px] lg:p-6 lg:shadow-[0_10px_30px_-18px_rgba(15,23,42,0.18)]">
-                <div className="mb-2 text-sm font-bold text-gray-500">미할당 공용 풀</div>
-                <div className="mt-1 font-mono text-[26px] font-extrabold tracking-tight text-amber-500">{totalNodes - totalAllocated}대</div>
-                <div className="mt-2 text-[12px] font-semibold text-gray-400">추가 할당이 가능한 유휴 자원</div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
 
-      <div className="min-h-0 flex-1 overflow-hidden rounded-[10px] border border-gray-200 bg-white shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] lg:rounded-[12px] lg:shadow-[0_10px_30px_-18px_rgba(15,23,42,0.18)]">
-        <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50/50 p-5">
-          <h3 className="flex items-center gap-1.5 text-[14px] font-extrabold text-gray-900">
-            {selectedTenant ? <Package className="text-emerald-500" size={16} /> : <Server className="text-gray-600" size={16} />}
-            {selectedTenant ? 'Subtenant(프로젝트) 하위 분배 테이블' : '전체 Tenant 배정 테이블'}
-          </h3>
-        </div>
+          <RangeModal
+            confirmLabel="배정 실행"
+            isOpen={Boolean(tenantModalTarget)}
+            nodeChoices={tenantAvailableNodes}
+            onClose={() => setTenantModalTarget(null)}
+            onSubmit={async ({ startNodeId, endNodeId }) => {
+              setSaving(true);
+              try {
+                const nodeIds = getRangeNodeIds(tenantAvailableNodes, startNodeId, endNodeId);
+                await allocateNodes(nodeIds, tenantModalTarget!.id);
+                await loadData();
+                setTenantModalTarget(null);
+              } finally { setSaving(false); }
+            }}
+            saving={saving}
+            title={`${tenantModalTarget?.name} - 인스턴스 할당`}
+          />
 
-        <div className="h-full overflow-x-auto overflow-y-auto">
-          {selectedTenant ? (
-            <table className="w-full min-w-[1080px] text-left">
-              <thead className="hidden md:table-header-group">
-                <tr className="border-b border-gray-200 bg-[#FAFAFA]">
-                  <th className="min-w-[120px] px-6 py-[12px] text-[12px] font-extrabold text-gray-500 whitespace-nowrap">Subtenant 명</th>
-                  <th className="min-w-[80px] px-6 py-[12px] text-[12px] font-extrabold text-gray-500 text-center whitespace-nowrap">분배 수량 (대)</th>
-                  <th className="min-w-[160px] px-6 py-[12px] text-[12px] font-extrabold text-gray-500 whitespace-nowrap">인스턴스 구간 내역</th>
-                  <th className="min-w-[120px] px-6 py-[12px] text-[12px] font-extrabold text-gray-500 whitespace-nowrap">비율 (Tenant 대비)</th>
-                  <th className="min-w-[120px] px-6 py-[12px] text-[12px] font-extrabold text-gray-500 text-right whitespace-nowrap">분배 관리</th>
-                </tr>
-              </thead>
-              <tbody className="flex flex-col gap-4 p-4 md:table-row-group md:p-0">
-                {(tenantDetail?.subtenants.length ?? 0) === 0 ? (
-                  <tr className="md:table-row">
-                    <td className="border-b-0 py-12 text-center text-[13px] font-medium text-gray-400 md:table-cell" colSpan={5}>
-                      등록된 Subtenant(프로젝트)가 없습니다.
-                    </td>
-                  </tr>
-                ) : (
-                  tenantDetail?.subtenants.map((subtenant) => (
-                    <tr
-                      key={subtenant.id}
-                      className="group flex flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-colors hover:bg-gray-50/50 md:table-row md:rounded-none md:border-0 md:border-b md:border-gray-100 md:p-0 md:shadow-none"
-                    >
-                      <td className="mb-3 border-b border-gray-50 px-0 py-1 pb-2 text-[15px] font-bold text-gray-800 md:mb-0 md:border-0 md:px-6 md:py-[14px] md:pb-[14px] md:text-[13px]">
-                        <span className="mb-0.5 block text-[10px] font-normal text-gray-400 md:hidden">Subtenant 명</span>
-                        {subtenant.name}
-                      </td>
-                      <td className="px-0 py-1 text-left font-mono text-[13px] md:px-6 md:text-center">
-                        <span className="mb-0.5 block text-[10px] font-normal text-gray-500 md:hidden">분배 수량 (대)</span>
-                        {subtenant.count > 0 ? (
-                          <span className="rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-bold text-emerald-700 md:inline-block">
-                            {subtenant.count}대
-                          </span>
-                        ) : (
-                          <span className="rounded border border-gray-200 bg-gray-100 px-2 py-0.5 font-bold text-gray-400 md:inline-block">미분배</span>
-                        )}
-                      </td>
-                      <td className="px-0 py-1 font-mono text-[12px] font-medium text-gray-500 md:px-6">
-                        <span className="mb-0.5 block text-[10px] font-normal text-gray-500 md:hidden">인스턴스 구간 내역</span>
-                        {subtenant.rangeText}
-                      </td>
-                      <td className="px-0 py-1 md:px-6">
-                        <span className="mb-0.5 block text-[10px] font-normal text-gray-500 md:hidden">비율 (Tenant 대비)</span>
-                        <div className="flex items-center gap-2">
-                          <div className="h-1.5 w-24 shrink-0 overflow-hidden rounded-full bg-gray-100">
-                            <div className="h-full rounded-full bg-emerald-400" style={{ width: `${subtenant.usageRatio}%` }} />
-                          </div>
-                          <span className="w-8 font-mono text-[11px] font-bold text-gray-500">{Math.round(subtenant.usageRatio)}%</span>
-                        </div>
-                      </td>
-                      <td className="mt-2 px-0 py-2 text-right md:mt-0 md:px-6">
-                        <div className="flex justify-end gap-2">
-                          {canManageSubtenant ? (
-                            <button
-                              className="rounded border border-gray-200 bg-white px-3 py-2 text-[12px] font-bold text-gray-600 shadow-sm outline-none hover:text-gray-900 whitespace-nowrap md:py-1.5"
-                              onClick={async () => {
-                                if (!tenantDetail) {
-                                  return;
-                                }
+          <RangeModal
+            confirmLabel="분배 실행"
+            isOpen={Boolean(subtenantModalTarget)}
+            nodeChoices={subtenantAvailableNodes}
+            onClose={() => setSubtenantModalTarget(null)}
+            onSubmit={async ({ startNodeId, endNodeId }) => {
+              setSaving(true);
+              try {
+                const nodeIds = getRangeNodeIds(subtenantAvailableNodes, startNodeId, endNodeId);
+                await allocateNodes(nodeIds, subtenantModalTarget!.tenantId, subtenantModalTarget!.id);
+                await loadData();
+                setSubtenantModalTarget(null);
+              } finally { setSaving(false); }
+            }}
+            saving={saving}
+            title={`${subtenantModalTarget?.name} - 리소스 분배`}
+            tone="emerald"
+          />
 
-                                await fetchTenantPoolNodes(tenantDetail.id);
-                                setSubtenantModalTarget(subtenant);
-                              }}
-                              type="button"
-                            >
-                              분배
-                            </button>
-                          ) : null}
-                          {canManageSubtenant && subtenant.allocationIds.length > 0 ? (
-                            <button
-                              className="rounded border border-rose-200 bg-white px-3 py-2 text-[12px] font-bold text-rose-600 shadow-sm outline-none hover:bg-rose-50 whitespace-nowrap md:py-1.5"
-                              onClick={() => {
-                                setSubtenantReclaimTarget(subtenant);
-                              }}
-                              type="button"
-                            >
-                              회수
-                            </button>
-                          ) : null}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+          <ReclaimModal
+            allocations={tenantDetail?.allocations || []}
+            isOpen={Boolean(tenantReclaimTarget)}
+            onClose={() => setTenantReclaimTarget(null)}
+            onSubmitAll={async () => {
+              setSaving(true);
+              try {
+                await reclaimManyTenantAllocations(tenantDetail!.allocations.map(a => a.id));
+                await loadData();
+                setTenantReclaimTarget(null);
+              } finally { setSaving(false); }
+            }}
+            onSubmitSelected={async (ids) => {
+              setSaving(true);
+              try {
+                await reclaimManyTenantAllocations(ids);
+                await loadData();
+                setTenantReclaimTarget(null);
+              } finally { setSaving(false); }
+            }}
+            saving={saving}
+            title={`${tenantReclaimTarget?.name} - 할당 리소스 회수`}
+          />
+
+          <ReclaimModal
+            allocations={allocations.filter(a => a.subtenant_id === subtenantReclaimTarget?.id)}
+            isOpen={Boolean(subtenantReclaimTarget)}
+            onClose={() => setSubtenantReclaimTarget(null)}
+            onSubmitAll={async () => {
+              setSaving(true);
+              try {
+                const targets = allocations.filter(a => a.subtenant_id === subtenantReclaimTarget!.id);
+                await reclaimManyAllocations(targets.map(a => a.id));
+                await loadData();
+                setSubtenantReclaimTarget(null);
+              } finally { setSaving(false); }
+            }}
+            onSubmitSelected={async (ids) => {
+              setSaving(true);
+              try {
+                await reclaimManyAllocations(ids);
+                await loadData();
+                setSubtenantReclaimTarget(null);
+              } finally { setSaving(false); }
+            }}
+            saving={saving}
+            title={`${subtenantReclaimTarget?.name} - 분배 리소스 회수`}
+          />
+
+          {loading ? (
+            <div className="flex h-[400px] items-center justify-center text-sm text-gray-400 italic">로딩 중...</div>
+          ) : error ? (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>
           ) : (
-            <table className="w-full min-w-[1080px] text-left">
-              <thead className="hidden md:table-header-group">
-                <tr className="border-b border-gray-200 bg-[#FAFAFA]">
-                  <th className="min-w-[120px] px-6 py-[12px] text-[12px] font-extrabold text-gray-500 whitespace-nowrap">Tenant 명</th>
-                  <th className="min-w-[80px] px-6 py-[12px] text-[12px] font-extrabold text-gray-500 text-center whitespace-nowrap">계약 대수</th>
-                  <th className="min-w-[80px] px-6 py-[12px] text-[12px] font-extrabold text-gray-500 text-center whitespace-nowrap">현재 할당 대수</th>
-                  <th className="min-w-[160px] px-6 py-[12px] text-[12px] font-extrabold text-gray-500 whitespace-nowrap">인스턴스 구간 내역</th>
-                  <th className="min-w-[120px] px-6 py-[12px] text-[12px] font-extrabold text-gray-500 text-right whitespace-nowrap">관리 액션</th>
-                </tr>
-              </thead>
-              <tbody className="flex flex-col gap-4 p-4 md:table-row-group md:p-0">
-                {overviewRows.map((tenant, index) => (
-                  <tr
-                    key={tenant.id}
-                    className="flex flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-colors hover:bg-gray-50/50 md:table-row md:rounded-none md:border-0 md:border-b md:border-gray-100 md:p-0 md:shadow-none"
-                  >
-                    <td
-                      className="mb-3 cursor-pointer border-b border-gray-50 px-0 py-1 pb-2 text-[15px] font-bold text-primary-600 hover:underline md:mb-0 md:border-0 md:px-6 md:py-[14px] md:pb-[14px] md:text-[14px] md:text-gray-900"
-                      onClick={() => setSelectedTenantIndex(index + 1)}
-                    >
-                      <span className="mb-0.5 block text-[10px] font-normal text-gray-400 md:hidden">Tenant 명</span>
-                      {tenant.name}
-                    </td>
-                    <td className="px-0 py-1 font-mono text-[13px] font-bold text-gray-600 md:px-6 md:text-center">
-                      <span className="mb-0.5 block text-[10px] font-normal text-gray-500 md:hidden">계약 대수</span>
-                      {tenant.contractCount}대
-                    </td>
-                    <td className="px-0 py-1 font-mono text-[13px] md:px-6 md:text-center">
-                      <span className="mb-0.5 block text-[10px] font-normal text-gray-500 md:hidden">현재 할당 대수</span>
-                      {tenant.assignedCount > 0 ? (
-                        <span className="rounded border border-primary-200 bg-primary-50 px-2 py-0.5 font-bold text-primary-700 md:inline-block">
-                          {tenant.assignedCount}대
-                        </span>
-                      ) : (
-                        <span className="rounded border border-gray-200 bg-gray-100 px-2 py-0.5 font-bold text-gray-400 md:inline-block">0대</span>
-                      )}
-                    </td>
-                    <td className="px-0 py-1 font-mono text-[12px] font-medium text-gray-500 md:px-6">
-                      <span className="mb-0.5 block text-[10px] font-normal text-gray-500 md:hidden">인스턴스 구간 내역</span>
-                      {tenant.rangeText}
-                    </td>
-                    <td className="mt-2 px-0 py-2 text-right md:mt-0 md:px-6">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          className="rounded border border-gray-200 bg-white px-3 py-2 text-[12px] font-bold text-gray-600 shadow-sm outline-none hover:text-gray-900 whitespace-nowrap md:py-1.5"
-                          onClick={() => setSelectedTenantIndex(index + 1)}
-                          type="button"
-                        >
-                          상세 보기
-                        </button>
-                        {isAdmin ? (
-                          <button
-                            className="rounded border border-gray-200 bg-white px-3 py-2 text-[12px] font-bold text-gray-600 shadow-sm outline-none hover:text-gray-900 whitespace-nowrap md:py-1.5"
-                            onClick={async () => {
-                              await fetchGlobalAvailableNodes();
-                              setSelectedTenantIndex(index + 1);
-                              setTenantModalTarget(tenant);
-                            }}
-                            type="button"
-                          >
-                            할당 관리
-                          </button>
-                        ) : null}
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                {selectedTenant ? (
+                  <>
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all hover:shadow-md">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                          <Package size={16} className="text-blue-500" />
+                        </div>
+                        <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">계약 수량</span>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      <p className="text-2xl font-black text-gray-900 tabular-nums">{selectedTenant.contractCount}<span className="text-sm ml-1 text-gray-400">대</span></p>
+                      <p className="text-xs text-gray-400 mt-1">데이터센터 → Tenant 배정 목표</p>
+                    </div>
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all hover:shadow-md">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+                          <Cpu size={16} className="text-emerald-500" />
+                        </div>
+                        <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">분배 완료</span>
+                      </div>
+                      <p className="text-2xl font-black text-emerald-600 tabular-nums">{tenantDetail?.distributedCount ?? 0}<span className="text-sm ml-1 text-gray-400">대</span></p>
+                      <p className="text-xs text-gray-400 mt-1">산하 프로젝트에 지급 완료된 자원</p>
+                    </div>
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all hover:shadow-md">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                          <Server size={16} className="text-amber-500" />
+                        </div>
+                        <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">잔여 Pool</span>
+                      </div>
+                      <p className="text-2xl font-black text-amber-600 tabular-nums">{tenantDetail?.poolCount ?? 0}<span className="text-sm ml-1 text-gray-400">대</span></p>
+                      <p className="text-xs text-gray-400 mt-1">추가 분배 가능한 유휴 자원</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                          <Building2 size={16} className="text-blue-500" />
+                        </div>
+                        <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">전체 인프라</span>
+                      </div>
+                      <p className="text-2xl font-black text-gray-900 tabular-nums">{totalNodes}<span className="text-sm ml-1 text-gray-400">대</span></p>
+                      <p className="text-xs text-gray-400 mt-1">데이터센터 전체 관리 상한</p>
+                    </div>
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                          <Cpu size={16} className="text-blue-500" />
+                        </div>
+                        <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">Tenant 할당</span>
+                      </div>
+                      <p className="text-2xl font-black text-blue-600 tabular-nums">{totalAllocated}<span className="text-sm ml-1 text-gray-400">대</span></p>
+                      <p className="text-xs text-gray-400 mt-1">Tenant에 배분 완료된 누적 자원</p>
+                    </div>
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                          <Server size={16} className="text-amber-500" />
+                        </div>
+                        <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">공용 잔여 풀</span>
+                      </div>
+                      <p className="text-2xl font-black text-amber-600 tabular-nums">{totalNodes - totalAllocated}<span className="text-sm ml-1 text-gray-400">대</span></p>
+                      <p className="text-xs text-gray-400 mt-1">할당 가능한 여유 리소스</p>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {selectedTenant && (
+                <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                      <Building2 size={20} className="text-blue-600" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-black text-gray-900">{selectedTenant.name} 상세</h2>
+                      <div className="flex items-center gap-4 mt-0.5">
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-tighter flex items-center gap-1.5">
+                          <div className="w-1.5 h-1.5 rounded-full bg-blue-500" /> 할당 범위: <span className="text-gray-600 font-mono tracking-normal">{tenantDetail?.tenantRangeText || '없음'}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {isAdmin && (
+                      <button
+                        onClick={async () => { await fetchGlobalAvailableNodes(); setTenantModalTarget(selectedTenant); }}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 rounded-lg text-xs font-black uppercase tracking-wider text-white shadow-sm hover:bg-blue-700 transition-all active:scale-[0.98]"
+                      >
+                        <Server size={14} /> 할당 추가
+                      </button>
+                    )}
+                    {isAdmin && (tenantDetail?.allocations.length || 0) > 0 && (
+                      <button
+                        onClick={() => setTenantReclaimTarget(selectedTenant)}
+                        className="inline-flex items-center gap-2 px-4 py-2 border border-red-200 rounded-lg text-xs font-black uppercase tracking-wider text-red-600 hover:bg-red-50 transition-all"
+                      >
+                        <Trash2 size={14} /> 자원 회수
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/30 flex justify-between items-center">
+                  <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                    {selectedTenant ? <Package size={16} className="text-blue-500" /> : <Server size={16} className="text-gray-500" />}
+                    {selectedTenant ? 'Subtenant 배분 현황' : 'Tenant별 할당 현황'}
+                  </h3>
+                  {selectedTenant && (
+                     <div className="px-3 py-1 rounded-full bg-amber-50 border border-amber-100 text-[10px] font-black text-amber-700 uppercase">
+                       Tenant Pool: {tenantDetail?.poolCount}대 ( {tenantDetail?.poolRangeText} )
+                     </div>
+                  )}
+                </div>
+                <div className="overflow-x-auto w-full">
+                   <div className="md:hidden space-y-3 p-4 bg-gray-50/50">
+                      {selectedTenant ? (
+                        (tenantDetail?.subtenants.length || 0) === 0 ? (
+                          <div className="py-12 text-center text-sm text-gray-400 italic">등록된 하위 프로젝트가 없습니다.</div>
+                        ) : (
+                          tenantDetail?.subtenants.map(sub => (
+                            <div key={sub.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-4">
+                              <div className="flex justify-between items-start">
+                                <p className="text-sm font-black text-gray-900">{sub.name}</p>
+                                {sub.count > 0 ? (
+                                  <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black border border-emerald-100">{sub.count}대</span>
+                                ) : (
+                                  <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-400 text-[10px] font-black tracking-tight uppercase">0 Node</span>
+                                )}
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">인스턴스 구간</p>
+                                <p className="font-mono text-xs text-gray-600">{sub.rangeText || '-'}</p>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2 flex-1">
+                                  <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden max-w-[100px]">
+                                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${sub.usageRatio}%` }} />
+                                  </div>
+                                  <span className="text-[10px] font-black text-gray-400 tabular-nums">{Math.round(sub.usageRatio)}%</span>
+                                </div>
+                                <div className="flex gap-1">
+                                  {canManageSubtenant && (
+                                    <button onClick={async () => { await fetchTenantPoolNodes(tenantDetail!.id); setSubtenantModalTarget(sub); }} className="px-3 py-1.5 rounded-lg text-[10px] font-black text-blue-600 bg-blue-50">분배</button>
+                                  )}
+                                  {canManageSubtenant && sub.count > 0 && (
+                                    <button onClick={() => setSubtenantReclaimTarget(sub)} className="px-3 py-1.5 rounded-lg text-[10px] font-black text-red-600 bg-red-50">회수</button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        )
+                      ) : (
+                        overviewRows.map((tenant, idx) => (
+                          <div key={tenant.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-4" onClick={() => setSelectedTenantIndex(idx + 1)}>
+                            <div className="flex justify-between items-start">
+                              <p className="text-sm font-black text-gray-900">{tenant.name}</p>
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${tenant.assignedCount >= tenant.contractCount ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-amber-50 text-amber-700 border-amber-100'}`}>{tenant.assignedCount >= tenant.contractCount ? 'Fulfilled' : 'Pending'}</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">할당/계약</p>
+                                <p className="text-xs font-bold text-gray-900">{tenant.assignedCount} / {tenant.contractCount}대</p>
+                              </div>
+                              <div>
+                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">인스턴스 구간</p>
+                                <p className="font-mono text-[10px] text-gray-500 overflow-hidden text-ellipsis whitespace-nowrap">{tenant.rangeText || '-'}</p>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <button onClick={(e) => { e.stopPropagation(); setSelectedTenantIndex(idx + 1); }} className="flex-1 py-2 bg-gray-50 rounded-lg text-[10px] font-black text-gray-600">DETAIL</button>
+                              {isAdmin && (
+                                <button onClick={async (e) => { e.stopPropagation(); await fetchGlobalAvailableNodes(); setSelectedTenantIndex(idx+1); setTenantModalTarget(tenant); }} className="flex-1 py-2 bg-blue-50 rounded-lg text-[10px] font-black text-blue-600">MANAGE</button>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                   </div>
+                   <table className="hidden md:table w-full">
+                      <thead>
+                        <tr className="border-b border-gray-200">
+                          <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-left bg-gray-50/50">
+                            {selectedTenant ? 'Subtenant 명' : 'Tenant 명'}
+                          </th>
+                          <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-center bg-gray-50/50">
+                            {selectedTenant ? '분계 (대)' : '계약/할당'}
+                          </th>
+                          <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-left bg-gray-50/50">인스턴스 구간</th>
+                          {selectedTenant ? (
+                            <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-left bg-gray-50/50">비율</th>
+                          ) : (
+                            <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-left bg-gray-50/50">상태</th>
+                          )}
+                          <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-right bg-gray-50/50">관리</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {selectedTenant ? (
+                          (tenantDetail?.subtenants.length || 0) === 0 ? (
+                            <tr><td colSpan={5} className="py-12 text-center text-sm text-gray-400 italic">등록된 하위 프로젝트가 없습니다.</td></tr>
+                          ) : (
+                            tenantDetail?.subtenants.map(sub => (
+                              <tr key={sub.id} className="hover:bg-gray-50/50 transition-colors">
+                                <td className="px-6 py-4 font-bold text-gray-900 text-sm">{sub.name}</td>
+                                <td className="px-6 text-center tabular-nums">
+                                  {sub.count > 0 ? (
+                                    <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-100">{sub.count}대</span>
+                                  ) : (
+                                    <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-400 text-xs font-bold">0대</span>
+                                  )}
+                                </td>
+                                <td className="px-6 font-mono text-[11px] text-gray-500">{sub.rangeText || '-'}</td>
+                                <td className="px-6 py-4">
+                                  <div className="flex items-center gap-3">
+                                    <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden max-w-[100px]">
+                                      <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${sub.usageRatio}%` }} />
+                                    </div>
+                                    <span className="text-[10px] font-black text-gray-400 tabular-nums">{Math.round(sub.usageRatio)}%</span>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-3 text-right">
+                                  <div className="flex justify-end gap-2">
+                                    {canManageSubtenant && (
+                                      <button 
+                                        onClick={async () => { await fetchTenantPoolNodes(tenantDetail!.id); setSubtenantModalTarget(sub); }} 
+                                        className="px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider text-blue-600 hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all font-black"
+                                      >
+                                        분배
+                                      </button>
+                                    )}
+                                    {canManageSubtenant && sub.count > 0 && (
+                                      <button 
+                                        onClick={() => setSubtenantReclaimTarget(sub)}
+                                        className="px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider text-red-600 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all font-black"
+                                      >
+                                        회수
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          )
+                        ) : (
+                          overviewRows.map((tenant, idx) => (
+                            <tr key={tenant.id} className="hover:bg-gray-50/50 transition-colors">
+                              <td 
+                                onClick={() => setSelectedTenantIndex(idx + 1)}
+                                className="px-6 py-4 font-bold text-gray-900 text-sm hover:text-blue-600 cursor-pointer"
+                              >
+                                {tenant.name}
+                              </td>
+                              <td className="px-6 text-center tabular-nums">
+                                <div className="flex flex-col">
+                                  <span className="text-xs font-bold text-gray-900">{tenant.assignedCount}대</span>
+                                  <span className="text-[10px] text-gray-400">계약: {tenant.contractCount}대</span>
+                                </div>
+                              </td>
+                              <td className="px-6 font-mono text-[11px] text-gray-500">{tenant.rangeText || '-'}</td>
+                              <td className="px-6">
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${
+                                  tenant.assignedCount >= tenant.contractCount 
+                                    ? 'bg-blue-50 text-blue-700 border-blue-100' 
+                                    : 'bg-amber-50 text-amber-700 border-amber-100'
+                                }`}>
+                                  {tenant.assignedCount >= tenant.contractCount ? 'Fulfilled' : 'Pending'}
+                                </span>
+                              </td>
+                              <td className="px-6 py-3 text-right">
+                                <div className="flex justify-end gap-2">
+                                  <button 
+                                    onClick={() => setSelectedTenantIndex(idx + 1)}
+                                    className="px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider text-gray-600 hover:bg-gray-100 transition-all font-black"
+                                  >
+                                    Detail
+                                  </button>
+                                  {isAdmin && (
+                                    <button 
+                                      onClick={async () => { await fetchGlobalAvailableNodes(); setSelectedTenantIndex(idx + 1); setTenantModalTarget(tenant); }}
+                                      className="px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider text-blue-600 hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all font-black"
+                                    >
+                                      Manage
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                   </table>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>
-    </>
-  );
-
-  return (
-    <div className="flex h-auto min-h-0 flex-col gap-6 pb-2 text-gray-900 md:flex-row md:h-[calc(100vh-112px)]">
-      <CompanyListPanel companies={companies} activeIndex={selectedTenantIndex} onCompanyClick={setSelectedTenantIndex} />
-
-      <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
-        {content}
-      </div>
-
-      <RangeModal
-        confirmLabel="Tenant 노드 할당"
-        isOpen={Boolean(tenantModalTarget)}
-        nodeChoices={tenantAvailableNodes}
-        onClose={() => setTenantModalTarget(null)}
-        onSubmit={async ({ startNodeId, endNodeId }) => {
-          if (!tenantModalTarget) {
-            throw new Error('Tenant가 선택되지 않았습니다.');
-          }
-
-          const nodeIds = getRangeNodeIds(tenantAvailableNodes, startNodeId, endNodeId);
-
-          setSaving(true);
-          try {
-            await allocateNodes(nodeIds, tenantModalTarget.id);
-            setTenantModalTarget(null);
-            await loadData();
-          } finally {
-            setSaving(false);
-          }
-        }}
-        saving={saving}
-        title={tenantModalTarget ? `${tenantModalTarget.name} Tenant 노드 할당` : 'Tenant 노드 할당'}
-      />
-
-      <RangeModal
-        confirmLabel="Subtenant 노드 분배"
-        isOpen={Boolean(subtenantModalTarget)}
-        nodeChoices={subtenantAvailableNodes}
-        onClose={() => setSubtenantModalTarget(null)}
-        onSubmit={async ({ startNodeId, endNodeId }) => {
-          if (!selectedTenant || !subtenantModalTarget) {
-            throw new Error('Subtenant가 선택되지 않았습니다.');
-          }
-
-          const nodeIds = getRangeNodeIds(subtenantAvailableNodes, startNodeId, endNodeId);
-
-          setSaving(true);
-          try {
-            await allocateNodes(nodeIds, selectedTenant.id, subtenantModalTarget.id);
-            setSubtenantModalTarget(null);
-            await loadData();
-          } finally {
-            setSaving(false);
-          }
-        }}
-        saving={saving}
-        title={subtenantModalTarget ? `${subtenantModalTarget.name} 노드 분배` : 'Subtenant 노드 분배'}
-        tone="emerald"
-      />
-
-      {tenantReclaimTarget ? (
-      <ReclaimModal
-        key={`tenant-${tenantReclaimTarget.id}`}
-        allocations={
-          allocations.filter((allocation) => allocation.tenant_id === tenantReclaimTarget.id)
-        }
-        isOpen
-        onClose={() => setTenantReclaimTarget(null)}
-        onSubmitAll={async () => {
-          if (!tenantReclaimTarget) {
-            throw new Error('Tenant가 선택되지 않았습니다.');
-          }
-
-          const targetAllocations = allocations.filter((allocation) => allocation.tenant_id === tenantReclaimTarget.id);
-
-          if (!window.confirm(`${tenantReclaimTarget.name}의 모든 노드를 회수하시겠습니까?`)) {
-            return;
-          }
-
-          setSaving(true);
-          try {
-            await reclaimManyTenantAllocations(targetAllocations.map((allocation) => allocation.id));
-            setTenantReclaimTarget(null);
-            await loadData();
-          } finally {
-            setSaving(false);
-          }
-        }}
-        onSubmitSelected={async (allocationIds) => {
-          setSaving(true);
-          try {
-            await reclaimManyTenantAllocations(allocationIds);
-            setTenantReclaimTarget(null);
-            await loadData();
-          } finally {
-            setSaving(false);
-          }
-        }}
-        saving={saving}
-        title={tenantReclaimTarget ? `${tenantReclaimTarget.name} Tenant 노드 회수` : 'Tenant 노드 회수'}
-      />
-      ) : null}
-
-      {subtenantReclaimTarget ? (
-      <ReclaimModal
-        key={`subtenant-${subtenantReclaimTarget.id}`}
-        allocations={
-          allocations.filter((allocation) => allocation.subtenant_id === subtenantReclaimTarget.id)
-        }
-        isOpen
-        onClose={() => setSubtenantReclaimTarget(null)}
-        onSubmitAll={async () => {
-          if (!subtenantReclaimTarget) {
-            throw new Error('Subtenant가 선택되지 않았습니다.');
-          }
-
-          const targetAllocations = allocations.filter((allocation) => allocation.subtenant_id === subtenantReclaimTarget.id);
-
-          if (!window.confirm(`${subtenantReclaimTarget.name}의 모든 노드를 회수하시겠습니까?`)) {
-            return;
-          }
-
-          setSaving(true);
-          try {
-            await reclaimManyAllocations(targetAllocations.map((allocation) => allocation.id));
-            setSubtenantReclaimTarget(null);
-            await loadData();
-          } finally {
-            setSaving(false);
-          }
-        }}
-        onSubmitSelected={async (allocationIds) => {
-          setSaving(true);
-          try {
-            await reclaimManyAllocations(allocationIds);
-            setSubtenantReclaimTarget(null);
-            await loadData();
-          } finally {
-            setSaving(false);
-          }
-        }}
-        saving={saving}
-        title={subtenantReclaimTarget ? `${subtenantReclaimTarget.name} 노드 회수` : 'Subtenant 노드 회수'}
-      />
-      ) : null}
     </div>
   );
 }

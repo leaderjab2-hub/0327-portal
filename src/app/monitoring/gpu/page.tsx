@@ -272,27 +272,29 @@ export default function GPUMonitoring() {
   }, [metricsMap, selectedInstances]);
 
   return (
-    <div className="flex flex-col items-start gap-6 md:flex-row">
-      <div className="flex w-full flex-col overflow-hidden rounded-[10px] border border-gray-200 bg-white md:sticky md:top-0 md:h-[calc(100vh-108px)] md:w-[228px] md:shrink-0">
+    <div className="flex h-full flex-col items-start gap-6 md:flex-row overflow-hidden">
+      <div className="flex w-full flex-col overflow-hidden rounded-xl border border-gray-200 bg-white md:sticky md:top-0 md:h-full md:w-60 md:shrink-0 shadow-sm">
         <div className="flex flex-col gap-3 border-b border-gray-100 p-4">
-          <select
-            className="h-[34px] w-full rounded-[7px] border border-gray-200 bg-white px-3 text-[13px] focus:border-primary-500 focus:outline-none"
-            value={selectedTenantId}
-            onChange={(event) => {
-              setSelectedTenantId(event.target.value);
-              setSelectedSubtenantId("all");
-              setSelectedInstances([]);
-            }}
-          >
-            {tenantOptions.map((tenant) => (
-              <option key={tenant.id} value={tenant.id}>
-                {tenant.name}
-              </option>
-            ))}
-          </select>
+          <div className="flex gap-2">
+            <select
+              className="h-[38px] flex-1 min-w-0 rounded-lg border border-gray-200 bg-white px-3 text-sm font-bold text-gray-700 focus:border-blue-500 focus:outline-none transition-colors"
+              value={selectedTenantId}
+              onChange={(event) => {
+                setSelectedTenantId(event.target.value);
+                setSelectedSubtenantId("all");
+                setSelectedInstances([]);
+              }}
+            >
+              {tenantOptions.map((tenant) => (
+                <option key={tenant.id} value={tenant.id}>
+                  {tenant.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <select
-            className="h-[34px] w-full rounded-[7px] border border-gray-200 bg-white px-3 text-[13px] focus:border-primary-500 focus:outline-none"
+            className="h-[38px] w-full rounded-lg border border-gray-200 bg-white px-3 text-sm font-bold text-gray-700 focus:border-blue-500 focus:outline-none transition-colors"
             value={selectedSubtenantId}
             onChange={(event) => {
               setSelectedSubtenantId(event.target.value);
@@ -307,12 +309,12 @@ export default function GPUMonitoring() {
             ))}
           </select>
 
-          <div className="mt-1 flex justify-end gap-2">
-            <button className="flex h-[34px] w-[34px] items-center justify-center rounded-[7px] border border-gray-200 text-gray-600 hover:bg-gray-50">
-              <RotateCcw size={14} />
+          <div className="flex md:mt-1 gap-2">
+            <button className="flex h-[38px] w-[38px] items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 transition-colors">
+              <RotateCcw size={16} />
             </button>
-            <button className="h-[34px] flex-1 rounded-[7px] bg-primary-500 text-[13px] font-semibold text-white hover:bg-primary-600">
-              검색
+            <button className="h-[38px] flex-1 rounded-lg bg-blue-600 text-[13px] font-black uppercase tracking-wider text-white hover:bg-blue-700 shadow-sm transition-all active:scale-[0.98]">
+              필터 적용
             </button>
           </div>
         </div>
@@ -375,43 +377,45 @@ export default function GPUMonitoring() {
         <div className="border-b border-gray-200 bg-white">
           <div className="flex border-b border-gray-100 md:border-b-0">
             <button
-              className={`flex-1 px-5 py-4 text-[13px] font-bold uppercase tracking-tight ${
+              className={`flex-1 px-5 py-4 text-[13px] font-black uppercase tracking-widest transition-all ${
                 activeTab === "gpu"
-                  ? "border-b-[3px] border-primary-500 text-primary-600"
-                  : "text-gray-500"
+                  ? "border-b-[3px] border-blue-600 text-blue-600 bg-blue-50/30"
+                  : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
               }`}
               onClick={() => setActiveTab("gpu")}
               type="button"
             >
-              GPU 모니터링
+              GPU Metrics
             </button>
             <button
-              className={`flex-1 px-5 py-4 text-[13px] font-bold uppercase tracking-tight ${
+              className={`flex-1 px-5 py-4 text-[13px] font-black uppercase tracking-widest transition-all ${
                 activeTab === "cpu"
-                  ? "border-b-[3px] border-primary-500 text-primary-600"
-                  : "text-gray-500"
+                  ? "border-b-[3px] border-blue-600 text-blue-600 bg-blue-50/30"
+                  : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
               }`}
               onClick={() => setActiveTab("cpu")}
               type="button"
             >
-              CPU 모니터링
+              CPU Metrics
             </button>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 p-3 md:justify-end md:pr-4">
-            <div className="flex h-[34px] overflow-hidden rounded-[8px] border border-gray-200 bg-gray-50 text-[11px] shadow-sm">
-              <button className="border-r border-gray-100 px-3 py-1 font-bold text-gray-500">1D</button>
-              <button className="border-r border-gray-100 px-3 py-1 font-bold text-gray-500">3D</button>
-              <button className="border-r border-gray-100 bg-white px-3 py-1 font-black text-primary-600">1W</button>
-              <button className="px-3 py-1 font-bold text-gray-500">1M</button>
+          <div className="flex flex-wrap items-center justify-between gap-2 p-3 md:justify-end md:pr-4">
+            <div className="flex h-[34px] overflow-hidden rounded-lg border border-gray-200 bg-gray-50 text-[10px] font-black shadow-sm">
+              <button className="border-r border-gray-200 px-3 py-1 text-gray-400 uppercase">1D</button>
+              <button className="border-r border-gray-200 px-3 py-1 text-gray-400 uppercase">3D</button>
+              <button className="border-r border-gray-200 bg-white px-3 py-1 text-blue-600 uppercase">1W</button>
+              <button className="px-3 py-1 text-gray-400 uppercase">1M</button>
             </div>
-            <div className="flex h-[34px] items-center gap-2 rounded-[8px] border border-gray-200 bg-white px-3 shadow-sm">
-              <Calendar className="text-gray-400" size={13} />
-              <span className="truncate text-[11px] font-mono font-bold text-gray-600">최근 30 포인트</span>
+            <div className="flex items-center gap-2">
+              <div className="flex h-[34px] items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 shadow-sm">
+                <Calendar className="text-gray-400" size={13} />
+                <span className="truncate text-[10px] font-black uppercase tracking-tight text-gray-500">Last 30 Points</span>
+              </div>
+              <button className="flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-gray-200 text-gray-400 transition hover:rotate-180 hover:bg-gray-50 shadow-sm">
+                <RotateCcw size={14} />
+              </button>
             </div>
-            <button className="flex h-[34px] w-[34px] items-center justify-center rounded-[8px] border border-gray-200 text-gray-500 transition hover:rotate-180 hover:bg-gray-50">
-              <RotateCcw size={14} />
-            </button>
           </div>
         </div>
 

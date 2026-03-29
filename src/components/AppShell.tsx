@@ -49,7 +49,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-screen overflow-hidden bg-[#F5F7FB]">
       <Sidebar
         collapsed={isSidebarCollapsed}
         onToggle={() => {
@@ -60,7 +60,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           });
         }}
       />
-      <div className={`flex min-w-0 flex-1 flex-col ${isSidebarCollapsed ? "md:ml-16" : "md:ml-[240px]"}`}>
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <MobileHeader />
         <Topbar />
         <div className="min-w-0 flex-1 overflow-auto bg-[#F9FAFB]">

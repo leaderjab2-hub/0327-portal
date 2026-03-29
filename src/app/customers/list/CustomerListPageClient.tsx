@@ -1,99 +1,35 @@
-'use client';
+"use client";
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Search, MoreVertical, Building2, SearchIcon, UserPlus, Info, ExternalLink, ShieldAlert, Cpu, HardDrive, X } from 'lucide-react';
-import Link from 'next/link';
-
+import { Search, MoreVertical, Building2, SearchIcon, UserPlus, Info, ExternalLink, ShieldAlert, Cpu, HardDrive, X, Users, Briefcase, UserCheck } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import type { MemberRole, UserRole } from '@/types/auth';
-type SubtenantOption = {
-  id: string;
-  name: string;
-  tenantId: string;
-  status: string;
-  products: string[];
-  startDate: string;
-  endDate: string;
-  memberCount: number;
-};
-type TenantOption = {
-  id: string;
-  name: string;
-  subtenants: SubtenantOption[];
-};
-type CustomerMember = {
-  id: string;
-  name: string;
-  email: string;
-  subtenantId: string | null;
-  tenantId: string;
-  role: 'tenant_admin' | 'pm' | 'member';
-  isContractor: boolean;
-  lastLogin: string;
-  subtenant: string | null;
-};
-type ApiMember = {
-  id: string;
-  email: string | null;
-  name: string | null;
-  role: UserRole | null;
-  tenantId: string | null;
-  subtenantId: string | null;
-  memberRole: MemberRole;
-  lastSignIn: string | null;
-};
-type TenantRecord = {
-  id: string;
-  name: string;
-};
-type SubtenantRecord = {
-  id: string;
-  tenant_id: string | null;
-  name: string;
-  status: string | null;
-  products: unknown;
-  start_date: string | null;
-  end_date: string | null;
-  member_count: number | null;
-};
 
-type InviteModalProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  subtenants: SubtenantOption[];
-  tenantId: string | null;
-  currentUserRole: UserRole | null | undefined;
-  onInvite: (input: {
-    email: string;
-    role: 'tenant_admin' | 'subtenant_member';
-    tenantId: string;
-    subtenantId?: string | null;
-    memberRole?: 'pm' | 'member' | null;
-  }) => Promise<void>;
-};
+type SubtenantOption = { id: string; name: string; tenantId: string; status: string; products: string[]; startDate: string; endDate: string; memberCount: number; };
+type TenantOption = { id: string; name: string; subtenants: SubtenantOption[]; };
+type CustomerMember = { id: string; name: string; email: string; subtenantId: string | null; tenantId: string; role: 'tenant_admin' | 'pm' | 'member'; isContractor: boolean; lastLogin: string; subtenant: string | null; };
+type ApiMember = { id: string; email: string | null; name: string | null; role: UserRole | null; tenantId: string | null; subtenantId: string | null; memberRole: MemberRole; lastSignIn: string | null; };
+type TenantRecord = { id: string; name: string; };
+type SubtenantRecord = { id: string; tenant_id: string | null; name: string; status: string | null; products: unknown; start_date: string | null; end_date: string | null; member_count: number | null; };
 
 function buildInitialTenants(tenantRecords: TenantRecord[], subtenantRecords: SubtenantRecord[]): TenantOption[] {
-  return tenantRecords.map((tenantRecord) => ({
-    id: tenantRecord.id,
-    name: tenantRecord.name,
-    subtenants: subtenantRecords
-      .filter((subtenant) => subtenant.tenant_id === tenantRecord.id)
-      .map((subtenant) => ({
-        id: subtenant.id,
-        name: subtenant.name,
-        tenantId: subtenant.tenant_id ?? tenantRecord.id,
-        status: subtenant.status ?? '대기',
-        products: Array.isArray(subtenant.products)
-          ? subtenant.products.filter((item): item is string => typeof item === 'string')
-          : [],
-        startDate: subtenant.start_date ?? '-',
-        endDate: subtenant.end_date ?? '-',
-        memberCount: subtenant.member_count ?? 0,
-      })),
+  return tenantRecords.map((t) => ({
+    id: t.id,
+    name: t.name,
+    subtenants: subtenantRecords.filter((s) => s.tenant_id === t.id).map((s) => ({
+      id: s.id,
+      name: s.name,
+      tenantId: s.tenant_id ?? t.id,
+      status: s.status ?? '대기',
+      products: Array.isArray(s.products) ? s.products.filter((i): i is string => typeof i === 'string') : [],
+      startDate: s.start_date ?? '-',
+      endDate: s.end_date ?? '-',
+      memberCount: s.member_count ?? 0,
+    })),
   }));
 }
 
-function InviteModal({ isOpen, onClose, subtenants, tenantId, currentUserRole, onInvite }: InviteModalProps) {
+function InviteModal({ isOpen, onClose, subtenants, tenantId, currentUserRole, onInvite }: { isOpen: boolean; onClose: () => void; subtenants: SubtenantOption[]; tenantId: string | null; currentUserRole: UserRole | null | undefined; onInvite: (input: any) => Promise<void>; }) {
   const [email, setEmail] = useState('');
   const [roleType, setRoleType] = useState<'tenant_admin' | 'pm' | 'member'>('member');
   const [subtenantId, setSubtenantId] = useState('');
@@ -101,141 +37,47 @@ function InviteModal({ isOpen, onClose, subtenants, tenantId, currentUserRole, o
   const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
-
   const canInviteTenantAdmin = currentUserRole === 'admin';
   const requiresSubtenant = roleType === 'pm' || roleType === 'member';
 
-  const resetAndClose = () => {
-    setEmail('');
-    setRoleType(canInviteTenantAdmin ? 'tenant_admin' : 'member');
-    setSubtenantId('');
-    setError(null);
-    onClose();
-  };
-
-  const handleSubmit = async () => {
-    setError(null);
-
-    if (!tenantId) {
-      setError('Tenant가 선택되지 않았습니다.');
-      return;
+  const handleInvite = async () => {
+    if (!tenantId || !email.trim() || (requiresSubtenant && !subtenantId)) {
+        setError("필수 항목을 입력해 주세요.");
+        return;
     }
-
-    if (!email.trim()) {
-      setError('이메일을 입력해 주세요.');
-      return;
-    }
-
-    if (requiresSubtenant && !subtenantId) {
-      setError('Subtenant를 선택해 주세요.');
-      return;
-    }
-
     setSubmitting(true);
-
     try {
-      if (roleType === 'tenant_admin') {
-        await onInvite({
-          email: email.trim(),
-          role: 'tenant_admin',
-          tenantId,
-        });
-      } else {
-        await onInvite({
-          email: email.trim(),
-          role: 'subtenant_member',
-          tenantId,
-          subtenantId,
-          memberRole: roleType === 'pm' ? 'pm' : 'member',
-        });
-      }
-
-      resetAndClose();
-    } catch (inviteError) {
-      setError(inviteError instanceof Error ? inviteError.message : '초대 발송에 실패했습니다.');
-    } finally {
-      setSubmitting(false);
-    }
+      await onInvite(roleType === 'tenant_admin' ? { email: email.trim(), role: 'tenant_admin', tenantId } : { email: email.trim(), role: 'subtenant_member', tenantId, subtenantId, memberRole: roleType });
+      onClose();
+    } catch (e) { setError("초대 발동 중 오류 발생"); }
+    finally { setSubmitting(false); }
   };
 
   return (
-    <div className="fixed inset-0 z-50 mx-4 flex flex-col items-center justify-center bg-gray-900/50 backdrop-blur-sm">
-      <div className="flex w-full max-w-2xl flex-col overflow-hidden rounded-[14px] bg-white shadow-2xl">
-        <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="text-[16px] font-bold text-gray-900 flex items-center gap-2"><UserPlus size={18} className="text-primary-600"/>구성원 초대</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-900"><X size={20}/></button>
+    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-gray-950/45 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-md overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+          <h2 className="text-xl font-black text-gray-900 tracking-tight flex items-center gap-2 italic"><UserPlus size={20} className="text-blue-600"/> INVITE MEMBER</h2>
+          <button onClick={onClose} className="rounded-full p-2 text-gray-400 hover:bg-gray-100 transición-colors"><X size={20}/></button>
         </div>
-        <div className="p-6 flex flex-col gap-5">
-           <div>
-              <label className="text-sm font-semibold text-gray-700 block mb-1.5">초대할 역할 <span className="text-red-500">*</span></label>
-              <select
-                className="w-full border border-gray-200 rounded-lg p-2.5 text-sm text-gray-800 focus:outline-none focus:border-primary-500"
-                value={roleType}
-                onChange={(event) => {
-                  const nextRole = event.target.value as 'tenant_admin' | 'pm' | 'member';
-                  setRoleType(nextRole);
-                  if (nextRole === 'tenant_admin') {
-                    setSubtenantId('');
-                  }
-                }}
-              >
-                {canInviteTenantAdmin ? <option value="tenant_admin">Tenant Admin</option> : null}
-                <option value="pm">PM</option>
-                <option value="member">멤버</option>
-              </select>
-           </div>
-           <div>
-              <label className="text-sm font-semibold text-gray-700 block mb-1.5">이메일 주소 <span className="text-red-500">*</span></label>
-              <input
-                type="email"
-                placeholder="example@company.com"
-                className="w-full border border-gray-200 rounded-lg p-2.5 text-sm focus:outline-none focus:border-primary-500"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-              />
-           </div>
-           {requiresSubtenant ? (
-             <div>
-                <label className="text-sm font-semibold text-gray-700 block mb-1.5">소속 Subtenant <span className="text-red-500">*</span></label>
-                <select
-                  className="w-full border border-gray-200 rounded-lg p-2.5 text-sm text-gray-800 focus:outline-none focus:border-primary-500"
-                  value={subtenantId}
-                  onChange={(event) => setSubtenantId(event.target.value)}
-                >
-                  <option value="">발령할 프로젝트 선택</option>
-                  {subtenants.map((subtenant) => <option key={subtenant.id} value={subtenant.id}>{subtenant.name}</option>)}
-                </select>
-             </div>
-           ) : null}
-           {error ? <p className="text-[13px] font-medium text-red-600">{error}</p> : null}
+        <div className="p-6 space-y-5 bg-gray-50/50">
+           <div className="space-y-1.5"><span className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Role Type</span><select className="w-full border border-gray-200 rounded-lg h-11 px-3 text-sm font-bold focus:border-blue-500 outline-none" value={roleType} onChange={e => setRoleType(e.target.value as any)}>{canInviteTenantAdmin && <option value="tenant_admin">Tenant Admin</option>}<option value="pm">Project Manager (PM)</option><option value="member">Regular Member</option></select></div>
+           <div className="space-y-1.5"><span className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Email Address</span><input type="email" placeholder="example@company.com" className="w-full border border-gray-200 rounded-lg h-11 px-4 text-sm font-bold focus:border-blue-500 outline-none" value={email} onChange={e => setEmail(e.target.value)} /></div>
+           {requiresSubtenant && <div className="space-y-1.5"><span className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Assign Subtenant</span><select className="w-full border border-gray-200 rounded-lg h-11 px-3 text-sm font-bold focus:border-blue-500 outline-none" value={subtenantId} onChange={e => setSubtenantId(e.target.value)}><option value="">Select Project</option>{subtenants.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>}
+           {error && <p className="text-[11px] font-bold text-red-500 pl-1">! {error}</p>}
         </div>
-        <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-2">
-          <button onClick={resetAndClose} className="px-5 py-2 border border-gray-200 rounded-lg text-sm font-bold text-gray-600 bg-white hover:bg-gray-50">취소</button>
-          <button onClick={handleSubmit} disabled={submitting} className="px-6 py-2 bg-primary-600 rounded-lg text-sm font-bold text-white shadow hover:bg-primary-700 disabled:opacity-60">{submitting ? '발송 중...' : '초대 발송'}</button>
+        <div className="p-4 bg-white border-t border-gray-100 flex justify-end gap-3">
+           <button onClick={onClose} className="px-5 py-2 rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-100 transition-colors">CANCEL</button>
+           <button onClick={handleInvite} disabled={submitting} className="px-6 py-2 bg-blue-600 rounded-lg text-xs font-black text-white shadow-xl shadow-blue-100 hover:bg-black transition-all active:scale-[0.98]">{submitting ? 'INVITING...' : 'SEND INVITATION'}</button>
         </div>
       </div>
     </div>
   );
 }
 
-type CustomerListPageClientProps = {
-  initialTenantRecords?: TenantRecord[];
-  initialSubtenantRecords?: SubtenantRecord[];
-  initialMembers?: ApiMember[];
-  initialMembersTenantId?: string | null;
-};
-
-export default function CustomerLookupPageClient({
-  initialTenantRecords = [],
-  initialSubtenantRecords = [],
-  initialMembers = [],
-  initialMembersTenantId = null,
-}: CustomerListPageClientProps) {
+export default function CustomerLookupPageClient({ initialTenantRecords = [], initialSubtenantRecords = [], initialMembers = [], initialMembersTenantId = null }: { initialTenantRecords?: TenantRecord[]; initialSubtenantRecords?: SubtenantRecord[]; initialMembers?: ApiMember[]; initialMembersTenantId?: string | null; }) {
   const { currentUser, inviteUser } = useAuth();
-  const initialTenants = useMemo(
-    () => buildInitialTenants(initialTenantRecords, initialSubtenantRecords),
-    [initialSubtenantRecords, initialTenantRecords],
-  );
+  const initialTenants = useMemo(() => buildInitialTenants(initialTenantRecords, initialSubtenantRecords), [initialSubtenantRecords, initialTenantRecords]);
   const [activeSelection, setActiveSelection] = useState<string>(initialTenants[0]?.id || 'unassigned');
   const [rightTab, setRightTab] = useState<'subtenant' | 'member'>('subtenant');
   const [isInviteModal, setIsInviteModal] = useState(false);
@@ -252,550 +94,266 @@ export default function CustomerLookupPageClient({
 
   const isUnassigned = activeSelection === 'unassigned';
   const tenant = isUnassigned ? null : tenants.find(t => t.id === activeSelection);
-  
   const currentTab = isUnassigned ? 'member' : rightTab;
+
+  // Sync state with props when they change (primarily for hydration or soft-navigation)
+  useEffect(() => {
+    setTenants(initialTenants);
+  }, [initialTenants]);
+
   const subtenantNameMap = useMemo(() => {
-    return new Map((tenant?.subtenants ?? []).map((subtenant) => [subtenant.id, subtenant.name]));
-  }, [tenant?.subtenants]);
-
-  const loadMembers = async (tenantId: string) => {
-    setMemberLoading(true);
-    setMemberError(null);
-
-    try {
-      const response = await fetch(`/api/members?tenantId=${tenantId}`, {
-        cache: 'no-store',
+    const map = new Map<string, string>();
+    tenants.forEach(t => {
+      t.subtenants.forEach(s => {
+        map.set(s.id, s.name);
       });
-      const payload = (await response.json().catch(() => ({}))) as { data?: ApiMember[]; error?: string };
+    });
+    return map;
+  }, [tenants]);
 
-      if (!response.ok) {
-        throw new Error(payload.error ?? '구성원 목록을 불러오지 못했습니다.');
-      }
-
-      console.log('[customers/list] /api/members response', payload.data ?? []);
-      setMembers(payload.data ?? []);
-    } catch (loadError) {
-      setMemberError(loadError instanceof Error ? loadError.message : '구성원 목록을 불러오지 못했습니다.');
-      setMembers([]);
-    } finally {
-      setMemberLoading(false);
-    }
+  const loadMembers = async (tid: string) => {
+    setMemberLoading(true); setMemberError(null);
+    try {
+      const r = await fetch(`/api/members?tenantId=${tid}`);
+      const p = await r.json();
+      if (!r.ok) throw new Error(p.error || 'Failed');
+      setMembers(p.data || []);
+      setLoadedMembersTenantId(tid);
+    } catch(err) { setMemberError("목록 로드 실패"); setMembers([]); }
+    finally { setMemberLoading(false); }
   };
 
-  useEffect(() => {
-    if (initialTenants.length > 0) {
-      return;
-    }
+  useEffect(() => { 
+    if (!isUnassigned && tenant?.id && tenant.id !== loadedMembersTenantId) {
+      loadMembers(tenant.id); 
+    } 
+  }, [activeSelection, tenant?.id, loadedMembersTenantId, isUnassigned]);
 
-    let active = true;
+  const displayMembers = useMemo(() => {
+    if (isUnassigned) return [];
+    const kw = memberSearch.trim().toLowerCase();
+    return members.map(m => {
+        // Handle both camelCase from API and snake_case from initialProps
+        const sId = m.subtenantId || (m as any).subtenant_id;
+        const tenantId = m.tenantId || (m as any).tenant_id || tenant?.id || '';
+        const role = m.role || (m as any).role;
+        const memberRole = m.memberRole || (m as any).member_role;
+        const lastSignIn = m.lastSignIn || (m as any).last_sign_in_at || (m as any).lastSignIn;
 
-    const loadTenants = async () => {
-      setTenantLoading(true);
-      setTenantError(null);
-
-      try {
-        const [tenantsResponse, subtenantsResponse] = await Promise.all([
-          fetch('/api/tenants', { cache: 'no-store' }),
-          fetch('/api/subtenants', { cache: 'no-store' }),
-        ]);
-
-        const tenantsPayload = (await tenantsResponse.json().catch(() => ({}))) as { data?: TenantRecord[]; error?: string };
-        const subtenantsPayload = (await subtenantsResponse.json().catch(() => ({}))) as { data?: SubtenantRecord[]; error?: string };
-
-        if (!tenantsResponse.ok) {
-          throw new Error(tenantsPayload.error ?? 'Tenant 목록을 불러오지 못했습니다.');
-        }
-
-        if (!subtenantsResponse.ok) {
-          throw new Error(subtenantsPayload.error ?? 'Subtenant 목록을 불러오지 못했습니다.');
-        }
-
-        const nextTenants = (tenantsPayload.data ?? []).map((tenantRecord) => ({
-          id: tenantRecord.id,
-          name: tenantRecord.name,
-          subtenants: (subtenantsPayload.data ?? [])
-            .filter((subtenant) => subtenant.tenant_id === tenantRecord.id)
-            .map((subtenant) => ({
-              id: subtenant.id,
-              name: subtenant.name,
-              tenantId: subtenant.tenant_id ?? tenantRecord.id,
-              status: subtenant.status ?? '대기',
-              products: Array.isArray(subtenant.products)
-                ? subtenant.products.filter((item): item is string => typeof item === 'string')
-                : [],
-              startDate: subtenant.start_date ?? '-',
-              endDate: subtenant.end_date ?? '-',
-              memberCount: subtenant.member_count ?? 0,
-            })),
-        }));
-
-        if (active) {
-          setTenants(nextTenants);
-          setActiveSelection((previous) => previous || nextTenants[0]?.id || 'unassigned');
-        }
-      } catch (loadError) {
-        if (active) {
-          setTenantError(loadError instanceof Error ? loadError.message : '고객 정보를 불러오지 못했습니다.');
-          setTenants([]);
-          setActiveSelection('unassigned');
-        }
-      } finally {
-        if (active) {
-          setTenantLoading(false);
-        }
-      }
-    };
-
-    void loadTenants();
-
-    return () => {
-      active = false;
-    };
-  }, [initialTenants.length]);
-
-  useEffect(() => {
-    if (tenantLoading || isUnassigned || !tenant?.id) {
-      setMembers([]);
-      setMemberError(null);
-      setMemberLoading(false);
-      return;
-    }
-
-    if (tenant.id === loadedMembersTenantId) {
-      return;
-    }
-
-    let active = true;
-
-    const loadMembers = async () => {
-      try {
-        const response = await fetch(`/api/members?tenantId=${tenant.id}`, {
-          cache: 'no-store',
-        });
-        const payload = (await response.json().catch(() => ({}))) as { data?: ApiMember[]; error?: string };
-
-        if (!response.ok) {
-          throw new Error(payload.error ?? '구성원 목록을 불러오지 못했습니다.');
-        }
-
-        if (active) {
-          console.log('[customers/list] /api/members response', payload.data ?? []);
-          setMembers(payload.data ?? []);
-          setLoadedMembersTenantId(tenant.id);
-        }
-      } catch (loadError) {
-        if (active) {
-          setMemberError(loadError instanceof Error ? loadError.message : '구성원 목록을 불러오지 못했습니다.');
-          setMembers([]);
-        }
-      } finally {
-        if (active) {
-          setMemberLoading(false);
-        }
-      }
-    };
-
-    void loadMembers();
-
-    return () => {
-      active = false;
-    };
-  }, [isUnassigned, loadedMembersTenantId, tenant?.id, tenantLoading]);
-
-  const displayMembers = useMemo<CustomerMember[]>(() => {
-    if (isUnassigned) {
-      return [];
-    }
-
-    const keyword = memberSearch.trim().toLowerCase();
-
-    return members
-      .map((member) => {
-        const subtenantName = member.subtenantId ? subtenantNameMap.get(member.subtenantId) ?? null : null;
-        const isTenantAdmin = member.role === 'tenant_admin';
-        const roleLabel: CustomerMember['role'] = isTenantAdmin
-          ? 'tenant_admin'
-          : member.memberRole === 'pm'
-            ? 'pm'
-            : 'member';
-
-        return {
-          id: member.id,
-          name: member.name ?? '-',
-          email: member.email ?? '-',
-          subtenantId: member.subtenantId,
-          tenantId: member.tenantId ?? tenant?.id ?? '',
-          role: roleLabel,
-          isContractor: isTenantAdmin,
-          lastLogin: member.lastSignIn ? member.lastSignIn.slice(0, 10) : '-',
-          subtenant: isTenantAdmin ? 'Tenant 관리자' : subtenantName,
+        const sn = sId ? subtenantNameMap.get(sId) || null : null;
+        const isTA = role === 'tenant_admin';
+        
+        return { 
+            id: m.id, 
+            name: m.name || '-', 
+            email: m.email || '-', 
+            subtenantId: sId, 
+            tenantId, 
+            role: (isTA ? 'tenant_admin' : memberRole === 'pm' ? 'pm' : 'member') as any,
+            isContractor: isTA, 
+            lastLogin: lastSignIn ? lastSignIn.slice(0, 10) : '-', 
+            subtenant: isTA ? 'Tenant 대표' : sn 
         };
-      })
-      .filter((member) => {
-        const matchesSubtenant = !subtenantFilter || member.subtenant === subtenantFilter;
-        const matchesKeyword =
-          !keyword ||
-          member.name.toLowerCase().includes(keyword) ||
-          member.email.toLowerCase().includes(keyword);
-
-        return matchesSubtenant && matchesKeyword;
-      });
+    }).filter(m => (!subtenantFilter || m.subtenant === subtenantFilter) && (!kw || m.name.toLowerCase().includes(kw) || m.email.toLowerCase().includes(kw)));
   }, [isUnassigned, memberSearch, members, subtenantFilter, subtenantNameMap, tenant?.id]);
 
-  const handleSelectTenant = (id: string) => {
-    setActiveSelection(id);
-    setRightTab('subtenant');
-    setSubtenantFilter('');
-  };
-
-  const handleDeleteMember = (member: CustomerMember) => {
-    if (member.isContractor) alert('계약자(Tenant 대표)는 삭제할 수 없습니다. 계약 관리를 확인해주세요.');
-    else {
-      if(confirm(`${member.name} 님을 구성원에서 삭제하시겠습니까?`)) {
-        // Mock deletion action
-      }
-    }
-  }
-
-  const handleMemberRoleChange = async (member: CustomerMember, nextRole: 'pm' | 'member') => {
-    if (!tenant?.id || member.isContractor || member.role === nextRole) {
-      return;
-    }
-
-    setUpdatingMemberId(member.id);
-    setMemberError(null);
-
-    try {
-      const response = await fetch('/api/update-member-role', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: member.id,
-          memberRole: nextRole,
-        }),
-      });
-
-      const payload = (await response.json().catch(() => ({}))) as { error?: string };
-
-      if (!response.ok) {
-        throw new Error(payload.error ?? '역할 변경에 실패했습니다.');
-      }
-
-      await loadMembers(tenant.id);
-    } catch (updateError) {
-      setMemberError(updateError instanceof Error ? updateError.message : '역할 변경에 실패했습니다.');
-    } finally {
-      setUpdatingMemberId(null);
-    }
-  };
-
   return (
-    <div className="flex flex-col md:flex md:flex-row gap-6 h-full text-gray-900 pb-8">
-      <InviteModal
-        isOpen={isInviteModal}
-        onClose={() => setIsInviteModal(false)}
-        subtenants={tenant?.subtenants || []}
-        tenantId={tenant?.id || null}
-        currentUserRole={currentUser?.role}
-        onInvite={inviteUser}
-      />
-
-      {/* ── Mobile: horizontal scrollable tab strip ── */}
-      <div className="md:hidden w-full bg-white border border-gray-200 rounded-[10px] overflow-hidden mb-3 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.02)]">
-        <div className="flex overflow-x-auto gap-2 p-3 scrollbar-none items-center">
-          {tenants.map((t) => {
-            const isActive = activeSelection === t.id;
-            return (
-              <button
-                key={t.id}
-                onClick={() => handleSelectTenant(t.id)}
-                className={`shrink-0 px-3 py-2 rounded-[8px] text-[12px] font-bold whitespace-nowrap transition-colors ${
-                  isActive
-                    ? 'bg-primary-500 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {t.name}
-              </button>
-            );
-          })}
-          <div className="w-[1px] h-4 bg-gray-200 mx-1 shrink-0"></div>
-          <button
-            onClick={() => setActiveSelection('unassigned')}
-            className={`shrink-0 px-3 py-2 rounded-[8px] text-[12px] font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
-              isUnassigned
-                ? 'bg-gray-800 text-white'
-                : 'bg-amber-50 text-amber-700 border border-amber-100 hover:bg-amber-100'
-            }`}
-          >
-            <ShieldAlert size={14}/> 미분류
-          </button>
-        </div>
-      </div>
-
-      {/* 좌측 패널 — 회사 (Tenant) 목록 (Desktop) */}
-      <div className="hidden w-60 flex-shrink-0 flex-col overflow-hidden rounded-[14px] border border-gray-200 bg-white shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] md:flex">
-         <div className="p-5 border-b border-gray-100 flex flex-col gap-4">
-            <h2 className="text-[16px] font-bold text-gray-900 flex items-center justify-between">
-              Tenant 목록
-              <span className="text-gray-500 bg-gray-100 text-[11px] font-bold px-2 py-0.5 rounded-md">Total {tenants.length}</span>
-            </h2>
-            <div className="relative">
-              <input type="text" placeholder="회사 명 검색" className="w-full border border-gray-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-primary-500 bg-gray-50 transition-colors" />
-              <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
+    <div className="flex h-full flex-col bg-[#F8FAFC]">
+      <InviteModal isOpen={isInviteModal} onClose={() => setIsInviteModal(false)} subtenants={tenant?.subtenants || []} tenantId={tenant?.id || null} currentUserRole={currentUser?.role} onInvite={inviteUser} />
+      
+      <div className="flex-1 overflow-y-auto w-full">
+        <div className="mx-auto w-full max-w-[1400px] px-6 py-8 space-y-6">
+          <div className="flex h-[48px] shrink-0 items-center justify-between bg-white px-4 rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-1 min-w-0 flex-1">
+              {tenants.map((t) => (
+                  <button key={t.id} onClick={() => setActiveSelection(t.id)} className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-bold transition-all ${activeSelection === t.id ? 'bg-primary-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50'}`}>{t.name}</button>
+              ))}
+              <div className="h-4 w-px bg-gray-200 mx-1 shrink-0" />
+              <button onClick={() => setActiveSelection('unassigned')} className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-bold transition-all flex items-center gap-1.5 ${isUnassigned ? 'bg-gray-800 text-white' : 'text-amber-600 bg-amber-50 hover:bg-amber-100'}`}><ShieldAlert size={14}/> 미분류</button>
             </div>
-         </div>
-         <div className="flex-1 overflow-y-auto flex flex-col">
-            {tenants.map(t => (
-              <div 
-                key={t.id} 
-                onClick={() => handleSelectTenant(t.id)}
-                className={`p-4 border-b border-gray-50 cursor-pointer flex justify-between items-center transition-all ${
-                  activeSelection === t.id 
-                  ? 'bg-primary-50/50 border-l-4 border-l-primary-500' 
-                  : 'hover:bg-gray-50 border-l-4 border-l-transparent'
-                }`}
-              >
-                 <div className="flex flex-col gap-1">
-                   <span className={`font-bold text-[14px] ${activeSelection === t.id ? 'text-primary-700' : 'text-gray-800'}`}>{t.name}</span>
-                   <span className="text-[11px] font-semibold text-gray-400">프로젝트 {t.subtenants.length}개</span>
+            <div className="hidden md:flex items-center gap-4 pl-4 shrink-0">
+              <SearchIcon className="text-gray-400" size={14} />
+              <input className="h-[30px] w-44 rounded-full border border-gray-200 bg-white px-4 text-[12px] font-bold transition-all focus:w-48 focus:border-blue-300 outline-none" placeholder="구성원/회사 검색" value={memberSearch} onChange={e => setMemberSearch(e.target.value)} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+               <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                     <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center"><Users size={16} className="text-blue-500" /></div>
+                     <span className="text-sm font-bold text-gray-500 uppercase">전체 구성원</span>
+                  </div>
+                  <p className="text-2xl font-black text-gray-900">{isUnassigned ? '0' : members.length}<span className="text-sm ml-1 text-gray-400">명</span></p>
+               </div>
+               <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                     <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center"><Briefcase size={16} className="text-emerald-500" /></div>
+                     <span className="text-sm font-bold text-gray-500 uppercase">서브 테넌트</span>
+                  </div>
+                  <p className="text-2xl font-black text-gray-900">{tenant?.subtenants.length || 0}<span className="text-sm ml-1 text-gray-400">개</span></p>
+               </div>
+               <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                     <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center"><UserCheck size={16} className="text-amber-500" /></div>
+                     <span className="text-sm font-bold text-gray-500 uppercase">관리자</span>
+                  </div>
+                  <p className="text-2xl font-black text-gray-900">{members.filter(m => m.role === 'tenant_admin').length}<span className="text-sm ml-1 text-gray-400">명</span></p>
+               </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[500px]">
+            <div className="pt-6 px-6 border-b border-gray-100">
+               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                 <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center"><Building2 className="text-gray-400" size={20}/></div>
+                   <div><h2 className="text-lg font-black text-gray-900 tracking-tight">{isUnassigned ? '미분류 명단' : tenant?.name}</h2><p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{isUnassigned ? '미분류 계정' : `ID: ${tenant?.id}`}</p></div>
                  </div>
-              </div>
-            ))}
-         </div>
-         <div 
-            onClick={() => setActiveSelection('unassigned')}
-            className={`p-4 border-t border-gray-200 cursor-pointer flex justify-between items-center transition-all ${
-              isUnassigned ? 'bg-gray-800 text-white' : 'bg-gray-50 hover:bg-gray-100 text-gray-600'
-            }`}
-          >
-             <div className="flex items-center gap-2 font-bold text-[14px]">
-               <ShieldAlert size={16} className={isUnassigned ? 'text-amber-400' : 'text-gray-400'}/>
-               소속 없음 미분류
-             </div>
-              <span className={`text-[11px] font-bold px-2 py-0.5 rounded ${isUnassigned ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-500'}`}>0명</span>
-         </div>
-         <div className="p-4 bg-blue-50/50 border-t border-blue-100">
-            <div className="flex items-start gap-2">
-               <Info size={16} className="text-blue-500 shrink-0 mt-0.5"/>
-               <div className="text-[12px] text-blue-800 font-medium leading-relaxed">
-                 Tenant 및 Subtenant 신규 생성은 <Link href="/customers/contracts" className="font-bold underline underline-offset-2 hover:text-blue-600 inline-flex items-center gap-0.5">계약 관리 메뉴<ExternalLink size={10}/></Link>에서 진행해주세요.
+                 {currentTab === 'member' && !isUnassigned && (
+                   <button onClick={() => setIsInviteModal(true)} className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 rounded-lg text-xs font-black text-white hover:bg-black transition-all shadow-xl shadow-blue-50">
+                     <UserPlus size={16}/> 구성원 초대
+                   </button>
+                 )}
+               </div>
+               <div className="flex gap-8">
+                 {!isUnassigned && <button onClick={() => setRightTab('subtenant')} className={`pb-4 text-[13px] font-black uppercase tracking-widest transition-all relative ${rightTab === 'subtenant' ? 'text-blue-600 after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-blue-600' : 'text-gray-400 hover:text-gray-600'}`}>서브 테넌트</button>}
+                 <button onClick={() => setRightTab('member')} className={`pb-4 text-[13px] font-black uppercase tracking-widest transition-all relative ${currentTab === 'member' ? 'text-blue-600 after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-blue-600' : 'text-gray-400 hover:text-gray-600'}`}>구성원 명단</button>
                </div>
             </div>
-         </div>
-      </div>
 
-      {/* 우측 패널 — 상세 */}
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-[14px] border border-gray-200 bg-white shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)]">
-         <div className="pt-6 px-6 border-b border-gray-200 bg-gray-50/30">
-            <h1 className="text-xl md:text-2xl font-extrabold text-gray-900 mb-6 flex items-center gap-2">
-              <Building2 className="text-primary-500 shrink-0" size={24}/> 
-              <span className="truncate">{isUnassigned ? '소속 없음 미분류 명단' : tenant?.name}</span>
-            </h1>
-            <div className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-none">
-              {!isUnassigned && (
-                <button 
-                  onClick={() => setRightTab('subtenant')}
-                  className={`pb-3 border-b-2 font-bold text-[13px] md:text-[14px] px-1 transition-colors whitespace-nowrap ${rightTab === 'subtenant' ? 'border-primary-600 text-primary-700' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-                >
-                  Subtenant (프로젝트) 관리
-                </button>
-              )}
-              <button 
-                onClick={() => !isUnassigned && setRightTab('member')}
-                className={`pb-3 border-b-2 font-bold text-[13px] md:text-[14px] px-1 transition-colors whitespace-nowrap ${currentTab === 'member' ? 'border-primary-600 text-primary-700' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-              >
-                구성원 조회 및 관리
-              </button>
-            </div>
-         </div>
-
-         <div className="flex-1 overflow-x-auto overflow-y-auto scrollbar-thin">
-            {tenantLoading ? (
-              <div className="p-6 text-sm font-medium text-gray-400">고객 정보를 불러오는 중입니다.</div>
-            ) : null}
-            {tenantError ? (
-              <div className="p-6 text-sm font-medium text-rose-500">{tenantError}</div>
-            ) : null}
-            {!isUnassigned && rightTab === 'subtenant' && (
-              <div className="p-0 md:p-6">
-                 <table className="inline-table min-w-[1040px] w-full flex-1 border-collapse text-left">
-                   <thead className="hidden md:table-header-group">
-                     <tr className="bg-[#FAFAFA] border-y border-gray-200">
-                       <th className="px-5 py-3 text-[12px] font-extrabold text-gray-500 whitespace-nowrap">Subtenant 명</th>
-                       <th className="px-5 py-3 text-[12px] font-extrabold text-gray-500 whitespace-nowrap">상태</th>
-                       <th className="px-5 py-3 text-[12px] font-extrabold text-gray-500 whitespace-nowrap">프로젝트 ID</th>
-                       <th className="px-5 py-3 text-[12px] font-extrabold text-gray-500 whitespace-nowrap">포함 상품</th>
-                       <th className="px-5 py-3 text-[12px] font-extrabold text-gray-500 whitespace-nowrap">사용 기간</th>
-                       <th className="px-5 py-3 text-[12px] font-extrabold text-gray-500 text-center whitespace-nowrap">구성원 수</th>
-                       <th className="px-5 py-3 text-[12px] font-extrabold text-gray-500 text-right whitespace-nowrap">관리</th>
-                     </tr>
-                   </thead>
-                   <tbody className="flex flex-col gap-4 p-4 md:table-row-group md:p-0">
-                     {tenant?.subtenants.length === 0 ? (
-                       <tr className="md:table-row"><td colSpan={7} className="text-center py-10 text-gray-400 text-sm">등록된 Subtenant가 없습니다.</td></tr>
-                     ) : (
-                       tenant?.subtenants.map(sub => (
-                         <tr key={sub.id} className="flex flex-col border border-gray-200 rounded-xl p-5 shadow-sm bg-white md:table-row md:border-0 md:border-b md:border-gray-100 md:rounded-none md:p-0 md:shadow-none hover:bg-gray-50/50 transition-colors group relative">
-                            <td className="px-0 py-1 md:px-5 md:py-4 font-bold text-gray-900 text-[16px] md:text-[14px] leading-tight mb-2 md:mb-0 whitespace-nowrap">{sub.name}</td>
-                            <td className="px-0 py-1 md:px-5 md:py-4 md:static absolute top-5 right-5">
-                               <span className={`inline-flex items-center justify-center px-2 py-0.5 text-[10px] md:text-[11px] font-bold rounded border 
-                                 ${sub.status === '활성' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-600 border-amber-200'}`}>
-                                 {sub.status}
-                               </span>
-                            </td>
-                            <td className="px-0 py-1 md:px-5 md:py-4 font-mono text-[11px] md:text-xs font-semibold text-gray-400 md:text-gray-500 md:mb-0 mb-4 border-b border-gray-50 md:border-0 pb-2 md:pb-0 whitespace-nowrap">
-                               <span className="md:hidden text-[10px] text-gray-300 font-normal block mb-0.5">프로젝트 ID</span>
-                               {sub.id}
-                            </td>
-                            <td className="px-0 py-1 md:px-5 md:py-4 text-[12px] md:text-xs font-medium text-gray-600 whitespace-nowrap">
-                               <span className="md:hidden text-[10px] text-gray-400 font-normal block mb-0.5">포함 상품</span>
-                               <div className="flex items-center gap-1.5 pt-1 md:pt-0">
-                                  {sub.products.includes('GPU 인프라') && <span className="bg-[#F8FAFC] border border-gray-200 p-1 rounded"><Cpu size={12} className="text-primary-500"/></span>}
-                                  {sub.products.includes('AI 스토리지') && <span className="bg-[#F8FAFC] border border-gray-200 p-1 rounded"><HardDrive size={12} className="text-amber-500"/></span>}
-                                  {sub.products.join(', ')}
+            <div className="p-6">
+                {currentTab === 'subtenant' ? (
+                  <div className="overflow-x-auto">
+                     <div className="md:hidden space-y-3 p-4 bg-gray-50/50">
+                        {(tenant?.subtenants || []).map(s => (
+                           <div key={s.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-4">
+                              <div className="flex justify-between items-start">
+                                 <div>
+                                    <p className="text-sm font-black text-gray-900">{s.name}</p>
+                                    <p className="text-[10px] font-bold text-gray-400 font-mono italic">#{s.id}</p>
+                                 </div>
+                                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${s.status === '활성' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-100'}`}>{s.status}</span>
+                              </div>
+                              <div className="flex flex-wrap gap-1">
+                                 {s.products.map(p => <span key={p} className="px-1.5 py-0.5 rounded bg-gray-100 text-[10px] font-bold text-gray-500 border border-gray-200">{p}</span>)}
+                              </div>
+                              <div className="pt-2 border-t border-gray-50 flex justify-between items-center text-[11px] font-bold text-gray-500">
+                                 <span>{s.startDate} ~ {s.endDate}</span>
+                                 <span>{s.memberCount}명</span>
+                              </div>
+                              <button onClick={()=>{setRightTab('member'); setSubtenantFilter(s.name);}} className="w-full py-2 bg-gray-50 rounded-lg text-[11px] font-black text-blue-600 hover:bg-blue-50 transition-colors">VIEW MEMBERS</button>
+                           </div>
+                        ))}
+                     </div>
+                     <table className="hidden md:table w-full">
+                        <thead>
+                          <tr className="border-b border-gray-200">
+                            <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-wider text-left bg-gray-50/50">프로젝트 정보</th>
+                            <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-wider text-left bg-gray-50/50">상태</th>
+                            <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-wider text-left bg-gray-50/50">리소스</th>
+                            <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-wider text-left bg-gray-50/50">계약 정보</th>
+                            <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-wider text-center bg-gray-50/50">인원수</th>
+                            <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-wider text-right bg-gray-50/50">작업</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {(tenant?.subtenants || []).map(s => (
+                             <tr key={s.id} className="hover:bg-gray-50 transition-colors">
+                               <td className="px-6 py-4"><p className="text-sm font-black text-gray-900">{s.name}</p><p className="text-[10px] font-bold text-gray-400 font-mono italic">#{s.id}</p></td>
+                               <td className="px-6 py-4"><span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${s.status === '활성' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-100'}`}>{s.status}</span></td>
+                               <td className="px-6 py-4"><div className="flex flex-wrap gap-1">{s.products.map(p => <span key={p} className="px-1.5 py-0.5 rounded bg-gray-100 text-[10px] font-bold text-gray-500 border border-gray-200">{p}</span>)}</div></td>
+                               <td className="px-6 py-4 text-[11px] font-bold text-gray-500 font-mono tracking-tight">{s.startDate} ~ {s.endDate}</td>
+                               <td className="px-6 py-4 text-center text-sm font-black text-gray-700">{s.memberCount}명</td>
+                               <td className="px-6 py-4 text-right"><button onClick={()=>{setRightTab('member'); setSubtenantFilter(s.name);}} className="text-[11px] font-black text-blue-600 hover:underline">VIEW MEMBERS</button></td>
+                             </tr>
+                          ))}
+                        </tbody>
+                     </table>
+                  </div>
+                ) : (
+                   <div className="space-y-4">
+                      {!isUnassigned && <div className="flex justify-start"><select value={subtenantFilter} onChange={e=>setSubtenantFilter(e.target.value)} className="h-9 rounded-full border border-gray-200 px-4 text-xs font-bold text-gray-600 outline-none focus:border-blue-500"><option value="">All Subtenants (Filter)</option>{tenant?.subtenants.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}</select></div>}
+                      <div className="overflow-x-auto">
+                         <div className="md:hidden space-y-3">
+                            {displayMembers.map(m => (
+                               <div key={m.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-4">
+                                  <div className="flex justify-between items-start">
+                                     <div className="flex items-center gap-2">
+                                        <p className="text-sm font-black text-gray-900">{m.name}</p>
+                                        {m.isContractor && <span className="bg-blue-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">OWNER</span>}
+                                     </div>
+                                     <button onClick={(e)=>{ e.stopPropagation(); if(confirm(`${m.name} 님을 삭제하시겠습니까?`)) { /* Mock Delete */ }}} disabled={m.isContractor} className={`p-2 rounded-full ${m.isContractor ? 'text-gray-100' : 'text-gray-400'}`}><MoreVertical size={16}/></button>
+                                  </div>
+                                  <div className="space-y-1">
+                                     <p className="text-xs font-bold text-gray-500 italic">{m.email}</p>
+                                     <p className="text-[11px] font-bold text-gray-400">{m.subtenant || 'No Assignment'}</p>
+                                  </div>
+                                  <div className="pt-2 border-t border-gray-50 flex justify-between items-center">
+                                     {m.isContractor ? <span className="text-[10px] font-black text-blue-600 uppercase">Tenant Admin</span> : 
+                                       <select value={m.role} onChange={async (e)=>{
+                                          setUpdatingMemberId(m.id);
+                                          try {
+                                             const r = await fetch('/api/update-member-role', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ userId:m.id, memberRole:e.target.value }) });
+                                             if(r.ok) await loadMembers(tenant!.id);
+                                          } finally { setUpdatingMemberId(null); }
+                                       }} disabled={updatingMemberId === m.id} className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${m.role==='pm'?'bg-amber-50 text-amber-700 border-amber-200':'bg-gray-100 text-gray-500 border-gray-200'}`}>
+                                          <option value="pm">PM</option>
+                                          <option value="member">MEM</option>
+                                       </select>
+                                     }
+                                     <span className="text-[10px] font-bold text-gray-400 font-mono">{m.lastLogin}</span>
+                                  </div>
                                </div>
-                            </td>
-                            <td className="px-0 py-1 md:px-5 md:py-4 text-[12px] md:text-xs font-medium text-gray-500 whitespace-nowrap">
-                               <span className="md:hidden text-[10px] text-gray-400 font-normal block mb-0.5">사용 기간</span>
-                               {sub.startDate}<span className="md:block md:before:content-['~_'] block">~ {sub.endDate}</span>
-                            </td>
-                            <td className="hidden md:table-cell px-5 py-4 text-center font-bold text-gray-800 whitespace-nowrap">{sub.memberCount}명</td>
-                            <td className="px-0 py-2 md:px-5 md:py-4 text-right border-t border-gray-50 md:border-0 mt-2 md:mt-0 pt-3 md:pt-0 whitespace-nowrap">
-                               <div className="flex md:block justify-between items-center">
-                                  <div className="md:hidden text-[12px] font-bold text-gray-800 bg-gray-100 px-2 py-0.5 rounded-full">{sub.memberCount}명</div>
-                                  <button 
-                                    onClick={() => { setRightTab('member'); setSubtenantFilter(sub.name); }}
-                                    className="w-full md:w-auto text-[11px] font-bold text-primary-600 bg-primary-50 hover:bg-primary-100 border border-primary-200 px-3 py-1.5 rounded-md transition-colors"
-                                  >
-                                    구성원 이동
-                                  </button>
-                               </div>
-                            </td>
-                         </tr>
-                       ))
-                     )}
-                   </tbody>
-                 </table>
-              </div>
-            )}
-
-            {currentTab === 'member' && (
-              <div className="flex h-full flex-col gap-5 p-0 md:p-6">
-                 <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 p-4 md:p-0">
-                    <div className="flex flex-col md:flex-row gap-3">
-                       {!isUnassigned && (
-                         <div className="relative">
-                           <select 
-                             value={subtenantFilter} 
-                             onChange={e => setSubtenantFilter(e.target.value)}
-                             className="w-full md:max-w-[180px] border border-gray-200 rounded-lg bg-white pl-3 pr-8 py-2 text-[13px] font-medium text-gray-700 appearance-none focus:outline-none focus:border-primary-500"
-                           >
-                              <option value="">전체 Subtenant</option>
-                              {tenant?.subtenants.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
-                           </select>
+                            ))}
                          </div>
-                       )}
-                       <div className="relative">
-                         <input
-                           type="text"
-                           placeholder="이름/이메일 검색"
-                           value={memberSearch}
-                           onChange={e => setMemberSearch(e.target.value)}
-                           className="w-full md:max-w-[220px] border border-gray-200 rounded-lg pl-9 pr-3 py-2 text-[13px] focus:outline-none focus:border-primary-500"
-                         />
-                         <SearchIcon size={14} className="absolute left-3 top-2.5 text-gray-400" />
-                       </div>
-                    </div>
-                    {!isUnassigned && (
-                      <button onClick={() => setIsInviteModal(true)} className="flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-primary-600 px-4 py-2 text-[13px] font-bold text-white shadow-sm transition-colors cursor-pointer outline-none hover:bg-primary-700">
-                        <UserPlus size={16}/> 구성원 초대 (생성)
-                      </button>
-                    )}
-                 </div>
-
-                 <div className="flex-1 overflow-x-auto rounded-xl bg-white border-0 md:border md:border-gray-200">
-                    <table className="inline-table min-w-[960px] w-full flex-1 border-collapse text-left">
-                       <thead className="hidden md:table-header-group">
-                         <tr className="bg-[#FAFAFA] border-b border-gray-200">
-                            <th className="px-5 py-3.5 text-[12px] font-extrabold text-gray-500 whitespace-nowrap">이름</th>
-                            <th className="px-5 py-3.5 text-[12px] font-extrabold text-gray-500 whitespace-nowrap">이메일</th>
-                            <th className="px-5 py-3.5 text-[12px] font-extrabold text-gray-500 whitespace-nowrap">소속 Subtenant</th>
-                            <th className="px-5 py-3.5 text-[12px] font-extrabold text-gray-500 whitespace-nowrap">역할 권한</th>
-                            <th className="px-5 py-3.5 text-[12px] font-extrabold text-gray-500 whitespace-nowrap">최근 접속일</th>
-                            <th className="min-w-[80px]"></th>
-                         </tr>
-                       </thead>
-                       <tbody className="flex flex-col gap-4 p-4 md:table-row-group md:p-0">
-                          {memberError && !isUnassigned ? (
-                            <tr className="md:table-row"><td colSpan={6} className="text-center py-10 text-rose-500 text-sm font-medium">{memberError}</td></tr>
-                          ) : memberLoading && !isUnassigned ? (
-                            <tr className="md:table-row"><td colSpan={6} className="text-center py-10 text-gray-400 text-sm font-medium">구성원 목록을 불러오는 중입니다.</td></tr>
-                          ) : displayMembers.length === 0 ? (
-                            <tr className="md:table-row"><td colSpan={6} className="text-center py-10 text-gray-400 text-sm font-medium">해당 조건의 구성원이 없습니다.</td></tr>
-                          ) : (
-                            displayMembers.map(m => (
-                              <tr key={m.id} className="flex flex-col border border-gray-200 rounded-xl p-5 shadow-sm bg-white md:table-row md:border-0 md:border-b md:border-gray-100 md:rounded-none md:p-0 md:shadow-none hover:bg-gray-50/50 transition-colors group relative">
-                                 <td className="px-0 py-1 md:px-5 md:py-4 md:mb-0 mb-4 border-b border-gray-50 md:border-0 pb-2 md:pb-0 whitespace-nowrap">
-                                   <div className="flex items-center gap-2">
-                                     <span className="font-bold text-gray-900 text-[16px] md:text-[14px]">{m.name}</span>
-                                     {m.isContractor && <span className="bg-primary-100 text-primary-700 text-[10px] font-extrabold px-1.5 py-0.5 rounded border border-primary-200">계약 대표자</span>}
-                                   </div>
-                                   <div className="md:hidden mt-1 font-mono text-[11px] text-gray-400">{m.email}</div>
-                                 </td>
-                                 <td className="hidden md:table-cell px-5 py-4 font-mono text-[13px] text-gray-600 whitespace-nowrap">{m.email}</td>
-                                 <td className="px-0 py-1 md:px-5 md:py-4 text-[13px] font-semibold text-gray-700 whitespace-nowrap">
-                                   <span className="md:hidden text-[10px] text-gray-400 font-normal block mb-0.5">소속 Subtenant</span>
-                                   {m.subtenant || <span className="text-gray-400 italic font-normal text-[12px]">소속 없음</span>}
-                                 </td>
-                                 <td className="px-0 py-1 md:px-5 md:py-4">
-                                   <span className="md:hidden text-[10px] text-gray-400 font-normal block mb-1">역할 권한</span>
-                                   {m.isContractor ? (
-                                     <span className="inline-flex rounded border border-primary-200 bg-primary-50 px-2 py-1 text-[12px] font-bold text-primary-700">
-                                       Tenant Admin
-                                     </span>
-                                   ) : (
-                                     <select 
-                                       value={m.role}
-                                       disabled={updatingMemberId === m.id}
-                                       onChange={(event) => {
-                                         const nextRole = event.target.value as 'pm' | 'member';
-                                         void handleMemberRoleChange(m, nextRole);
-                                       }}
-                                       className={`text-[12px] font-bold px-2 py-1 rounded border outline-none cursor-pointer w-full md:w-auto
-                                         ${m.role === 'pm' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-300'}
-                                         ${updatingMemberId === m.id ? 'opacity-60 cursor-wait' : ''}`}
-                                     >
-                                        <option value="pm">PM (매니저)</option>
-                                        <option value="member">멤버 (일반)</option>
-                                     </select>
-                                   )}
-                                 </td>
-                                 <td className="px-0 py-1 md:px-5 md:py-4 font-mono text-[12px] text-gray-500 whitespace-nowrap">
-                                   <span className="md:hidden text-[10px] text-gray-400 font-normal block mb-0.5">최근 접속일</span>
-                                   {m.lastLogin}
-                                 </td>
-                                 <td className="absolute top-5 right-5 md:static px-0 md:px-5 md:py-4 flex items-center">
-                                   <button 
-                                     onClick={() => handleDeleteMember(m)}
-                                     disabled={m.isContractor}
-                                     className={`p-1.5 rounded transition-colors ${m.isContractor ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:text-red-500 hover:bg-red-50'}`}
-                                     title={m.isContractor ? '계약자는 삭제 불가' : '삭제'}
-                                   >
-                                     <MoreVertical size={16}/>
-                                   </button>
-                                 </td>
-                              </tr>
-                            ))
-                          )}
-                       </tbody>
-                    </table>
-                 </div>
-              </div>
-            )}
-         </div>
+                         <table className="hidden md:table w-full">
+                            <thead>
+                                <tr className="border-b border-gray-200">
+                                   <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-left bg-gray-50/50">User Information</th>
+                                   <th className="hidden md:table-cell px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-left bg-gray-50/50">Assignment</th>
+                                   <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-left bg-gray-50/50">Org Role</th>
+                                   <th className="hidden md:table-cell px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-left bg-gray-50/50">Last Login</th>
+                                   <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right bg-gray-50/50">Control</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                               {displayMembers.map(m => (
+                                  <tr key={m.id} className="hover:bg-gray-50 transition-colors">
+                                      <td className="px-6 py-4">
+                                         <div className="flex items-center gap-2">
+                                            <p className="text-sm font-black text-gray-900">{m.name}</p>
+                                            {m.isContractor && <span className="bg-blue-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-lg shadow-blue-100">OWNER</span>}
+                                         </div>
+                                         <p className="text-[11px] font-bold text-gray-400 italic">{m.email}</p>
+                                      </td>
+                                      <td className="hidden md:table-cell px-6 py-4 text-xs font-bold text-gray-500 italic">{m.subtenant || 'No Assignment'}</td>
+                                      <td className="px-6 py-4">
+                                         {m.isContractor ? <span className="text-[10px] font-black text-blue-600 uppercase border border-blue-200 px-2 py-0.5 rounded-full bg-blue-50">Tenant Admin</span> : 
+                                           <select value={m.role} onChange={async (e)=>{
+                                              setUpdatingMemberId(m.id);
+                                              try {
+                                                 const r = await fetch('/api/update-member-role', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ userId:m.id, memberRole:e.target.value }) });
+                                                 if(r.ok) await loadMembers(tenant!.id);
+                                              } finally { setUpdatingMemberId(null); }
+                                           }} disabled={updatingMemberId === m.id} className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border outline-none cursor-pointer ${m.role==='pm'?'bg-amber-50 text-amber-700 border-amber-200':'bg-gray-100 text-gray-500 border-gray-200'} ${updatingMemberId===m.id?'opacity-50 cursor-wait':''}`}>
+                                              <option value="pm">PM</option>
+                                              <option value="member">MEM</option>
+                                           </select>
+                                         }
+                                      </td>
+                                      <td className="hidden md:table-cell px-6 py-4 text-[11px] font-bold text-gray-400 font-mono tracking-tight">{m.lastLogin}</td>
+                                     <td className="px-6 py-4 text-right">
+                                        <button onClick={(e)=>{ e.stopPropagation(); if(confirm(`${m.name} 님을 삭제하시겠습니까?`)) { /* Mock Delete */ }}} disabled={m.isContractor} className={`p-2 rounded-full transition-colors ${m.isContractor ? 'text-gray-100' : 'text-gray-300 hover:text-red-500 hover:bg-red-50'}`}><MoreVertical size={16}/></button>
+                                     </td>
+                                  </tr>
+                               ))}
+                            </tbody>
+                         </table>
+                      </div>
+                   </div>
+                )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

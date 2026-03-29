@@ -105,7 +105,7 @@ function NoticeModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-2xl rounded-[16px] bg-white p-4 shadow-2xl sm:p-6">
+      <div className="w-full max-w-2xl rounded-[16px] bg-white p-6 shadow-2xl">
         <div className="mb-5 flex items-center justify-between sm:mb-6">
           <h2 className="text-[18px] font-extrabold text-gray-900 sm:text-[20px]">
             {mode === 'create' ? '공지사항 작성' : '공지사항 수정'}
@@ -452,16 +452,16 @@ export default function NoticesPageClient({ initialNotices = [] }: NoticesPageCl
             </div>
           ) : null}
 
-          <div className="flex h-full flex-col overflow-hidden rounded-[10px] border border-gray-200 bg-white shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)]">
-            <div className="overflow-x-auto">
-              <table className="min-w-[760px] w-full border-collapse text-left">
+          <div className="flex-1 overflow-hidden rounded-[10px] border border-gray-200 bg-white shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)]">
+            <div className="h-full overflow-x-auto">
+              <table className="w-full border-collapse text-left">
                 <thead>
                   <tr className="border-b border-gray-200 bg-[#FAFAFA]">
-                    <th className="min-w-[80px] whitespace-nowrap px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500">유형</th>
-                    <th className="min-w-[220px] whitespace-nowrap px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500">제목</th>
-                    <th className="px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500 whitespace-nowrap">작성자</th>
-                    <th className="px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500 whitespace-nowrap">등록 일시</th>
-                    <th className="min-w-[80px] px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500" />
+                    <th className="whitespace-nowrap px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500">유형</th>
+                    <th className="whitespace-nowrap px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500">제목</th>
+                    <th className="whitespace-nowrap px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500">작성자</th>
+                    <th className="whitespace-nowrap px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500">등록 일시</th>
+                    <th className="w-10 px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500" />
                   </tr>
                 </thead>
                 <tbody>

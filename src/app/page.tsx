@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, 
   Tooltip as RechartsTooltip, ResponsiveContainer 
 } from 'recharts';
 import Link from 'next/link';
 import { tenants, gpuNodes } from '@/lib/mockData';
+import { Cpu, HardDrive, Network, TerminalSquare, Clock, ChevronRight, Activity } from 'lucide-react';
 
 type KpiCardProps = {
   title: string;
@@ -77,8 +78,45 @@ const top3ResourceData = [
 export default function HomeDashboard() {
   const [activeFilter, setActiveFilter] = useState<'all' | 'ok' | 'warn' | 'err'>('all');
   const [activeTenantIdx, setActiveTenantIdx] = useState(0);
+  const [meteringData, setMeteringData] = useState<any>(null);
+  const [ticketsData, setTicketsData] = useState<any[]>([]);
+  const [loadingMetering, setLoadingMetering] = useState(false);
+  const [loadingTickets, setLoadingTickets] = useState(false);
 
   const tenant = tenants[activeTenantIdx] || tenants[0];
+
+  useEffect(() => {
+    const fetchMetering = async () => {
+      setLoadingMetering(true);
+      try {
+        const res = await fetch(`/api/metering/${tenant.id}`);
+        const json = await res.json();
+        setMeteringData(json.data);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoadingMetering(false);
+      }
+    };
+    fetchMetering();
+  }, [tenant.id]);
+
+  useEffect(() => {
+    const fetchTickets = async () => {
+      setLoadingTickets(true);
+      try {
+        const res = await fetch('/api/tickets');
+        const json = await res.json();
+        setTicketsData(json.data || []);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoadingTickets(false);
+      }
+    };
+    fetchTickets();
+  }, []);
+
   const tNodes = gpuNodes.filter(n => n.tenantId === tenant.id);
 
   const cntOk = tNodes.filter(n => n.status === 'ok').length;
@@ -303,60 +341,141 @@ export default function HomeDashboard() {
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-[10px] p-0 overflow-hidden relative shadow-sm">
-        <div className="px-5 py-4 flex justify-between items-center bg-[#FAFAFA] border-b border-gray-100">
-          <h2 className="text-[14px] font-semibold text-gray-900">최근 지원 티켓</h2>
-          <Link href="/support/tickets">
-             <button className="text-[12px] font-semibold text-primary-600 border border-gray-200 px-3 py-1.5 rounded-[6px] bg-white hover:bg-gray-50 transition-colors">전체 보기</button>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Left: Monthly Metering Summary */}
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm flex flex-col min-h-[360px]">
+          <div className="px-5 py-4 flex justify-between items-center bg-gray-50/50 border-b border-gray-100">
+            <div className="flex items-center gap-2">
+               <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center">
+                  <Activity size={14} className="text-blue-600" />
+               </div>
+               <h2 className="text-[14px] font-bold text-gray-900">이번달 미터링 요약 <span className="text-gray-400 font-medium ml-1">({meteringData?.period || '2026.03'})</span></h2>
+            </div>
+          </div>
+          
+          <div className="p-6 flex-1 space-y-6">
+            {loadingMetering ? (
+              <div className="h-full flex items-center justify-center text-gray-400 text-sm italic">로딩 중...</div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-end">
+                      <div className="flex items-center gap-2">
+                        <Cpu size={14} className="text-gray-400" />
+                        <span className="text-xs font-bold text-gray-500">CPU 코어</span>
+                      </div>
+                      <span className="text-xs font-black text-gray-900">{tNodes.length * 8}<span className="text-gray-400 font-bold ml-0.5">/ {meteringData?.fixed?.cpu?.contracted || 0}</span></span>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-blue-500 rounded-full transition-all duration-1000" 
+                        style={{ width: `${Math.min(100, ((tNodes.length * 8) / (meteringData?.fixed?.cpu?.contracted || 1)) * 100)}%` }} 
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-end">
+                      <div className="flex items-center gap-2">
+                        <TerminalSquare size={14} className="text-gray-400" />
+                        <span className="text-xs font-bold text-gray-500">GPU 인스턴스</span>
+                      </div>
+                      <span className="text-xs font-black text-gray-900">{tNodes.length}<span className="text-gray-400 font-bold ml-0.5">/ {meteringData?.fixed?.gpu?.contracted || 0}</span></span>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-indigo-500 rounded-full transition-all duration-1000" 
+                        style={{ width: `${Math.min(100, (tNodes.length / (meteringData?.fixed?.gpu?.contracted || 1)) * 100)}%` }} 
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                   <div className="p-4 rounded-xl bg-emerald-50/50 border border-emerald-100/50">
+                      <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                        <HardDrive size={12} /> STORAGE
+                      </p>
+                      <p className="text-xl font-black text-gray-900 tabular-nums">
+                        {meteringData?.variable?.storage?.usage || 0}<span className="text-xs ml-1 text-gray-400">TB</span>
+                      </p>
+                   </div>
+                   <div className="p-4 rounded-xl bg-amber-50/50 border border-amber-100/50">
+                      <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                        <Network size={12} /> NETWORK OUT
+                      </p>
+                      <p className="text-xl font-black text-gray-900 tabular-nums">
+                        {meteringData?.variable?.networkOutbound?.usage || 0}<span className="text-xs ml-1 text-gray-400">GB</span>
+                      </p>
+                   </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          <Link href="/billing/metering" className="p-4 border-t border-gray-100 text-center text-[12px] font-bold text-blue-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-1">
+            자세히 보기 <ChevronRight size={14} />
           </Link>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse flex-1 inline-table">
-            <thead className="hidden md:table-header-group">
-              <tr className="bg-[#FAFAFA] border-b border-gray-100 text-gray-400">
-                <th className="whitespace-nowrap px-5 py-3 text-[11px] font-bold uppercase tracking-wider">유형</th>
-                <th className="whitespace-nowrap px-5 py-3 text-[11px] font-bold uppercase tracking-wider">티켓 ID</th>
-                <th className="whitespace-nowrap px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-left">제목</th>
-                <th className="whitespace-nowrap px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-center">상태</th>
-                <th className="whitespace-nowrap px-5 py-3 text-[11px] font-bold uppercase tracking-wider">작성자</th>
-                <th className="whitespace-nowrap px-5 py-3 text-[11px] font-bold uppercase tracking-wider">등록 일시</th>
-              </tr>
-            </thead>
-            <tbody className="flex flex-col md:table-row-group">
-              {[
-                { type: '장애접수', id: 'TKT-00142', title: 'H100 인스턴스 접속 불가 현상', status: '대기 중', user: '김사원', date: '2026-03-19 14:22:01', statusColor: 'bg-[#FFFBEB] text-[#D97706]' },
-                { type: '기술지원', id: 'TKT-00141', title: 'PyTorch 노드 환경 설정 문의', status: '처리 중', user: '이대리', date: '2026-03-19 10:15:44', statusColor: 'bg-primary-50 text-primary-600' },
-                { type: '일반안내', id: 'TKT-00139', title: '월간 크레딧 청구서 재발급 요청', status: '완료', user: '최과장', date: '2026-03-18 16:40:22', statusColor: 'bg-[#ECFDF5] text-[#059669]' },
-              ].map(row => (
-                <tr key={row.id} className="flex flex-col border-b border-gray-100 p-5 md:table-row md:p-0 hover:bg-gray-50/50 transition-colors">
-                  <td className="px-0 py-1 md:px-5 md:py-3.5">
-                    <span className={`px-2 py-0.5 rounded text-[10px] md:text-[11px] font-bold ${row.statusColor} border border-current opacity-80 md:opacity-100`}>{row.type}</span>
-                  </td>
-                  <td className="px-0 py-1 md:px-5 md:py-3.5 font-mono text-[11px] text-gray-400 whitespace-nowrap">
-                    <span className="md:hidden text-[10px] text-gray-300 mr-2 uppercase">ID</span>
-                    {row.id}
-                  </td>
-                  <td className="px-0 py-2 md:px-5 md:py-3.5 font-bold md:font-semibold text-gray-900 md:text-[13px] hover:text-primary-600 cursor-pointer transition-colors">
-                    <Link href="/support/tickets">{row.title}</Link>
-                  </td>
-                  <td className="px-0 py-1 md:px-5 md:py-3.5 md:text-center">
-                    <div className="flex items-center md:justify-center gap-2">
-                      <span className="md:hidden text-[10px] text-gray-300 uppercase">상태</span>
-                      <span className={`px-2 py-0.5 rounded-[4px] text-[10px] md:text-[11px] font-bold ${row.statusColor}`}>{row.status}</span>
+
+        {/* Right: Recent Support Tickets (compact) */}
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm flex flex-col min-h-[360px]">
+          <div className="px-5 py-4 flex justify-between items-center bg-gray-50/50 border-b border-gray-100">
+            <div className="flex items-center gap-2">
+               <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center">
+                  <Clock size={14} className="text-amber-600" />
+               </div>
+               <h2 className="text-[14px] font-bold text-gray-900">최근 지원 티켓</h2>
+            </div>
+            {ticketsData.filter(t => t.status === '대기중').length > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-red-50 text-red-600 text-[10px] font-bold border border-red-100">
+                대기 {ticketsData.filter(t => t.status === '대기중').length}건
+              </span>
+            )}
+          </div>
+
+          <div className="flex-1 overflow-hidden">
+            {loadingTickets ? (
+              <div className="h-full flex items-center justify-center text-gray-400 text-sm italic">로딩 중...</div>
+            ) : ticketsData.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-gray-400 text-sm italic">등록된 티켓이 없습니다.</div>
+            ) : (
+              <div className="divide-y divide-gray-50">
+                {ticketsData.slice(0, 3).map(ticket => (
+                  <Link href="/support/tickets" key={ticket.id} className="block p-4 hover:bg-gray-50/50 transition-colors">
+                    <div className="flex items-start justify-between mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold border ${
+                          ticket.type === '장애접수' ? 'bg-red-50 text-red-600 border-red-100' : 
+                          ticket.type === '기술지원' ? 'bg-blue-50 text-blue-600 border-blue-100' : 
+                          'bg-gray-50 text-gray-600 border-gray-200'
+                        }`}>
+                          {ticket.type}
+                        </span>
+                        <h3 className="text-[13px] font-bold text-gray-900 truncate max-w-[200px]">{ticket.title}</h3>
+                      </div>
+                      <span className={`text-[10px] font-bold ${
+                        ticket.status === '대기중' ? 'text-amber-600' :
+                        ticket.status === '처리중' ? 'text-blue-600' :
+                        'text-emerald-600'
+                      }`}>
+                        {ticket.status}
+                      </span>
                     </div>
-                  </td>
-                  <td className="px-0 py-1 md:px-5 md:py-3.5 text-[12px] text-gray-500 whitespace-nowrap">
-                    <span className="md:hidden text-[10px] text-gray-300 mr-2 uppercase">작성자</span>
-                    {row.user}
-                  </td>
-                  <td className="px-0 py-1 md:px-5 md:py-3.5 font-mono text-[11px] text-gray-400 whitespace-nowrap">
-                    <span className="md:hidden text-[10px] text-gray-300 mr-2 uppercase">등록일</span>
-                    {row.date}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    <div className="flex items-center gap-3 text-[11px] text-gray-400">
+                      <span className="font-mono">{ticket.ticket_number}</span>
+                      <span className="flex items-center gap-1"><Clock size={10} /> {ticket.created_at?.slice(0, 10)}</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <Link href="/support/tickets" className="p-4 border-t border-gray-100 text-center text-[12px] font-bold text-blue-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-1">
+            전체 보기 <ChevronRight size={14} />
+          </Link>
         </div>
       </div>
     </div>

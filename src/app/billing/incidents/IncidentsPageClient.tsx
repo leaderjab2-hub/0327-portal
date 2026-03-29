@@ -1,8 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, Plus, RotateCcw, Server, Settings, Trash2, X } from 'lucide-react';
-import CompanyListPanel from '@/components/CompanyListPanel';
+import { AlertTriangle, Plus, RotateCcw, Search, Server, Settings, Trash2, X, Calendar, Activity, TrendingUp } from 'lucide-react';
 import { calculateCreditAmount, calculateDurationMinutes } from '@/lib/creditMath';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -72,16 +71,9 @@ type FormState = {
 };
 
 function formatDate(value: string | null) {
-  if (!value) {
-    return '-';
-  }
-
+  if (!value) return '-';
   const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
+  if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString('ko-KR', {
     year: 'numeric',
     month: '2-digit',
@@ -92,46 +84,24 @@ function formatDate(value: string | null) {
 }
 
 function formatDuration(minutes: number) {
-  if (!minutes) {
-    return '0분';
-  }
-
+  if (!minutes) return '0분';
   const hours = Math.floor(minutes / 60);
   const remains = minutes % 60;
-
-  if (hours === 0) {
-    return `${remains}분`;
-  }
-
-  if (remains === 0) {
-    return `${hours}시간`;
-  }
-
+  if (hours === 0) return `${remains}분`;
+  if (remains === 0) return `${hours}시간`;
   return `${hours}시간 ${remains}분`;
 }
 
 function getTypeLabel(type: string | null) {
-  if (type === 'urgent_pm') {
-    return '긴급 PM';
-  }
-
-  if (type === 'regular_pm') {
-    return '정기 PM';
-  }
-
+  if (type === 'urgent_pm') return '긴급 PM';
+  if (type === 'regular_pm') return '정기 PM';
   return '장애';
 }
 
 function getTypeBadgeClass(type: string | null) {
-  if (type === 'urgent_pm') {
-    return 'bg-amber-50 text-amber-600 border border-amber-200';
-  }
-
-  if (type === 'regular_pm') {
-    return 'bg-primary-50 text-primary-600 border border-primary-200';
-  }
-
-  return 'bg-rose-50 text-rose-600 border border-rose-200';
+  if (type === 'urgent_pm') return 'bg-amber-50 text-amber-700 border-amber-200';
+  if (type === 'regular_pm') return 'bg-blue-50 text-blue-700 border-blue-200';
+  return 'bg-red-50 text-red-700 border-red-200';
 }
 
 function IncidentModal({
@@ -155,20 +125,15 @@ function IncidentModal({
   onChange: (next: Partial<FormState>) => void;
   onSubmit: () => Promise<void>;
 }) {
-  if (!isOpen) {
-    return null;
-  }
+  if (!isOpen) return null;
 
-  const selectedAllocation = allocations.find((allocation) => allocation.node_id === form.nodeId) ?? null;
-  const mappedCustomer =
-    selectedAllocation?.subtenant_id
-      ? {
-          tenantId,
-          subtenantId: selectedAllocation.subtenant_id,
-          gpuCount: 1,
-          subtenantName: subtenantNameById[selectedAllocation.subtenant_id] ?? selectedAllocation.subtenant_id,
-        }
-      : null;
+  const selectedAllocation = allocations.find(a => a.node_id === form.nodeId) ?? null;
+  const mappedCustomer = selectedAllocation?.subtenant_id ? {
+    tenantId,
+    subtenantId: selectedAllocation.subtenant_id,
+    gpuCount: 1,
+    subtenantName: subtenantNameById[selectedAllocation.subtenant_id] ?? selectedAllocation.subtenant_id,
+  } : null;
 
   let durationMinutes = 0;
   let durationText = '자동 계산';
@@ -179,173 +144,116 @@ function IncidentModal({
     try {
       durationMinutes = calculateDurationMinutes(form.occurredAt, form.recoveredAt);
       durationText = formatDuration(durationMinutes);
-      expectedCredit = mappedCustomer
-        ? calculateCreditAmount(form.type, durationMinutes, mappedCustomer.gpuCount)
-        : 0;
+      expectedCredit = mappedCustomer ? calculateCreditAmount(form.type, durationMinutes, mappedCustomer.gpuCount) : 0;
     } catch {
       hasDurationError = true;
-      durationText = '시간 범위를 확인해 주세요';
+      durationText = '시간 정보 오류';
     }
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[16px] bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-gray-100 p-4 sm:p-6">
-          <h2 className="flex items-center gap-2 text-[18px] font-extrabold text-gray-900 sm:text-[20px]">
-            <AlertTriangle size={20} className="text-red-500" />
-            장애/PM 등록
-          </h2>
-          <button onClick={onClose} className="rounded-lg p-2 text-gray-400 hover:bg-gray-50 hover:text-gray-700">
-            <X size={18} />
+    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-gray-950/45 p-4 backdrop-blur-sm">
+      <div className="flex w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+          <h2 className="text-xl font-black text-gray-900 tracking-tight flex items-center gap-2"><AlertTriangle className="text-red-500" size={20} /> 장애/PM 등록</h2>
+          <button className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors" onClick={onClose}>
+            <X size={20} />
           </button>
         </div>
 
-        <div className="space-y-4 p-4 sm:space-y-6 sm:p-6 lg:space-y-7 lg:p-7">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
-              <label className="mb-1.5 block text-[13px] font-bold text-gray-700">구분</label>
-              <select
-                value={form.type}
-                onChange={(event) => onChange({ type: event.target.value as FormState['type'] })}
-                className="w-full rounded-[10px] border border-gray-200 p-3 text-[13px] font-medium text-gray-900 focus:border-primary-500 focus:outline-none"
-              >
-                <option value="incident">장애</option>
-                <option value="urgent_pm">긴급 PM</option>
-                <option value="regular_pm">정기 PM</option>
-              </select>
-            </div>
-            <div>
-              <label className="mb-1.5 block text-[13px] font-bold text-gray-700">노드 유형</label>
-              <select
-                value={form.nodeType}
-                onChange={(event) => onChange({ nodeType: event.target.value })}
-                className="w-full rounded-[10px] border border-gray-200 p-3 text-[13px] font-medium text-gray-900 focus:border-primary-500 focus:outline-none"
-              >
-                <option value="GPU">GPU</option>
-                <option value="CPU">CPU</option>
-                <option value="Storage">Storage</option>
-                <option value="NW">NW</option>
-              </select>
-            </div>
-            <div>
-              <label className="mb-1.5 block text-[13px] font-bold text-gray-700">발생 시간</label>
-              <input
-                type="datetime-local"
-                value={form.occurredAt}
-                onChange={(event) => onChange({ occurredAt: event.target.value })}
-                className="w-full rounded-[10px] border border-gray-200 p-3 text-[13px] font-medium text-gray-900 focus:border-primary-500 focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-[13px] font-bold text-gray-700">복구 시간</label>
-              <input
-                type="datetime-local"
-                value={form.recoveredAt}
-                onChange={(event) => onChange({ recoveredAt: event.target.value })}
-                className="w-full rounded-[10px] border border-gray-200 p-3 text-[13px] font-medium text-gray-900 focus:border-primary-500 focus:outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
-              <label className="mb-1.5 block text-[13px] font-bold text-gray-700">인스턴스 선택</label>
-              <select
-                value={form.nodeId}
-                onChange={(event) => onChange({ nodeId: event.target.value })}
-                className="w-full rounded-[10px] border border-gray-200 p-3 text-[13px] font-medium text-gray-900 focus:border-primary-500 focus:outline-none"
-              >
-                <option value="">인스턴스 선택</option>
-                {allocations.map((allocation) => (
-                  <option key={allocation.id} value={allocation.node_id}>
-                    {allocation.node?.label ?? allocation.node_id}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="mb-1.5 block text-[13px] font-bold text-gray-700">소요 시간</label>
-              <div
-                className={`rounded-[10px] border p-3 text-[13px] font-bold ${
-                  hasDurationError ? 'border-rose-200 bg-rose-50 text-rose-600' : 'border-gray-200 bg-gray-50 text-gray-700'
-                }`}
-              >
-                {durationText}
+        <div className="flex-1 overflow-y-auto space-y-6 p-6 scroll-smooth bg-gray-50/50">
+          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm space-y-4">
+            <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest border-l-4 border-blue-500 pl-3">상세 유형 및 시간</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="mb-1.5 block text-[10px] font-black text-gray-400 uppercase tracking-tight">구분</label>
+                <select className="w-full rounded-lg border border-gray-200 p-2 text-[13px] font-bold focus:border-blue-500 outline-none" value={form.type} onChange={e => onChange({ type: e.target.value as FormState['type'] })}>
+                  <option value="incident">장애</option>
+                  <option value="urgent_pm">긴급 PM</option>
+                  <option value="regular_pm">정기 PM</option>
+                </select>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-[10px] font-black text-gray-400 uppercase tracking-tight">노드 유형</label>
+                <select className="w-full rounded-lg border border-gray-200 p-2 text-[13px] font-bold focus:border-blue-500 outline-none" value={form.nodeType} onChange={e => onChange({ nodeType: e.target.value })}>
+                  <option value="GPU">GPU</option>
+                  <option value="CPU">CPU</option>
+                  <option value="Storage">Storage</option>
+                  <option value="NW">NW</option>
+                </select>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-[10px] font-black text-gray-400 uppercase tracking-tight">발생 시점</label>
+                <input className="w-full rounded-lg border border-gray-200 p-2 text-[13px] font-bold focus:border-blue-500 outline-none" type="datetime-local" value={form.occurredAt} onChange={e => onChange({ occurredAt: e.target.value })} />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-[10px] font-black text-gray-400 uppercase tracking-tight">복구 시점</label>
+                <input className="w-full rounded-lg border border-gray-200 p-2 text-[13px] font-bold focus:border-blue-500 outline-none" type="datetime-local" value={form.recoveredAt} onChange={e => onChange({ recoveredAt: e.target.value })} />
               </div>
             </div>
           </div>
 
-          <div className="rounded-[12px] border border-gray-200 bg-gray-50 p-4 lg:p-5">
-            <div className="mb-2 text-[13px] font-bold text-gray-700">고객사 자동 매핑</div>
-            {mappedCustomer ? (
-              <div className="flex items-center justify-between gap-3 rounded-[10px] border border-primary-100 bg-white px-4 py-3">
-                <div>
-                  <div className="text-[13px] font-bold text-primary-700">{mappedCustomer.subtenantName}</div>
-                  <div className="text-[12px] text-gray-500">GPU {mappedCustomer.gpuCount}대 자동 매핑</div>
-                </div>
-                <div className="text-[12px] font-mono text-gray-400">{selectedAllocation?.node_id}</div>
-              </div>
-            ) : (
-              <div className="rounded-[10px] border border-dashed border-gray-200 bg-white px-4 py-6 text-center text-[13px] text-gray-400">
-                선택한 노드의 고객사 매핑 정보가 없습니다.
-              </div>
-            )}
+          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm space-y-4">
+             <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest border-l-4 border-emerald-500 pl-3">인스턴스 및 고객사 매핑</h3>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div>
+                  <label className="mb-1.5 block text-[10px] font-black text-gray-400 uppercase tracking-tight">인스턴스 선택</label>
+                  <select className="w-full rounded-lg border border-gray-200 p-2 text-[13px] font-bold focus:border-blue-500 outline-none" value={form.nodeId} onChange={e => onChange({ nodeId: e.target.value })}>
+                    <option value="">인스턴스 선택</option>
+                    {allocations.map(a => <option key={a.id} value={a.node_id}>{a.node?.label || a.node_id}</option>)}
+                  </select>
+               </div>
+               <div>
+                  <label className="mb-1.5 block text-[10px] font-black text-gray-400 uppercase tracking-tight">총 소요 시간</label>
+                  <div className={`rounded-lg p-2 text-[13px] font-black tabular-nums border ${hasDurationError ? 'bg-red-50 border-red-100 text-red-600' : 'bg-gray-50 border-gray-100 text-gray-700'}`}>{durationText}</div>
+               </div>
+             </div>
+             {mappedCustomer ? (
+               <div className="mt-3 p-4 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-between">
+                 <div className="space-y-0.5">
+                   <p className="text-[11px] font-black text-blue-800 uppercase tracking-tight">자동 매핑 고객사</p>
+                   <p className="text-[14px] font-black text-blue-900">{mappedCustomer.subtenantName}</p>
+                 </div>
+                 <div className="text-right">
+                   <p className="text-[10px] font-bold text-blue-500">할당 가중치</p>
+                   <p className="text-[12px] font-black text-blue-700">GPU {mappedCustomer.gpuCount}대 기준</p>
+                 </div>
+               </div>
+             ) : (
+               <div className="mt-3 p-8 border border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center bg-white">
+                  <Server className="text-gray-300 mb-2" size={32} />
+                  <p className="text-xs font-bold text-gray-400 italic">노드를 선택하면 고객사 정보가 매핑됩니다.</p>
+               </div>
+             )}
           </div>
 
-          <div className="rounded-[12px] border border-emerald-100 bg-emerald-50 p-4 lg:p-5">
-            <div className="mb-1 text-[13px] font-bold text-emerald-800">크레딧 산출액 (예상)</div>
-            <div className="font-mono text-[24px] font-extrabold text-emerald-600 sm:text-[28px]">+₩ {expectedCredit.toLocaleString()}</div>
+          <div className="bg-emerald-600 rounded-xl p-6 shadow-xl flex justify-between items-center text-white transition-transform active:scale-[0.99]">
+             <span className="text-[11px] font-black uppercase tracking-widest opacity-80">예상 크레딧 보상액</span>
+             <span className="text-2xl font-black font-mono">+ ₩ {expectedCredit.toLocaleString()}</span>
           </div>
 
           <div className="space-y-4">
-            <div>
-              <label className="mb-1.5 block text-[13px] font-bold text-gray-700">메모</label>
-              <textarea
-                value={form.memo}
-                onChange={(event) => onChange({ memo: event.target.value })}
-                className="h-[90px] w-full resize-none rounded-[10px] border border-gray-200 p-3 text-[13px] text-gray-900 focus:border-primary-500 focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-[13px] font-bold text-gray-700">복구 메모</label>
-              <textarea
-                value={form.recoveryNote}
-                onChange={(event) => onChange({ recoveryNote: event.target.value })}
-                className="h-[90px] w-full resize-none rounded-[10px] border border-gray-200 p-3 text-[13px] text-gray-900 focus:border-primary-500 focus:outline-none"
-              />
-            </div>
+             <div>
+                <label className="mb-1.5 block text-[10px] font-black text-gray-400 uppercase tracking-tight">상세 장애 메모</label>
+                <textarea className="w-full rounded-xl border border-gray-200 p-3 text-sm h-24 resize-none transition-all focus:border-blue-500 outline-none" placeholder="장애 발생 원인, 증상 등..." value={form.memo} onChange={e => onChange({ memo: e.target.value })} />
+             </div>
+             <div>
+                <label className="mb-1.5 block text-[10px] font-black text-gray-400 uppercase tracking-tight">복구 조치 내역</label>
+                <textarea className="w-full rounded-xl border border-gray-200 p-3 text-sm h-24 resize-none transition-all focus:border-blue-500 outline-none" placeholder="조치 사항 및 재발 방지 대책..." value={form.recoveryNote} onChange={e => onChange({ recoveryNote: e.target.value })} />
+             </div>
           </div>
         </div>
 
-        <div className="flex flex-col-reverse gap-3 border-t border-gray-100 p-4 sm:flex-row sm:p-6">
-          <button
-            onClick={onClose}
-            className="flex-1 rounded-[10px] border border-gray-200 px-5 py-3 text-[14px] font-bold text-gray-600 hover:bg-gray-50"
-          >
-            취소
-          </button>
-          <button
-            onClick={() => void onSubmit()}
-            disabled={!mappedCustomer || !form.occurredAt || !form.recoveredAt || !form.nodeId || saving || hasDurationError}
-            className="flex-1 rounded-[10px] bg-red-500 px-5 py-3 text-[14px] font-extrabold text-white disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
-          >
-            {saving ? '등록 중...' : '등록 완료'}
-          </button>
+        <div className="flex justify-end gap-3 bg-white border-t border-gray-100 px-8 py-5">
+           <button className="px-6 py-2.5 rounded-lg text-sm font-bold text-gray-500 hover:bg-gray-50 transition-colors" onClick={onClose}>취소</button>
+           <button className="px-10 py-2.5 rounded-lg bg-red-600 text-sm font-black uppercase tracking-wider text-white shadow-xl shadow-red-100 hover:bg-black transition-all active:scale-[0.98] disabled:bg-gray-200" disabled={!mappedCustomer || !form.occurredAt || !form.recoveredAt || !form.nodeId || saving || hasDurationError} onClick={onSubmit}>
+             {saving ? '등록 중...' : '장애 확정 등록'}
+           </button>
         </div>
       </div>
     </div>
   );
 }
-
-type IncidentsPageClientProps = {
-  initialTenants?: Tenant[];
-  initialSubtenants?: Subtenant[];
-  initialIncidents?: IncidentRecord[];
-  initialCredits?: CreditItem[];
-  initialAllocations?: Allocation[];
-  initialTenantId?: string | null;
-};
 
 export default function IncidentsPageClient({
   initialTenants = [],
@@ -354,417 +262,273 @@ export default function IncidentsPageClient({
   initialCredits = [],
   initialAllocations = [],
   initialTenantId = null,
-}: IncidentsPageClientProps) {
+}: {
+  initialTenants?: Tenant[];
+  initialSubtenants?: Subtenant[];
+  initialIncidents?: IncidentRecord[];
+  initialCredits?: CreditItem[];
+  initialAllocations?: Allocation[];
+  initialTenantId?: string | null;
+}) {
   const { currentUser } = useAuth();
   const isAdmin = currentUser?.role === 'admin';
 
   const [tenants, setTenants] = useState<Tenant[]>(initialTenants);
-  const [activeTenantIdx, setActiveTenantIdx] = useState(
-    Math.max(0, initialTenants.findIndex((tenant) => tenant.id === initialTenantId)),
-  );
+  const [activeTenantIdx, setActiveTenantIdx] = useState(Math.max(0, initialTenants.findIndex(t => t.id === initialTenantId)));
   const [subtenants, setSubtenants] = useState<Subtenant[]>(initialSubtenants);
   const [incidents, setIncidents] = useState<IncidentRecord[]>(initialIncidents);
   const [credits, setCredits] = useState<CreditItem[]>(initialCredits);
   const [allocations, setAllocations] = useState<Allocation[]>(initialAllocations);
-  const [loading, setLoading] = useState(initialTenants.length === 0 && initialIncidents.length === 0);
+  const [loading, setLoading] = useState(initialTenants.length === 0);
   const [saving, setSaving] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [form, setForm] = useState<FormState>({
-    type: 'incident',
-    occurredAt: '',
-    recoveredAt: '',
-    nodeType: 'GPU',
-    nodeId: '',
-    memo: '',
-    recoveryNote: '',
-  });
+  const [error, setError] = useState<string | null>(null);
+  const [form, setForm] = useState<FormState>({ type: 'incident', occurredAt: '', recoveredAt: '', nodeType: 'GPU', nodeId: '', memo: '', recoveryNote: '' });
+  const [tenantSearchTerm, setTenantSearchTerm] = useState('');
+
+  const filteredTenants = useMemo(() => {
+    if (!tenantSearchTerm) return tenants;
+    return tenants.filter(t => t.name.toLowerCase().includes(tenantSearchTerm.toLowerCase()));
+  }, [tenants, tenantSearchTerm]);
 
   const activeTenant = tenants[activeTenantIdx] ?? null;
 
-  const loadTenants = useCallback(async () => {
-    const response = await fetch('/api/tenants');
-    const payload = (await response.json()) as { data?: Tenant[]; error?: string };
-
-    if (!response.ok) {
-      throw new Error(payload.error ?? '회사 목록을 불러오지 못했습니다.');
-    }
-
-    const items = payload.data ?? [];
-    setTenants(items);
-  }, []);
-
-  const loadTenantData = useCallback(async (tenantId: string) => {
-    const [subtenantsResponse, incidentsResponse, creditsResponse, allocationsResponse] = await Promise.all([
-      fetch(`/api/subtenants?tenantId=${tenantId}`),
-      fetch(`/api/incidents?tenantId=${tenantId}`),
-      fetch(`/api/credits?tenantId=${tenantId}`),
-      fetch(`/api/node-allocations?tenantId=${tenantId}`),
-    ]);
-
-    const [subtenantsPayload, incidentsPayload, creditsPayload, allocationsPayload] = await Promise.all([
-      subtenantsResponse.json() as Promise<{ data?: Subtenant[]; error?: string }>,
-      incidentsResponse.json() as Promise<{ data?: IncidentRecord[]; error?: string }>,
-      creditsResponse.json() as Promise<{ data?: { items?: CreditItem[] }; error?: string }>,
-      allocationsResponse.json() as Promise<{ data?: Allocation[]; error?: string }>,
-    ]);
-
-    if (!subtenantsResponse.ok) {
-      throw new Error(subtenantsPayload.error ?? '프로젝트 목록을 불러오지 못했습니다.');
-    }
-
-    if (!incidentsResponse.ok) {
-      throw new Error(incidentsPayload.error ?? '장애 목록을 불러오지 못했습니다.');
-    }
-
-    if (!creditsResponse.ok) {
-      throw new Error(creditsPayload.error ?? '크레딧 내역을 불러오지 못했습니다.');
-    }
-
-    if (!allocationsResponse.ok) {
-      throw new Error(allocationsPayload.error ?? '노드 목록을 불러오지 못했습니다.');
-    }
-
-    setSubtenants(subtenantsPayload.data ?? []);
-    setIncidents(incidentsPayload.data ?? []);
-    setCredits(creditsPayload.data?.items ?? []);
-    setAllocations((allocationsPayload.data ?? []).filter((allocation) => Boolean(allocation.subtenant_id)));
+  const loadTenantData = useCallback(async (tid: string) => {
+    setLoading(true); setError(null);
+    try {
+      const [s, i, c, a] = await Promise.all([
+        fetch(`/api/subtenants?tenantId=${tid}`).then(r => r.json()),
+        fetch(`/api/incidents?tenantId=${tid}`).then(r => r.json()),
+        fetch(`/api/credits?tenantId=${tid}`).then(r => r.json()),
+        fetch(`/api/node-allocations?tenantId=${tid}`).then(r => r.json()),
+      ]);
+      setSubtenants(s.data ?? []);
+      setIncidents(i.data ?? []);
+      setCredits(c.data?.items ?? []);
+      setAllocations((a.data ?? []).filter((node: Allocation) => !!node.subtenant_id));
+    } catch (err) { setError('데이터 갱신 실패'); }
+    finally { setLoading(false); }
   }, []);
 
   useEffect(() => {
-    if (initialTenants.length > 0) {
-      return;
-    }
-
-    const bootstrap = async () => {
-      setLoading(true);
-
+    if (initialTenants.length > 0) return;
+    const fetchTenants = async () => {
       try {
-        await loadTenants();
-      } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : '회사 목록을 불러오지 못했습니다.');
-      } finally {
-        setLoading(false);
-      }
+        const r = await fetch('/api/tenants');
+        const p = await r.json();
+        setTenants(p.data ?? []);
+      } catch (err) { setError('Tenant 로드 실패'); }
     };
-
-    void bootstrap()
-      .catch((error: unknown) => {
-        setErrorMessage(error instanceof Error ? error.message : '회사 목록을 불러오지 못했습니다.');
-      });
-  }, [initialTenants.length, loadTenants]);
+    fetchTenants();
+  }, [initialTenants.length]);
 
   useEffect(() => {
-    if (!activeTenant?.id) {
+    if (!activeTenant?.id) return;
+    if (activeTenant.id === initialTenantId && initialIncidents.length > 0) {
+      setSubtenants(initialSubtenants);
+      setIncidents(initialIncidents);
+      setCredits(initialCredits);
+      setAllocations(initialAllocations.filter((node: Allocation) => !!node.subtenant_id));
+      setLoading(false);
       return;
     }
+    loadTenantData(activeTenant.id);
+  }, [activeTenant?.id, initialIncidents.length, initialTenantId, loadTenantData]);
 
-    if (activeTenant.id === initialTenantId && (initialIncidents.length > 0 || initialSubtenants.length > 0 || initialAllocations.length > 0)) {
-      return;
-    }
-
-    const bootstrap = async () => {
-      setLoading(true);
-      setErrorMessage(null);
-
-      try {
-        await loadTenantData(activeTenant.id);
-      } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : '데이터를 불러오지 못했습니다.');
-        setIncidents([]);
-        setCredits([]);
-        setAllocations([]);
-        setSubtenants([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void bootstrap();
-  }, [
-    activeTenant?.id,
-    initialAllocations.length,
-    initialIncidents.length,
-    initialSubtenants.length,
-    initialTenantId,
-    loadTenantData,
-  ]);
-
-  const subtenantNameById = useMemo(
-    () =>
-      subtenants.reduce<Record<string, string>>((acc, subtenant) => {
-        acc[subtenant.id] = subtenant.name;
-        return acc;
-      }, {}),
-    [subtenants],
-  );
+  const subtenantNameById = useMemo(() => subtenants.reduce<Record<string, string>>((acc, s) => { acc[s.id] = s.name; return acc; }, {}), [subtenants]);
 
   const summary = useMemo(() => {
-    const currentMonth = new Date().toISOString().slice(0, 7);
-
+    const cur = new Date().toISOString().slice(0, 7);
     return {
-      totalCount: incidents.length,
-      incidentCount: incidents.filter((incident) => incident.type === 'incident').length,
-      pmCount: incidents.filter((incident) => incident.type === 'urgent_pm' || incident.type === 'regular_pm').length,
-      totalCredit: credits.filter((credit) => credit.amount > 0).reduce((sum, credit) => sum + credit.amount, 0),
-      monthlyCount: incidents.filter((incident) => (incident.occurredAt ?? '').startsWith(currentMonth)).length,
+      total: incidents.length,
+      incident: incidents.filter(i => i.type === 'incident').length,
+      pm: incidents.filter(i => i.type !== 'incident').length,
+      credits: credits.filter(c => c.amount > 0).reduce((s, c) => s + c.amount, 0),
+      monthly: incidents.filter(i => (i.occurredAt || '').startsWith(cur)).length
     };
   }, [credits, incidents]);
 
-  const resetForm = () => {
-    setForm({
-      type: 'incident',
-      occurredAt: '',
-      recoveredAt: '',
-      nodeType: 'GPU',
-      nodeId: '',
-      memo: '',
-      recoveryNote: '',
-    });
-  };
-
   const handleCreate = async () => {
-    if (!activeTenant?.id) {
-      return;
-    }
-
-    const selectedAllocation = allocations.find((allocation) => allocation.node_id === form.nodeId);
-
-    if (!selectedAllocation?.subtenant_id) {
-      setErrorMessage('선택한 노드의 고객사 매핑 정보를 찾지 못했습니다.');
-      return;
-    }
-
+    if (!activeTenant?.id) return;
+    const sa = allocations.find(a => a.node_id === form.nodeId);
+    if (!sa?.subtenant_id) { setError('매핑 정보 없음'); return; }
     setSaving(true);
-
     try {
-      const response = await fetch('/api/incidents', {
+      const resp = await fetch('/api/incidents', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: form.type,
-          occurredAt: form.occurredAt,
-          recoveredAt: form.recoveredAt,
-          nodeType: form.nodeType,
-          nodeId: form.nodeId,
-          instanceName: selectedAllocation.node?.label ?? selectedAllocation.node_id,
-          customers: [
-            {
-              tenantId: activeTenant.id,
-              subtenantId: selectedAllocation.subtenant_id,
-              gpuCount: 1,
-            },
-          ],
-          memo: form.memo,
-          recoveryNote: form.recoveryNote,
-        }),
+        body: JSON.stringify({ ...form, instanceName: sa.node?.label || sa.node_id, customers: [{ tenantId: activeTenant.id, subtenantId: sa.subtenant_id, gpuCount: 1 }] })
       });
-      const payload = (await response.json()) as { error?: string };
-
-      if (!response.ok) {
-        throw new Error(payload.error ?? '등록에 실패했습니다.');
-      }
-
+      if (!resp.ok) throw new Error('저장 실패');
       await loadTenantData(activeTenant.id);
-      setIsModalOpen(false);
-      resetForm();
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '등록에 실패했습니다.');
-    } finally {
-      setSaving(false);
-    }
+      setIsModalOpen(false); setForm({ type: 'incident', occurredAt: '', recoveredAt: '', nodeType: 'GPU', nodeId: '', memo: '', recoveryNote: '' });
+    } catch (err) { setError(err instanceof Error ? err.message : '실패'); }
+    finally { setSaving(false); }
   };
 
-  const handleDelete = async (incidentId: number) => {
-    if (!isAdmin || !activeTenant?.id) {
-      return;
-    }
-
-    if (!window.confirm('이 항목을 삭제할까요? 연관 크레딧도 함께 삭제됩니다.')) {
-      return;
-    }
-
+  const handleDelete = async (id: number) => {
+    if (!isAdmin || !confirm('삭제할까요?')) return;
     try {
-      const response = await fetch(`/api/incidents/${incidentId}`, { method: 'DELETE' });
-      const payload = (await response.json()) as { error?: string };
-
-      if (!response.ok) {
-        throw new Error(payload.error ?? '삭제에 실패했습니다.');
-      }
-
-      await loadTenantData(activeTenant.id);
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '삭제에 실패했습니다.');
-    }
+      const resp = await fetch(`/api/incidents/${id}`, { method: 'DELETE' });
+      if (!resp.ok) throw new Error('삭제 실패');
+      await loadTenantData(activeTenant!.id);
+    } catch (err) { setError('삭제 중 오류'); }
   };
 
   return (
-    <div className="flex h-auto min-h-0 flex-col gap-6 text-gray-900 md:h-[calc(100vh-112px)] md:flex-row lg:gap-7">
-      <IncidentModal
-        isOpen={isModalOpen}
-        form={form}
-        allocations={allocations}
-        tenantId={activeTenant?.id ?? ''}
-        subtenantNameById={subtenantNameById}
-        saving={saving}
-        onClose={() => {
-          setIsModalOpen(false);
-          resetForm();
-        }}
-        onChange={(next) => setForm((previous) => ({ ...previous, ...next }))}
-        onSubmit={handleCreate}
-      />
-
-      <CompanyListPanel
-        companies={tenants.map((tenant) => ({ id: tenant.id, name: tenant.name, subCount: subtenants.length }))}
-        activeIndex={activeTenantIdx}
-        onCompanyClick={setActiveTenantIdx}
-      />
-
-      <div className="relative flex flex-1 flex-col overflow-hidden">
-        <div className="mb-5 flex-none space-y-5">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="rounded-[10px] border border-gray-200 bg-white p-5 shadow-sm">
-              <div className="mb-2 text-[14px] font-semibold text-gray-600">{activeTenant?.name ?? '고객사'} 전체 등록 건수</div>
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-3xl font-bold tracking-tight text-gray-900">{summary.totalCount}</span>
-                <span className="text-sm text-gray-500">건</span>
-              </div>
-              <div className="mt-4 flex items-center gap-3 text-[12px] font-medium text-gray-500">
-                <span className="flex items-center gap-1.5 rounded-md border border-gray-100 bg-gray-50 px-2 py-1">
-                  <AlertTriangle size={12} className="text-red-500" />
-                  장애 {summary.incidentCount}건
-                </span>
-                <span className="flex items-center gap-1.5 rounded-md border border-gray-100 bg-gray-50 px-2 py-1">
-                  <Settings size={12} className="text-blue-500" />
-                  PM {summary.pmCount}건
-                </span>
-              </div>
-            </div>
-            <div className="rounded-[10px] border border-gray-200 bg-white p-5 shadow-sm">
-              <div className="mb-2 text-[14px] font-semibold text-gray-600">총 크레딧 산출액</div>
-              <div className="mt-1 text-3xl font-bold tracking-tight text-emerald-600">+₩ {summary.totalCredit.toLocaleString()}</div>
-              <div className="mt-4 text-[12px] font-medium text-gray-400">credits 테이블 누적 발생액 기준</div>
-            </div>
-            <div className="rounded-[10px] border border-gray-200 bg-white p-5 shadow-sm">
-              <div className="mb-2 text-[14px] font-semibold text-gray-600">이번 달 신규 등록</div>
-              <div className="mt-1 text-3xl font-bold tracking-tight text-emerald-600">
-                {summary.monthlyCount} <span className="text-sm font-medium text-gray-500">건</span>
-              </div>
-              <div className="mt-4 text-[12px] font-medium text-gray-400">이번 달 발생 시간 기준</div>
-            </div>
-          </div>
-
-          <div className="rounded-[14px] border border-gray-200 bg-white p-4 shadow-sm">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="flex items-center justify-between md:border-r md:border-gray-200 md:pr-5">
-                <div className="text-[14px] font-bold text-gray-900">장애/PM 등록 및 조회</div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    if (activeTenant?.id) {
-                      void loadTenantData(activeTenant.id);
-                    }
-                  }}
-                  className="flex h-[36px] w-[36px] items-center justify-center rounded-[8px] border border-gray-200 text-gray-500 hover:bg-gray-50"
-                >
-                  <RotateCcw size={14} />
-                </button>
-                {isAdmin ? (
-                  <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="flex h-[36px] items-center justify-center gap-1.5 rounded-[8px] bg-red-500 px-4 text-[13px] font-bold text-white hover:bg-red-600"
-                  >
-                    <AlertTriangle size={14} />
-                    <Plus size={14} />
-                    등록
+    <div className="flex h-full flex-col bg-[#F8FAFC]">
+      <div className="flex-1 overflow-y-auto w-full">
+        <div className="mx-auto w-full max-w-[1400px] px-6 py-8 space-y-6">
+          <div className="flex h-[48px] shrink-0 items-center justify-between bg-white px-4 rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-1 min-w-0 flex-1">
+              {filteredTenants.map((t, idx) => {
+                const originalIdx = tenants.findIndex(at => at.id === t.id);
+                const isSelected = activeTenantIdx === originalIdx;
+                return (
+                  <button key={t.id} onClick={() => setActiveTenantIdx(originalIdx)} className={`whitespace-nowrap rounded-full px-4 py-1.5 text-[12px] font-bold transition-all ${isSelected ? 'bg-primary-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50'}`}>
+                    {t.name}
                   </button>
-                ) : null}
+                );
+              })}
+            </div>
+            <div className="hidden md:flex items-center gap-4 pl-4 shrink-0">
+              <div className="h-4 w-px bg-gray-200 shrink-0" />
+              <div className="relative shrink-0">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={13} />
+                <input className="h-[30px] w-36 rounded-full border border-gray-200 bg-white pl-8 pr-4 text-[12px] transition-all focus:w-48 focus:border-blue-300 focus:outline-none" placeholder="테넌트 검색" value={tenantSearchTerm} onChange={e => setTenantSearchTerm(e.target.value)} />
               </div>
             </div>
           </div>
-        </div>
 
-        {errorMessage ? (
-          <div className="mb-4 rounded-[10px] border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] text-rose-600">
-            {errorMessage}
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all hover:shadow-md">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center"><AlertTriangle size={16} className="text-red-500" /></div>
+                <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">전체 등록 건수</span>
+              </div>
+              <p className="text-2xl font-black text-gray-900 tabular-nums">{summary.total}<span className="text-sm ml-1 text-gray-400 font-bold">건</span></p>
+              <div className="mt-2 flex gap-2">
+                 <span className="text-[10px] font-black text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-100">장애 {summary.incident}</span>
+                 <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">PM {summary.pm}</span>
+              </div>
+            </div>
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all hover:shadow-md">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center"><Activity size={16} className="text-emerald-500" /></div>
+                <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">누적 보상 규모</span>
+              </div>
+              <p className="text-2xl font-black text-emerald-600 tabular-nums">+ ₩ {summary.credits.toLocaleString()}</p>
+              <p className="text-xs text-gray-400 mt-1">SLA 준수 보상 산출액 합계</p>
+            </div>
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all hover:shadow-md">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center"><TrendingUp size={16} className="text-amber-500" /></div>
+                <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">당월 신규 등록</span>
+              </div>
+              <p className="text-2xl font-black text-amber-600 tabular-nums">{summary.monthly}<span className="text-sm ml-1 text-gray-400 font-bold">건</span></p>
+              <p className="text-xs text-gray-400 mt-1">최근 30일 이내 발생 건수</p>
+            </div>
           </div>
-        ) : null}
 
-        <div className="flex-1 overflow-hidden rounded-[10px] border border-gray-200 bg-white shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)]">
-          <div className="h-full overflow-x-auto overflow-y-auto">
-            <table className="min-w-[920px] w-full border-collapse text-left">
-              <thead>
-                <tr className="border-b border-gray-200 bg-[#FAFAFA]">
-                  <th className="px-5 py-[14px] text-[12px] font-bold uppercase text-gray-500 whitespace-nowrap">구분</th>
-                  <th className="px-5 py-[14px] text-[12px] font-bold uppercase text-gray-500 whitespace-nowrap">발생 시간</th>
-                  <th className="px-5 py-[14px] text-[12px] font-bold uppercase text-gray-500 whitespace-nowrap">소요 시간</th>
-                  <th className="px-5 py-[14px] text-[12px] font-bold uppercase text-gray-500 whitespace-nowrap">노드</th>
-                  <th className="px-5 py-[14px] text-[12px] font-bold uppercase text-gray-500 whitespace-nowrap">고객사</th>
-                  <th className="px-5 py-[14px] text-[12px] font-bold uppercase text-gray-500 text-right whitespace-nowrap">크레딧 산출액</th>
-                  <th className="px-5 py-[14px] text-[12px] font-bold uppercase text-gray-500 whitespace-nowrap">등록자</th>
-                  {isAdmin ? <th className="px-5 py-[14px] text-[12px] font-bold uppercase text-gray-500 whitespace-nowrap">관리</th> : null}
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={isAdmin ? 8 : 7} className="px-6 py-14 text-center text-[13px] text-gray-400">
-                      데이터를 불러오는 중입니다.
-                    </td>
-                  </tr>
-                ) : incidents.length === 0 ? (
-                  <tr>
-                    <td colSpan={isAdmin ? 8 : 7} className="px-6 py-14 text-center text-[13px] text-gray-400">
-                      등록된 장애/PM 내역이 없습니다.
-                    </td>
-                  </tr>
-                ) : (
-                  incidents.map((incident) => (
-                    <tr key={incident.id} className="border-b border-gray-100 hover:bg-gray-50/60">
-                      <td className="px-5 py-[14px]">
-                        <span className={`inline-flex rounded-[6px] px-2.5 py-1 text-[11px] font-bold ${getTypeBadgeClass(incident.type)}`}>
-                          {getTypeLabel(incident.type)}
-                        </span>
-                      </td>
-                      <td className="px-5 py-[14px] font-mono text-[12px] text-gray-500 whitespace-nowrap">
-                        {formatDate(incident.occurredAt)}
-                      </td>
-                      <td className="px-5 py-[14px] text-[13px] font-medium text-gray-600 whitespace-nowrap">
-                        {formatDuration(incident.durationMinutes)}
-                      </td>
-                      <td className="px-5 py-[14px]">
-                        <span className="inline-flex items-center gap-1.5 rounded-[6px] border border-gray-200 bg-[#F8FAFC] px-2.5 py-1 text-[12px] font-medium text-gray-600">
-                          <Server size={12} className="text-gray-400" />
-                          {incident.instanceName ?? incident.nodeId ?? '-'}
-                        </span>
-                      </td>
-                      <td className="px-5 py-[14px] text-[13px] font-medium text-gray-700 whitespace-nowrap">
-                        {incident.customers.map((customer) => subtenantNameById[customer.subtenantId ?? ''] ?? customer.subtenantId ?? '-').join(', ')}
-                      </td>
-                      <td className="px-5 py-[14px] text-right font-mono text-[13px] font-bold text-emerald-600 whitespace-nowrap">
-                        +₩ {incident.totalCreditAmount.toLocaleString()}
-                      </td>
-                      <td className="px-5 py-[14px] text-[13px] font-medium text-gray-600 whitespace-nowrap">
-                        {incident.registeredBy ?? '-'}
-                      </td>
-                      {isAdmin ? (
-                        <td className="px-5 py-[14px]">
-                          <button onClick={() => void handleDelete(incident.id)} className="text-rose-500 hover:text-rose-700">
-                            <Trash2 size={15} />
-                          </button>
-                        </td>
-                      ) : null}
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/30 flex justify-between items-center">
+               <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest flex items-center gap-2"><RotateCcw size={16} className="text-blue-500" /> 장애 및 점검 내역</h3>
+               <div className="flex gap-2">
+                  <button className="p-2 rounded-lg bg-white border border-gray-200 text-gray-500 hover:text-blue-600 transition-all active:scale-[0.95]" onClick={() => loadTenantData(activeTenant!.id)}><RotateCcw size={14} /></button>
+                  {isAdmin && (
+                    <button className="flex items-center gap-2 px-4 py-2 bg-red-600 rounded-lg text-[11px] font-black uppercase tracking-wider text-white shadow-xl shadow-red-100 hover:bg-black transition-all active:scale-[0.98]" onClick={() => setIsModalOpen(true)}>
+                      <Plus size={14} /> 장애 등록
+                    </button>
+                  )}
+               </div>
+            </div>
+            <div className="overflow-x-auto">
+              {loading ? <div className="p-20 text-center text-sm text-gray-400 italic">데이터 로딩 중...</div> : (
+                <>
+                  <div className="md:hidden space-y-3 p-4 bg-gray-50/50">
+                    {incidents.length === 0 ? (
+                      <div className="py-12 text-center text-sm text-gray-400 italic">등록된 내역이 없습니다.</div>
+                    ) : (
+                      incidents.map(i => (
+                        <div key={i.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-4">
+                          <div className="flex justify-between items-start">
+                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${getTypeBadgeClass(i.type)}`}>{getTypeLabel(i.type)}</span>
+                             <span className="text-sm font-black text-emerald-600 font-mono">+ ₩ {i.totalCreditAmount.toLocaleString()}</span>
+                          </div>
+                          <div className="space-y-3">
+                             <div className="flex items-center justify-between">
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">발생 시점</p>
+                                <p className="text-xs font-bold text-gray-600 tabular-nums">{formatDate(i.occurredAt)}</p>
+                             </div>
+                             <div className="flex items-center justify-between">
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">소요 시간</p>
+                                <p className="text-xs font-black text-gray-900">{formatDuration(i.durationMinutes)}</p>
+                             </div>
+                             <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
+                                <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-50 border border-gray-100">
+                                   <Server size={12} className="text-gray-400" />
+                                   <span className="text-[11px] font-bold text-gray-600">{i.instanceName || i.nodeId}</span>
+                                </div>
+                                {isAdmin && (
+                                  <button className="p-2 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all" onClick={() => handleDelete(i.id)}><Trash2 size={15}/></button>
+                                )}
+                             </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  <table className="hidden md:table w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-left bg-gray-50/50">유형</th>
+                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-left bg-gray-50/50">발생 시점</th>
+                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-left bg-gray-50/50">소요</th>
+                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-left bg-gray-50/50">관련 인스턴스</th>
+                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-left bg-gray-50/50">고객사</th>
+                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-right bg-gray-50/50">보상액</th>
+                        {isAdmin && <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-center bg-gray-50/50">관리</th>}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {incidents.length === 0 ? <tr><td colSpan={isAdmin ? 7 : 6} className="py-20 text-center text-sm text-gray-400 italic">등록된 내역이 없습니다.</td></tr> :
+                        incidents.map(i => (
+                          <tr key={i.id} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-6 py-4">
+                               <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${getTypeBadgeClass(i.type)}`}>{getTypeLabel(i.type)}</span>
+                            </td>
+                            <td className="px-6 py-4 text-[11px] font-bold text-gray-500 tabular-nums">{formatDate(i.occurredAt)}</td>
+                            <td className="px-6 py-4 text-xs font-black text-gray-900">{formatDuration(i.durationMinutes)}</td>
+                            <td className="px-6 py-4">
+                               <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-100 border border-gray-200 w-fit">
+                                  <Server size={12} className="text-gray-400" />
+                                  <span className="text-[11px] font-bold text-gray-600">{i.instanceName || i.nodeId}</span>
+                               </div>
+                            </td>
+                            <td className="px-6 py-4 text-xs font-bold text-gray-700">
+                               {i.customers.map(c => subtenantNameById[c.subtenantId || ''] || c.subtenantId).join(', ')}
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                               <span className="text-sm font-black text-emerald-600 font-mono">+ ₩ {i.totalCreditAmount.toLocaleString()}</span>
+                            </td>
+                            {isAdmin && (
+                              <td className="px-6 py-4 text-center">
+                                 <button className="p-2 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all" onClick={() => handleDelete(i.id)}><Trash2 size={15}/></button>
+                              </td>
+                            )}
+                          </tr>
+                        ))
+                      }
+                    </tbody>
+                  </table>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
+
+      <IncidentModal isOpen={isModalOpen} form={form} allocations={allocations} tenantId={activeTenant?.id || ''} subtenantNameById={subtenantNameById} saving={saving} onClose={() => { setIsModalOpen(false); setForm({ type: 'incident', occurredAt: '', recoveredAt: '', nodeType: 'GPU', nodeId: '', memo: '', recoveryNote: '' }); }} onChange={n => setForm(p => ({ ...p, ...n }))} onSubmit={handleCreate} />
     </div>
   );
 }

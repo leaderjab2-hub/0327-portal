@@ -53,7 +53,7 @@ export default function Topbar() {
 
   return (
     <div className="hidden md:flex h-[52px] w-full bg-white border-b border-[#E5E7EB] items-center justify-between px-6 sticky top-0 z-10">
-      <div className="text-[13px] font-semibold text-gray-900">
+      <div className="text-[13px] font-bold text-gray-400 uppercase tracking-widest">
         {breadcrumb}
       </div>
 
@@ -72,11 +72,18 @@ export default function Topbar() {
         </div>
         <div className="relative ml-2" ref={menuRef}>
           <button
-            className="flex items-center gap-2 rounded-full px-1 py-1 transition hover:bg-gray-50"
+            className="flex items-center gap-3 rounded-full px-2 py-1 transition hover:bg-gray-50"
             onClick={() => setMenuOpen((prev) => !prev)}
             type="button"
           >
-            <div className="w-8 h-8 rounded-full bg-primary-500 font-bold text-white text-[12px] flex items-center justify-center">
+            <div className="text-right hidden sm:block">
+              <p className="text-[13px] font-bold text-gray-900 leading-tight">{currentUser?.name ?? "사용자"}</p>
+              <p className="text-[11px] font-medium text-gray-400">
+                {currentUser?.role === 'admin' ? '전체 관리자' : 
+                 currentUser?.role === 'tenant_admin' ? 'Tenant 관리자' : '멤버'}
+              </p>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-primary-500 font-bold text-white text-[12px] flex items-center justify-center border-2 border-white shadow-sm">
               {badgeLabel}
             </div>
             <ChevronDown size={14} className="text-gray-400" />

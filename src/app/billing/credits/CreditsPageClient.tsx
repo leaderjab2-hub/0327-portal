@@ -1,8 +1,7 @@
 'use client';
 
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, Calendar, FileText } from 'lucide-react';
-import CompanyListPanel from '@/components/CompanyListPanel';
+import { AlertTriangle, Calendar, FileText, Search, CreditCard, TrendingUp, Filter } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 type Tenant = {
@@ -29,16 +28,9 @@ type CreditGroup = {
 };
 
 function formatDate(value: string | null) {
-  if (!value) {
-    return '-';
-  }
-
+  if (!value) return '-';
   const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
+  if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString('ko-KR', {
     year: 'numeric',
     month: '2-digit',
@@ -49,276 +41,221 @@ function formatDate(value: string | null) {
 }
 
 function formatSourceType(sourceType: string | null) {
-  if (sourceType === 'billing_deduction') {
-    return '빌링 차감';
-  }
-
-  if (sourceType === 'urgent_pm') {
-    return '긴급 PM';
-  }
-
-  if (sourceType === 'regular_pm') {
-    return '정기 PM';
-  }
-
-  return '장애';
+  const map: Record<string, string> = {
+    'billing_deduction': '빌링 차감',
+    'urgent_pm': '긴급 PM',
+    'regular_pm': '정기 PM',
+    'incident': '장애 보상'
+  };
+  return map[sourceType ?? ''] || '기타';
 }
-
-type CreditsPageClientProps = {
-  initialTenants?: Tenant[];
-  initialItems?: CreditItem[];
-  initialGroups?: CreditGroup[];
-  initialTenantId?: string | null;
-};
 
 export default function CreditsPageClient({
   initialTenants = [],
   initialItems = [],
   initialGroups = [],
   initialTenantId = null,
-}: CreditsPageClientProps) {
+}: {
+  initialTenants?: Tenant[];
+  initialItems?: CreditItem[];
+  initialGroups?: CreditGroup[];
+  initialTenantId?: string | null;
+}) {
   const { currentUser } = useAuth();
   const [tenants, setTenants] = useState<Tenant[]>(initialTenants);
-  const [activeTenantIdx, setActiveTenantIdx] = useState(
-    Math.max(0, initialTenants.findIndex((tenant) => tenant.id === initialTenantId)),
-  );
+  const [activeTenantIdx, setActiveTenantIdx] = useState(Math.max(0, initialTenants.findIndex(t => t.id === initialTenantId)));
   const [groups, setGroups] = useState<CreditGroup[]>(initialGroups);
   const [items, setItems] = useState<CreditItem[]>(initialItems);
-  const [loading, setLoading] = useState(initialTenants.length === 0 && initialItems.length === 0);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(initialTenants.length === 0);
+  const [tenantSearchTerm, setTenantSearchTerm] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  const filteredTenants = useMemo(() => {
+    if (!tenantSearchTerm) return tenants;
+    return tenants.filter(t => t.name.toLowerCase().includes(tenantSearchTerm.toLowerCase()));
+  }, [tenants, tenantSearchTerm]);
 
   const activeTenant = tenants[activeTenantIdx] ?? null;
 
-  const loadTenants = useCallback(async () => {
-    setLoading(true);
-
-    try {
-      const response = await fetch('/api/tenants');
-      const payload = (await response.json()) as { data?: Tenant[]; error?: string };
-
-      if (!response.ok) {
-        throw new Error(payload.error ?? '회사 목록을 불러오지 못했습니다.');
-      }
-
-      setTenants(payload.data ?? []);
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '회사 목록을 불러오지 못했습니다.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   const loadCredits = useCallback(async (tenantId: string) => {
-    setLoading(true);
-    setErrorMessage(null);
-
+    setLoading(true); setError(null);
     try {
-      const response = await fetch(`/api/credits?tenantId=${tenantId}`);
-      const payload = (await response.json()) as {
-        data?: { items?: CreditItem[]; groups?: CreditGroup[] };
-        error?: string;
-      };
-
-      if (!response.ok) {
-        throw new Error(payload.error ?? '크레딧 내역을 불러오지 못했습니다.');
-      }
-
+      const resp = await fetch(`/api/credits?tenantId=${tenantId}`);
+      const payload = await resp.json();
+      if (!resp.ok) throw new Error(payload.error || '실패');
       setItems(payload.data?.items ?? []);
       setGroups(payload.data?.groups ?? []);
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '크레딧 내역을 불러오지 못했습니다.');
-      setItems([]);
-      setGroups([]);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { setError(err instanceof Error ? err.message : '실패'); setItems([]); setGroups([]); }
+    finally { setLoading(false); }
   }, []);
 
   useEffect(() => {
-    if (initialTenants.length > 0) {
-      return;
-    }
-
-    void loadTenants();
-  }, [initialTenants.length, loadTenants]);
+    if (initialTenants.length > 0) return;
+    const fetchTenants = async () => {
+      try {
+        const r = await fetch('/api/tenants');
+        const p = await r.json();
+        setTenants(p.data ?? []);
+      } catch (err) { setError('Tenant 로드 실패'); }
+    };
+    fetchTenants();
+  }, [initialTenants.length]);
 
   useEffect(() => {
-    if (!activeTenant?.id) {
-      return;
-    }
-
+    if (!activeTenant?.id) return;
     if (activeTenant.id === initialTenantId && initialItems.length > 0) {
+      setItems(initialItems);
+      setGroups(initialGroups);
+      setLoading(false);
       return;
     }
-
-    void loadCredits(activeTenant.id);
+    loadCredits(activeTenant.id);
   }, [activeTenant?.id, initialItems.length, initialTenantId, loadCredits]);
 
   const summary = useMemo(() => {
     const currentMonth = new Date().toISOString().slice(0, 7);
-    const monthlyItems = items.filter((item) => (item.createdAt ?? '').startsWith(currentMonth));
-    const generated = monthlyItems.filter((item) => item.amount > 0).reduce((sum, item) => sum + item.amount, 0);
-    const deducted = monthlyItems.filter((item) => item.amount < 0).reduce((sum, item) => sum + item.amount, 0);
-    const balance = items.reduce((sum, item) => sum + item.amount, 0);
-
+    const monthlyItems = items.filter(i => (i.createdAt ?? '').startsWith(currentMonth));
+    const generated = monthlyItems.filter(i => i.amount > 0).reduce((sum, i) => sum + i.amount, 0);
+    const deducted = monthlyItems.filter(i => i.amount < 0).reduce((sum, i) => sum + i.amount, 0);
+    const balance = items.reduce((sum, i) => sum + i.amount, 0);
     return { balance, generated, deducted };
   }, [items]);
 
   return (
-    <div className="flex h-auto min-h-0 flex-col gap-6 text-gray-900 md:h-[calc(100vh-112px)] md:flex-row lg:gap-7">
-      <CompanyListPanel
-        companies={tenants.map((tenant) => ({ id: tenant.id, name: tenant.name, subCount: groups.length }))}
-        activeIndex={activeTenantIdx}
-        onCompanyClick={setActiveTenantIdx}
-      />
-
-      <div className="relative flex flex-1 flex-col overflow-hidden">
-        <div className="mb-5 flex-none space-y-5">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:gap-5">
-            <div className="rounded-[10px] border border-gray-200 bg-white p-5 shadow-sm lg:rounded-[12px] lg:p-6 lg:shadow-[0_8px_24px_-16px_rgba(15,23,42,0.15)]">
-              <div className="mb-2 text-[14px] font-semibold text-gray-600">현재 크레딧 잔액</div>
-              <div className={`text-[28px] font-bold tracking-tight lg:text-[30px] ${summary.balance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                {summary.balance >= 0 ? '+₩ ' : '-₩ '}
-                {Math.abs(summary.balance).toLocaleString()}
-              </div>
-              <div className="mt-4 text-[12px] font-medium text-gray-400">누적 발생 - 누적 차감</div>
+    <div className="flex h-full flex-col bg-[#F8FAFC]">
+      <div className="flex-1 overflow-y-auto w-full">
+        <div className="mx-auto w-full max-w-[1400px] px-6 py-8 space-y-6">
+          
+          <div className="flex h-[48px] shrink-0 items-center justify-between bg-white px-4 rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-1 min-w-0 flex-1">
+              {filteredTenants.map((t, idx) => {
+                const originalIdx = tenants.findIndex(at => at.id === t.id);
+                const isSelected = activeTenantIdx === originalIdx;
+                return (
+                  <button key={t.id} onClick={() => setActiveTenantIdx(originalIdx)} className={`whitespace-nowrap rounded-full px-4 py-1.5 text-[12px] font-bold transition-all ${isSelected ? 'bg-primary-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50'}`}>
+                    {t.name}
+                  </button>
+                );
+              })}
             </div>
-            <div className="rounded-[10px] border border-gray-200 bg-white p-5 shadow-sm lg:rounded-[12px] lg:p-6 lg:shadow-[0_8px_24px_-16px_rgba(15,23,42,0.15)]">
-              <div className="mb-2 text-[14px] font-semibold text-gray-600">이번 달 발생액</div>
-              <div className="text-[28px] font-bold tracking-tight text-emerald-600 lg:text-[30px]">+₩ {summary.generated.toLocaleString()}</div>
-              <div className="mt-4 flex items-center gap-3 text-[12px] font-medium text-gray-500">
-                <span className="flex items-center gap-1.5 rounded-md border border-gray-100 bg-gray-50 px-2 py-1">
-                  <AlertTriangle size={12} className="text-red-500" />
-                  장애/PM 발생
-                </span>
-              </div>
-            </div>
-            <div className="rounded-[10px] border border-gray-200 bg-white p-5 shadow-sm lg:rounded-[12px] lg:p-6 lg:shadow-[0_8px_24px_-16px_rgba(15,23,42,0.15)]">
-              <div className="mb-2 text-[14px] font-semibold text-gray-600">이번 달 차감액</div>
-              <div className="text-[28px] font-bold tracking-tight text-red-600 lg:text-[30px]">-₩ {Math.abs(summary.deducted).toLocaleString()}</div>
-              <div className="mt-4 flex items-center gap-3 text-[12px] font-medium text-gray-500">
-                <span className="flex items-center gap-1.5 rounded-md border border-gray-100 bg-gray-50 px-2 py-1">
-                  <FileText size={12} className="text-blue-500" />
-                  빌링 차감
-                </span>
+            <div className="hidden md:flex items-center gap-4 pl-4 shrink-0">
+              <div className="h-4 w-px bg-gray-200 shrink-0" />
+              <div className="relative shrink-0">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={13} />
+                <input className="h-[30px] w-36 rounded-full border border-gray-200 bg-white pl-8 pr-4 text-[12px] transition-all focus:w-48 focus:border-blue-300 focus:outline-none" placeholder="테넌트 검색" value={tenantSearchTerm} onChange={e => setTenantSearchTerm(e.target.value)} />
               </div>
             </div>
           </div>
 
-          <div className="rounded-[14px] border border-gray-200 bg-white p-4 shadow-sm lg:p-5 lg:shadow-[0_8px_24px_-16px_rgba(15,23,42,0.12)]">
-            <div className="flex items-center gap-2 text-[14px] font-bold text-gray-900">
-              <Calendar size={16} className="text-gray-400" />
-              {activeTenant?.name ?? currentUser?.tenantId ?? '고객사'} 크레딧 내역
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all hover:shadow-md">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center"><CreditCard size={16} className="text-blue-500" /></div>
+                <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">현재 가용 잔액</span>
+              </div>
+              <p className={`text-2xl font-black tabular-nums ${summary.balance >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
+                {summary.balance >= 0 ? '₩ ' : '- ₩ '}{Math.abs(summary.balance).toLocaleString()}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">발생액 - 차감액 누계 필터</p>
+            </div>
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all hover:shadow-md">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center"><TrendingUp size={16} className="text-emerald-500" /></div>
+                <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">당월 발생합계</span>
+              </div>
+              <p className="text-2xl font-black text-emerald-600 tabular-nums">+ ₩ {summary.generated.toLocaleString()}</p>
+              <p className="text-xs text-gray-400 mt-1">장애 보상 및 프로모션 합계</p>
+            </div>
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all hover:shadow-md">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center"><AlertTriangle size={16} className="text-red-500" /></div>
+                <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">당월 차감합계</span>
+              </div>
+              <p className="text-2xl font-black text-red-600 tabular-nums">- ₩ {Math.abs(summary.deducted).toLocaleString()}</p>
+              <p className="text-xs text-gray-400 mt-1">빌링 결제 시 소진된 크레딧</p>
             </div>
           </div>
-        </div>
 
-        {errorMessage ? (
-          <div className="mb-4 rounded-[10px] border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] text-rose-600">
-            {errorMessage}
-          </div>
-        ) : null}
-
-        <div className="flex-1 overflow-hidden rounded-[10px] border border-gray-200 bg-white shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] lg:rounded-[12px] lg:shadow-[0_10px_30px_-18px_rgba(15,23,42,0.18)]">
-          <div className="h-full overflow-x-auto overflow-y-auto">
-            <table className="min-w-full border-collapse text-left">
-              <thead>
-                <tr className="border-b border-gray-200 bg-[#FAFAFA]">
-                  <th className="px-6 py-[14px] text-[12px] font-bold uppercase tracking-wider text-gray-500 whitespace-nowrap">Subtenant</th>
-                  <th className="px-6 py-[14px] text-[12px] font-bold uppercase tracking-wider text-gray-500 whitespace-nowrap">구분</th>
-                  <th className="px-6 py-[14px] text-[12px] font-bold uppercase tracking-wider text-gray-500 whitespace-nowrap">출처</th>
-                  <th className="px-6 py-[14px] text-[12px] font-bold uppercase tracking-wider text-gray-500 whitespace-nowrap">일시</th>
-                  <th className="px-6 py-[14px] text-[12px] font-bold uppercase tracking-wider text-gray-500 text-right whitespace-nowrap">발생/차감액</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-14 text-center text-[13px] text-gray-400">
-                      데이터를 불러오는 중입니다.
-                    </td>
-                  </tr>
-                ) : groups.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-14 text-center text-[13px] text-gray-400">
-                      표시할 크레딧 이력이 없습니다.
-                    </td>
-                  </tr>
-                ) : (
-                  groups.map((group) => {
-                    const groupGenerated = group.items.filter((item) => item.amount > 0).reduce((sum, item) => sum + item.amount, 0);
-                    const groupDeducted = group.items.filter((item) => item.amount < 0).reduce((sum, item) => sum + item.amount, 0);
-                    const groupBalance = group.items.reduce((sum, item) => sum + item.amount, 0);
-
-                    return (
-                      <Fragment key={group.subtenantId ?? 'unassigned'}>
-                        <tr key={`${group.subtenantId ?? 'unassigned'}-header`} className="border-b border-gray-100 bg-[#F8FAFC]">
-                          <td colSpan={5} className="px-6 py-3">
-                            <div className="flex flex-wrap items-center gap-3 text-[13px] font-semibold text-gray-800">
-                              <span>{group.subtenantName ?? '미지정'}</span>
-                              <span className="text-gray-300">|</span>
-                              <span className="text-gray-500">{group.items.length}건</span>
-                              <span className="text-gray-300">|</span>
-                              <span className={groupBalance >= 0 ? 'text-emerald-600' : 'text-red-600'}>
-                                {groupBalance >= 0 ? '+₩ ' : '-₩ '}
-                                {Math.abs(groupBalance).toLocaleString()}
-                              </span>
-                            </div>
-                          </td>
-                        </tr>
-                        {group.items.map((item) => (
-                          <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50/50">
-                            <td className="px-6 py-[14px] text-[13px] font-medium text-gray-700">{group.subtenantName ?? '미지정'}</td>
-                            <td className="px-6 py-[14px]">
-                              <span
-                                className={`inline-flex rounded-[6px] px-2.5 py-1 text-[11px] font-bold ${
-                                  item.amount >= 0
-                                    ? 'bg-emerald-50 text-emerald-600'
-                                    : 'bg-red-50 text-red-600'
-                                }`}
-                              >
-                                {formatSourceType(item.sourceType)}
-                              </span>
-                            </td>
-                            <td className="px-6 py-[14px] text-[13px] font-medium text-gray-600">{item.note ?? '-'}</td>
-                            <td className="px-6 py-[14px] font-mono text-[12px] text-gray-500 whitespace-nowrap">{formatDate(item.createdAt)}</td>
-                            <td
-                              className={`px-6 py-[14px] text-right font-mono text-[13px] font-bold whitespace-nowrap ${
-                                item.amount >= 0 ? 'text-emerald-600' : 'text-red-600'
-                              }`}
-                            >
-                              {item.amount >= 0 ? '+₩ ' : '-₩ '}
-                              {Math.abs(item.amount).toLocaleString()}
-                            </td>
-                          </tr>
-                        ))}
-                        <tr key={`${group.subtenantId ?? 'unassigned'}-summary`} className="border-t border-gray-200 bg-gray-50">
-                          <td colSpan={5} className="px-6 py-[18px]">
-                            <div className="flex flex-col gap-3 text-[14px] font-bold md:flex-row md:items-center md:justify-end md:gap-6">
-                              <div className="flex items-center justify-between gap-2">
-                                <span className="text-gray-600">누적 발생액:</span>
-                                <span className="font-mono text-emerald-600">+₩ {groupGenerated.toLocaleString()}</span>
-                              </div>
-                              <div className="flex items-center justify-between gap-2">
-                                <span className="text-gray-600">누적 차감액:</span>
-                                <span className="font-mono text-red-600">-₩ {Math.abs(groupDeducted).toLocaleString()}</span>
-                              </div>
-                              <div className="flex items-center justify-between gap-2 border-t border-gray-200 pt-3 md:border-l md:border-t-0 md:pl-6 md:pt-0">
-                                <span className="text-gray-900">최종 잔액:</span>
-                                <span className={`font-mono text-[16px] ${groupBalance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                                  {groupBalance >= 0 ? '+₩ ' : '-₩ '}
-                                  {Math.abs(groupBalance).toLocaleString()}
-                                </span>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      </Fragment>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden min-h-[500px]">
+            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/30 flex justify-between items-center">
+               <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest flex items-center gap-2"><Filter size={16} className="text-blue-500" /> 크레딧 트랜잭션 기록</h3>
+               <div className="text-[10px] font-black text-blue-600 uppercase tracking-tighter bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100 italic">{activeTenant?.name || '로딩 중...'}</div>
+            </div>
+            <div className="overflow-x-auto">
+              {loading ? (
+                <div className="flex h-[200px] items-center justify-center text-sm text-gray-400 italic">로딩 중...</div>
+              ) : groups.length === 0 ? (
+                <div className="flex h-[200px] items-center justify-center text-sm text-gray-400 italic">등록된 내역이 없습니다.</div>
+              ) : (
+                <>
+                  <div className="md:hidden space-y-3 p-4 bg-gray-50/50">
+                    {groups.flatMap(g => g.items).map(i => (
+                      <div key={i.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
+                        <div className="flex justify-between items-start">
+                           <p className="text-sm font-black text-gray-900">{formatSourceType(i.sourceType)}</p>
+                           <p className={`text-sm font-black ${i.amount >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                             {i.amount >= 0 ? '+' : ''}{i.amount.toLocaleString()}
+                           </p>
+                        </div>
+                        <div className="space-y-1">
+                           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">거래 일시</p>
+                           <p className="text-xs text-gray-600 tabular-nums">{formatDate(i.createdAt)}</p>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg text-[11px] text-gray-600 leading-relaxed">
+                           {i.note || '내용 없음'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <table className="hidden md:table w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-left bg-gray-50/50">파트너사</th>
+                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-left bg-gray-50/50">유형</th>
+                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-left bg-gray-50/50">내용</th>
+                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-left bg-gray-50/50">일시</th>
+                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-right bg-gray-50/50">거래 금액</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {groups.map(g => {
+                        const gb = g.items.reduce((s, i) => s + i.amount, 0);
+                        return (
+                          <Fragment key={g.subtenantId || 'na'}>
+                             <tr className="bg-slate-50 border-y border-slate-100">
+                               <td colSpan={5} className="px-6 py-2.5">
+                                  <div className="flex items-center gap-3">
+                                     <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                                     <span className="text-[12px] font-black text-gray-900 uppercase tracking-tight">{g.subtenantName || '미지정 파트너'}</span>
+                                     <span className="text-xs font-bold text-gray-400">|</span>
+                                     <span className="text-[11px] font-bold text-gray-500">{g.items.length} Transactions</span>
+                                     <div className="ml-auto text-[11px] font-black uppercase tracking-widest text-gray-400">Subtotal: <span className={gb >= 0 ? 'text-emerald-600' : 'text-red-600'}>{gb >= 0 ? '₩ ' : '- ₩ '}{Math.abs(gb).toLocaleString()}</span></div>
+                                  </div>
+                               </td>
+                             </tr>
+                             {g.items.map(i => (
+                               <tr key={i.id} className="group hover:bg-gray-50 transition-colors">
+                                 <td className="px-6 py-4 text-sm font-bold text-gray-900">{g.subtenantName || '미지정'}</td>
+                                 <td className="px-6 py-4">
+                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${i.amount >= 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
+                                      {formatSourceType(i.sourceType)}
+                                    </span>
+                                 </td>
+                                 <td className="px-6 py-4 text-xs font-bold text-gray-700">{i.note || '-'}</td>
+                                 <td className="px-6 py-4 text-[11px] font-bold text-gray-500 tabular-nums">{formatDate(i.createdAt)}</td>
+                                 <td className={`px-6 py-4 text-right font-black text-sm tabular-nums ${i.amount >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                   {i.amount >= 0 ? '+ ₩ ' : '- ₩ '}{Math.abs(i.amount).toLocaleString()}
+                                 </td>
+                               </tr>
+                             ))}
+                          </Fragment>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>

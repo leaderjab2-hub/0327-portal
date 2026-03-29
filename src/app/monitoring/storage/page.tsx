@@ -135,26 +135,28 @@ export default function StorageMonitoring() {
 
   return (
     <div className="flex h-full min-w-0 w-full flex-col gap-6">
-      <div className="flex items-center justify-between rounded-[10px] border border-gray-200 bg-white p-4 text-left">
-        <div className="border-r border-gray-200 pr-5 text-[14px] font-semibold text-gray-900">Total {companies.length}</div>
-        <div className="flex flex-1 items-center gap-3 px-5">
-          <select className="h-[34px] w-[200px] rounded-[7px] border border-gray-200 bg-white px-3 text-[13px] focus:border-primary-500 focus:outline-none">
-            <option>전체 회사</option>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center justify-between rounded-xl border border-gray-200 bg-white p-4 text-left shadow-sm">
+        <div className="flex flex-1 items-center gap-3 w-full overflow-hidden">
+          <div className="hidden md:block border-r border-gray-200 pr-5 text-[14px] font-black text-gray-900 whitespace-nowrap uppercase tracking-widest">Total {companies.length}</div>
+          <select className="h-[38px] flex-1 min-w-0 md:w-[220px] md:flex-none rounded-lg border border-gray-200 bg-white px-3 text-sm font-bold text-gray-700 focus:border-blue-500 focus:outline-none transition-colors">
+            <option>전체 테넌트 (Company)</option>
             {companies.map((company) => (
               <option key={company.tenantId}>{company.name}</option>
             ))}
           </select>
-          <div className="flex h-[34px] w-[200px] items-center gap-2 rounded-[7px] border border-gray-200 bg-white px-3">
-            <Calendar className="text-gray-400" size={14} />
-            <span className="text-[12px] font-mono text-gray-600">최근 30 포인트</span>
+        </div>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="flex h-[38px] flex-1 md:w-[180px] items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 shadow-sm overflow-hidden">
+            <Calendar className="shrink-0 text-gray-400" size={14} />
+            <span className="truncate text-[10px] font-black uppercase tracking-tight text-gray-500">Last 30 Points</span>
           </div>
-          <button className="flex h-[34px] w-[34px] items-center justify-center rounded-[7px] border border-gray-200 text-gray-600 hover:bg-gray-50">
-            <RotateCcw size={14} />
+          <button className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 shadow-sm transition-colors">
+            <RotateCcw size={16} />
+          </button>
+          <button className="flex h-[38px] w-[80px] shrink-0 items-center justify-center gap-1 rounded-lg bg-blue-600 text-[13px] font-black uppercase tracking-wider text-white hover:bg-blue-700 shadow-xl transition-all active:scale-[0.98]">
+            검색
           </button>
         </div>
-        <button className="flex h-[34px] w-[80px] items-center justify-center gap-1 rounded-[7px] bg-primary-500 text-[13px] font-semibold text-white hover:bg-primary-600">
-          검색
-        </button>
       </div>
 
       {error ? (
@@ -170,29 +172,33 @@ export default function StorageMonitoring() {
           </div>
         ) : (
           companies.map((company) => (
-            <div key={company.tenantId} className="overflow-hidden rounded-[10px] border border-gray-200 bg-white text-left">
-              <div className="flex items-center justify-between border-b border-gray-100 bg-[#FAFAFA] p-5">
+            <div key={company.tenantId} className="overflow-hidden rounded-xl border border-gray-200 bg-white text-left shadow-sm">
+              <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-gray-100 bg-[#FAFAFA] p-5 gap-4">
                 <div className="flex items-center gap-4">
-                  <h2 className="text-[16px] font-bold text-gray-900">{company.name}</h2>
-                  <span className="font-mono text-[13px] text-gray-600">{company.tenantId}</span>
+                  <h2 className="text-[15px] font-black text-gray-900 uppercase tracking-tight">{company.name}</h2>
+                  <span className="font-mono text-[11px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded flex items-center">{company.tenantId}</span>
                 </div>
-                <div className="flex items-center gap-4 rounded-[7px] border border-gray-200 bg-white px-4 py-1.5">
-                  <span className="text-[12px] font-semibold uppercase tracking-wide text-gray-400">사용량</span>
-                  <span className="font-mono text-[14px] font-bold text-gray-900">
-                    {company.usageTB} TB / {company.totalTB} TB
-                  </span>
-                  <span
-                    className={`rounded-[4px] px-2 py-0.5 font-mono text-[11px] font-bold ${
-                      company.usagePercent >= 80
-                        ? "bg-[#FEF2F2] text-[#DC2626]"
-                        : "bg-primary-50 text-primary-600"
-                    }`}
-                  >
-                    {company.usagePercent}%
-                  </span>
-                  <div className="mx-2 h-4 w-px bg-gray-200" />
-                  <ToggleRight className="text-[#10B981]" size={24} />
-                  <span className="text-[12px] font-semibold text-[#10B981]">활성</span>
+                <div className="flex flex-wrap items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">USAGE</span>
+                    <span className="font-mono text-sm font-black text-gray-900 leading-none">
+                      {company.usageTB} / {company.totalTB} TB
+                    </span>
+                    <span
+                      className={`rounded-full px-2 py-0.5 font-black text-[10px] uppercase border ${
+                        company.usagePercent >= 80
+                          ? "bg-red-50 text-red-600 border-red-100"
+                          : "bg-blue-50 text-blue-600 border-blue-100"
+                      }`}
+                    >
+                      {company.usagePercent}%
+                    </span>
+                  </div>
+                  <div className="hidden h-4 w-px bg-gray-200 sm:block" />
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Active</span>
+                  </div>
                 </div>
               </div>
 

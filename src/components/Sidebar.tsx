@@ -151,8 +151,8 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`fixed left-0 top-0 z-40 hidden h-screen flex-col overflow-visible border-r border-[#E5E7EB] bg-white transition-[width] duration-200 md:flex ${
-        collapsed ? 'w-16' : 'w-[240px]'
+      className={`relative z-40 hidden h-screen flex-col overflow-visible border-r border-[#E5E7EB] bg-white transition-[width] duration-200 md:flex ${
+        collapsed ? 'w-16' : 'w-60'
       }`}
     >
       <div

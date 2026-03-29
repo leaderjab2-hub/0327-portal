@@ -4,14 +4,17 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
   Building2,
+  CreditCard,
   Download,
   FileText,
   MoreVertical,
   Plus,
+  Search,
+  TrendingUp,
   UploadCloud,
   X,
 } from 'lucide-react';
-import CompanyListPanel from '@/components/CompanyListPanel';
+
 import { useAuth } from '@/contexts/AuthContext';
 import { mockNetworkMetrics, mockStorageMetrics } from '@/lib/mockMonitoringData';
 import type { Json } from '@/types/database';
@@ -76,10 +79,7 @@ type TenantContract = {
 };
 
 function parseContract(contract: Json | null): TenantContract {
-  if (!contract || Array.isArray(contract) || typeof contract !== 'object') {
-    return {};
-  }
-
+  if (!contract || Array.isArray(contract) || typeof contract !== 'object') return {};
   return contract as TenantContract;
 }
 
@@ -113,10 +113,7 @@ function normalizeBillingRecord(record: BillingLikeRecord): BillingRecord {
 }
 
 function formatPeriod(start: string | null, end: string | null) {
-  if (!start || !end) {
-    return '-';
-  }
-
+  if (!start || !end) return '-';
   return `${start} ~ ${end}`;
 }
 
@@ -126,30 +123,21 @@ function periodKey(start: string | null) {
 
 async function readJson<T>(response: Response): Promise<T> {
   const payload = (await response.json().catch(() => ({}))) as T & { error?: string };
-
-  if (!response.ok) {
-    throw new Error(payload.error ?? '요청을 처리하지 못했습니다.');
-  }
-
+  if (!response.ok) throw new Error(payload.error ?? '요청을 처리하지 못했습니다.');
   return payload;
 }
 
 function downloadCsv(filename: string, rows: Array<Record<string, string | number | null>>) {
-  if (rows.length === 0) {
-    return;
-  }
-
+  if (rows.length === 0) return;
   const headers = Object.keys(rows[0]);
   const csv = [
     headers.join(','),
     ...rows.map((row) =>
-      headers
-        .map((header) => {
-          const value = row[header];
-          const text = value == null ? '' : String(value);
-          return `"${text.replaceAll('"', '""')}"`;
-        })
-        .join(','),
+      headers.map((header) => {
+        const value = row[header];
+        const text = value == null ? '' : String(value);
+        return `"${text.replaceAll('"', '""')}"`;
+      }).join(','),
     ),
   ].join('\n');
 
@@ -186,8 +174,8 @@ function BillingRegistrationModal({
     memo: string | null;
   }) => Promise<void>;
 }) {
-  const [periodStart, setPeriodStart] = useState('2026-02-01');
-  const [periodEnd, setPeriodEnd] = useState('2026-02-28');
+  const [periodStart, setPeriodStart] = useState('2026-03-01');
+  const [periodEnd, setPeriodEnd] = useState('2026-03-31');
   const [creditDeduction, setCreditDeduction] = useState('0');
   const [invoiceUrl, setInvoiceUrl] = useState('');
   const [memo, setMemo] = useState('');
@@ -197,28 +185,18 @@ function BillingRegistrationModal({
 
   useEffect(() => {
     let active = true;
-
     const loadCreditBalance = async () => {
       try {
         const payload = await readJson<{ data: { balance: number } }>(
           await fetch(`/api/credits/balance?tenantId=${tenant.id}&subtenantId=${subtenant.id}`, { cache: 'no-store' }),
         );
-
-        if (active) {
-          setCreditBalance(payload.data.balance ?? 0);
-        }
+        if (active) setCreditBalance(payload.data.balance ?? 0);
       } catch {
-        if (active) {
-          setCreditBalance(0);
-        }
+        if (active) setCreditBalance(0);
       }
     };
-
-    void loadCreditBalance();
-
-    return () => {
-      active = false;
-    };
+    loadCreditBalance();
+    return () => { active = false; };
   }, [subtenant.id, tenant.id]);
 
   const contract = parseContract(tenant.contract);
@@ -226,153 +204,94 @@ function BillingRegistrationModal({
   const cpuFee = (contract.cpu?.quantity ?? 0) * (contract.cpu?.unitPrice ?? 0);
   const storageFee = Math.round((mockStorageMetrics[tenant.id]?.usageTB ?? 0) * (contract.storage?.unitPrice ?? 0));
   const networkFee = Math.round((mockNetworkMetrics[tenant.id]?.currentOutboundGB ?? 0) * (contract.network?.unitPrice ?? 0));
-  const creditValue = Number(creditDeduction.replaceAll(',', '')) || 0;
+  const creditValue = Number(creditDeduction.replace(/[^\d]/g, '')) || 0;
   const expectedBalance = creditBalance - creditValue;
   const totalFee = gpuFee + cpuFee + storageFee + networkFee - creditValue;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 p-4 backdrop-blur-sm">
-      <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-[16px] bg-[#F8FAFC] shadow-2xl">
-        <div className="flex h-[56px] shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 sm:h-[64px] sm:px-6">
-          <h2 className="flex items-center gap-2 text-[18px] font-extrabold text-gray-900">빌링 등록</h2>
-          <button className="text-gray-400 transition-colors hover:text-gray-900" onClick={onClose} type="button">
+    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-gray-950/45 p-4 backdrop-blur-sm">
+      <div className="flex w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+          <h2 className="text-xl font-black text-gray-900 tracking-tight">신규 빌링 등록</h2>
+          <button className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors" onClick={onClose}>
             <X size={20} />
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4 sm:gap-6 sm:p-6">
-          <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
-            <h3 className="mb-4 border-l-4 border-primary-500 pl-3 text-sm font-extrabold text-gray-800">기본 정보</h3>
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="flex-1 overflow-y-auto space-y-6 p-6 scroll-smooth bg-gray-50/50">
+          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm space-y-4">
+            <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest border-l-4 border-blue-500 pl-3">기본 정산 정보</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="mb-1.5 block text-[11px] font-extrabold uppercase tracking-tight text-gray-400">Tenant</label>
-                <input className="w-full rounded-[10px] border border-gray-200 bg-gray-50/50 p-2.5 text-[13px] font-bold text-gray-700" readOnly value={tenant.name} />
+                <label className="mb-1.5 block text-[10px] font-black text-gray-500 uppercase tracking-tight">Tenant</label>
+                <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-sm font-bold text-gray-600">{tenant.name}</div>
               </div>
               <div>
-                <label className="mb-1.5 block text-[11px] font-extrabold uppercase tracking-tight text-gray-400">Subtenant</label>
-                <input className="w-full rounded-[10px] border border-gray-200 bg-gray-50/50 p-2.5 text-[13px] font-bold text-gray-700" readOnly value={subtenant.name} />
+                <label className="mb-1.5 block text-[10px] font-black text-gray-500 uppercase tracking-tight">Subtenant</label>
+                <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-sm font-bold text-gray-600">{subtenant.name}</div>
               </div>
               <div>
-                <label className="mb-1.5 block text-[11px] font-extrabold uppercase tracking-tight text-gray-500">청구 시작일</label>
-                <input className="w-full rounded-[10px] border border-gray-200 p-2.5 text-[13px] font-bold text-gray-900 shadow-sm focus:border-primary-500 focus:outline-none" type="date" value={periodStart} onChange={(event) => setPeriodStart(event.target.value)} />
+                <label className="mb-1.5 block text-[10px] font-black text-gray-500 uppercase tracking-tight">청구 시작일</label>
+                <input className="w-full rounded-lg border border-gray-200 p-2 text-[13px] font-bold focus:border-blue-500 outline-none" type="date" value={periodStart} onChange={e => setPeriodStart(e.target.value)} />
               </div>
               <div>
-                <label className="mb-1.5 block text-[11px] font-extrabold uppercase tracking-tight text-gray-500">청구 종료일</label>
-                <input className="w-full rounded-[10px] border border-gray-200 p-2.5 text-[13px] font-bold text-gray-900 shadow-sm focus:border-primary-500 focus:outline-none" type="date" value={periodEnd} onChange={(event) => setPeriodEnd(event.target.value)} />
+                <label className="mb-1.5 block text-[10px] font-black text-gray-500 uppercase tracking-tight">청구 종료일</label>
+                <input className="w-full rounded-lg border border-gray-200 p-2 text-[13px] font-bold focus:border-blue-500 outline-none" type="date" value={periodEnd} onChange={e => setPeriodEnd(e.target.value)} />
               </div>
             </div>
-          </section>
+          </div>
 
-          <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="border-l-4 border-primary-500 pl-2 text-sm font-bold text-gray-800">청구 내역 (자동 산출)</h3>
-              <span className="rounded bg-gray-100 px-2 py-1 text-[11px] text-gray-500">{formatPeriod(periodStart, periodEnd)}</span>
+          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm space-y-4">
+            <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest border-l-4 border-emerald-500 pl-3">요금 산출 내역</h3>
+            <div className="grid grid-cols-2 gap-y-4 gap-x-8 px-2">
+              <div className="flex justify-between items-end pb-2 border-b border-gray-50"><span className="text-xs text-gray-400 font-bold">GPU (고정)</span><span className="text-sm font-mono font-black text-gray-800">{formatCurrency(gpuFee)}</span></div>
+              <div className="flex justify-between items-end pb-2 border-b border-gray-50"><span className="text-xs text-gray-400 font-bold">CPU (고정)</span><span className="text-sm font-mono font-black text-gray-800">{formatCurrency(cpuFee)}</span></div>
+              <div className="flex justify-between items-end pb-2 border-b border-gray-50"><span className="text-xs text-gray-400 font-bold">Storage (변동)</span><span className="text-sm font-mono font-black text-gray-800">{formatCurrency(storageFee)}</span></div>
+              <div className="flex justify-between items-end pb-2 border-b border-gray-50"><span className="text-xs text-gray-400 font-bold">Network (변동)</span><span className="text-sm font-mono font-black text-gray-800">{formatCurrency(networkFee)}</span></div>
             </div>
-            <div className="overflow-hidden rounded-lg border border-gray-200 bg-[#FAFAFA]">
-              <div className="grid grid-cols-1 divide-y divide-gray-200 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
-                <div className="flex flex-col gap-3 p-4">
-                  <div className="flex items-center justify-between"><span className="text-xs font-medium text-gray-500">GPU 요금 (고정)</span><span className="font-mono text-sm font-bold text-gray-800">{formatCurrency(gpuFee)}</span></div>
-                  <div className="flex items-center justify-between"><span className="text-xs font-medium text-gray-500">CPU 요금 (고정)</span><span className="font-mono text-sm font-bold text-gray-800">{formatCurrency(cpuFee)}</span></div>
-                </div>
-                <div className="flex flex-col gap-3 p-4">
-                  <div className="flex items-center justify-between"><span className="text-xs font-medium text-gray-500">스토리지 요금 (변동)</span><span className="font-mono text-sm font-bold text-gray-800">{formatCurrency(storageFee)}</span></div>
-                  <div className="flex items-center justify-between"><span className="text-xs font-medium text-gray-500">네트워크 요금 (변동)</span><span className="font-mono text-sm font-bold text-gray-800">{formatCurrency(networkFee)}</span></div>
-                </div>
+
+            <div className="mt-4 p-4 rounded-xl bg-orange-50 border border-orange-100 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-xs font-black text-orange-700 uppercase tracking-tight"><AlertTriangle size={14} />크레딧 차감 적용</span>
+                <span className="text-[10px] font-bold text-orange-600 opacity-60">잔액: ₩ {formatNumber(creditBalance)}</span>
               </div>
-              <div className="flex flex-col gap-3 border-t border-gray-200 bg-red-50/30 p-4">
-                <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
-                  <span className="flex items-center gap-1.5 text-[13px] font-bold text-red-700"><AlertTriangle size={14} />크레딧 차감</span>
-                  <span className="text-[12px] font-medium text-gray-600">
-                    현재 잔여 크레딧:
-                    <span className={`ml-1 font-mono font-bold ${creditBalance > 0 ? 'text-emerald-600' : 'text-gray-500'}`}>
-                      {creditBalance > 0 ? `₩ ${formatNumber(creditBalance)}` : '₩ 0'}
-                    </span>
-                  </span>
-                </div>
-                <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
-                  <div className="text-[12px] text-gray-500">
-                    차감 후 예상 잔액:
-                    <span className={`ml-1 font-mono font-bold ${expectedBalance < 0 ? 'text-red-500' : expectedBalance > 0 ? 'text-emerald-600' : 'text-gray-500'}`}>
-                      {expectedBalance >= 0 ? `₩ ${formatNumber(expectedBalance)}` : `-₩ ${formatNumber(Math.abs(expectedBalance))}`}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="font-mono text-sm text-red-500">-₩</span>
-                    <input
-                      className="w-[120px] rounded border border-red-200 bg-white px-2 py-1 text-right font-mono font-bold text-red-600 shadow-inner focus:border-red-400 focus:outline-none"
-                      value={creditDeduction}
-                      onChange={(event) => setCreditDeduction(event.target.value.replace(/[^\d]/g, ''))}
-                    />
-                  </div>
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-[11px] font-bold text-gray-500">차감 후 잔액: <span className="font-mono text-gray-700">₩ {formatNumber(expectedBalance)}</span></span>
+                <div className="flex items-center gap-1.5">
+                   <span className="font-mono text-sm font-black text-orange-600">-₩</span>
+                   <input className="w-32 rounded-lg border border-orange-200 bg-white px-3 py-1.5 text-right font-mono text-sm font-black text-orange-600 focus:border-orange-400 outline-none" value={creditDeduction} onChange={e => setCreditDeduction(e.target.value.replace(/[^\d]/g, ''))} />
                 </div>
               </div>
             </div>
-          </section>
+          </div>
 
-          <section className="rounded-xl bg-gradient-to-br from-gray-900 to-gray-800 p-4 text-white shadow-md sm:p-5">
-            <div className="flex items-end justify-between">
-              <span className="text-[14px] font-medium text-gray-300">최종 청구 금액</span>
-              <span className="font-mono text-[28px] font-extrabold text-[#FCD34D] sm:text-3xl">{formatCurrency(totalFee)}</span>
+          <div className="bg-gray-900 rounded-xl p-6 shadow-xl flex justify-between items-center transition-transform active:scale-[0.99]">
+             <span className="text-[13px] font-black text-gray-400 uppercase tracking-widest">청구 집계 금액</span>
+             <span className="text-2xl font-black text-white font-mono">{formatCurrency(totalFee)}</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm space-y-3">
+               <label className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5"><UploadCloud size={14} /> 인보이스 링크</label>
+               <input className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs focus:border-blue-500 outline-none" placeholder="https://cloud-portal.com/invoice/..." value={invoiceUrl} onChange={e => setInvoiceUrl(e.target.value)} />
             </div>
-          </section>
-
-          <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
-            <h3 className="mb-4 border-l-4 border-primary-500 pl-2 text-sm font-bold text-gray-800">부가 정보</h3>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4">
-                <UploadCloud className="mb-2 text-gray-400" size={20} />
-                <span className="mb-2 text-[12px] font-semibold text-gray-600">인보이스 URL</span>
-                <input
-                  className="w-full rounded border border-gray-200 bg-white px-3 py-2 text-[12px] focus:border-primary-500 focus:outline-none"
-                  placeholder="https://..."
-                  value={invoiceUrl}
-                  onChange={(event) => setInvoiceUrl(event.target.value)}
-                />
-              </div>
-              <textarea
-                className="min-h-[110px] w-full resize-none rounded-lg border border-gray-200 p-3 text-sm focus:border-primary-500 focus:outline-none"
-                placeholder="특이사항 메모"
-                value={memo}
-                onChange={(event) => setMemo(event.target.value)}
-              />
+            <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm space-y-3">
+               <label className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5"><FileText size={14} /> 특이사항 메모</label>
+               <textarea className="w-full rounded-lg border border-gray-200 p-2.5 text-xs h-20 resize-none focus:border-blue-500 outline-none" placeholder="비정기 할인 적용 등..." value={memo} onChange={e => setMemo(e.target.value)} />
             </div>
-          </section>
+          </div>
 
-          {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] text-rose-700">{error}</div> : null}
+          {error && <div className="rounded-xl bg-red-50 border border-red-100 p-4 text-xs font-bold text-red-600">{error}</div>}
         </div>
 
-        <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-gray-200 bg-white px-4 py-4 sm:h-[80px] sm:flex-row sm:items-center sm:justify-end sm:gap-4 sm:px-8 sm:py-0">
-          <button className="h-[44px] rounded-[12px] px-6 text-[14px] font-bold text-gray-600 transition-all hover:bg-gray-100" onClick={onClose} type="button">취소</button>
-          <button
-            className="h-[44px] rounded-[12px] border border-gray-900 bg-gray-900 px-10 text-[14px] font-black uppercase tracking-wider text-white shadow-lg shadow-gray-900/10 transition-all hover:bg-black disabled:opacity-60"
-            disabled={saving}
-            onClick={async () => {
-              setSaving(true);
-              setError(null);
-
-              try {
-                await onSubmit({
-                  periodStart,
-                  periodEnd,
-                  gpuFee,
-                  cpuFee,
-                  storageFee,
-                  networkFee,
-                  creditDeduction: creditValue,
-                  totalFee,
-                  invoiceUrl: invoiceUrl || null,
-                  memo: memo || null,
-                });
-              } catch (submitError) {
-                setError(submitError instanceof Error ? submitError.message : '빌링 등록에 실패했습니다.');
-              } finally {
-                setSaving(false);
-              }
-            }}
-            type="button"
-          >
-            {saving ? '등록 중...' : '빌링 등록 완료'}
-          </button>
+        <div className="flex justify-end gap-3 bg-white border-t border-gray-100 px-8 py-5">
+           <button className="px-6 py-2.5 rounded-lg text-sm font-bold text-gray-500 hover:bg-gray-50 transition-colors" onClick={onClose}>취소</button>
+           <button className="px-10 py-2.5 rounded-lg bg-gray-900 text-sm font-black uppercase tracking-wider text-white shadow-xl shadow-gray-200 hover:bg-black transition-all active:scale-[0.98] disabled:bg-gray-300" disabled={saving} onClick={async () => {
+             setSaving(true);
+             try { await onSubmit({ periodStart, periodEnd, gpuFee, cpuFee, storageFee, networkFee, creditDeduction: creditValue, totalFee, invoiceUrl: invoiceUrl || null, memo: memo || null }); } catch (err) { setError(err instanceof Error ? err.message : '실패'); } finally { setSaving(false); }
+           }}>
+             {saving ? '정산 등록 중...' : '빌링 확정 완료'}
+           </button>
         </div>
       </div>
     </div>
@@ -382,7 +301,7 @@ function BillingRegistrationModal({
 type InvoicesPageClientProps = {
   initialTenantRecords?: TenantRecord[];
   initialSubtenantRecords?: SubtenantRecord[];
-  initialBillings?: BillingRecord[];
+  initialBillings?: unknown[];
   initialTenantId?: string | null;
 };
 
@@ -393,413 +312,279 @@ export default function InvoicesPageClient({
   initialTenantId = null,
 }: InvoicesPageClientProps) {
   const { currentUser } = useAuth();
-  const normalizedInitialBillings = useMemo(
-    () => initialBillings.map((record) => normalizeBillingRecord(record as BillingLikeRecord)),
-    [initialBillings],
-  );
+  const normalizedInitialBillings = useMemo(() => initialBillings.map((r: unknown) => normalizeBillingRecord(r as BillingLikeRecord)), [initialBillings]);
   const [tenants, setTenants] = useState<TenantRecord[]>(initialTenantRecords);
   const [subtenants, setSubtenants] = useState<SubtenantRecord[]>(initialSubtenantRecords);
   const [records, setRecords] = useState<BillingRecord[]>(normalizedInitialBillings);
   const [loading, setLoading] = useState(initialBillings.length === 0);
   const [error, setError] = useState<string | null>(null);
-  const [activeTenantIdx, setActiveTenantIdx] = useState(
-    Math.max(0, initialTenantRecords.findIndex((tenant) => tenant.id === initialTenantId)),
-  );
+  const [activeTenantIdx, setActiveTenantIdx] = useState(Math.max(0, initialTenantRecords.findIndex((t: TenantRecord) => t.id === initialTenantId)));
   const [activeSubtenantIdx, setActiveSubtenantIdx] = useState(-1);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [tenantSearchTerm, setTenantSearchTerm] = useState('');
 
   const isAdmin = currentUser?.role === 'admin';
+  const filteredTenants = useMemo(() => {
+    if (!tenantSearchTerm) return tenants;
+    return tenants.filter(t => t.name.toLowerCase().includes(tenantSearchTerm.toLowerCase()));
+  }, [tenants, tenantSearchTerm]);
 
   useEffect(() => {
-    if (initialTenantRecords.length > 0 || initialSubtenantRecords.length > 0) {
-      return;
-    }
-
+    if (initialTenantRecords.length > 0) return;
     let active = true;
-
     const loadStaticData = async () => {
       try {
-        const [tenantsPayload, subtenantsPayload] = await Promise.all([
+        const [tp, sp] = await Promise.all([
           readJson<{ data: TenantRecord[] }>(await fetch('/api/tenants', { cache: 'no-store' })),
           readJson<{ data: SubtenantRecord[] }>(await fetch('/api/subtenants', { cache: 'no-store' })),
         ]);
-
-        if (!active) {
-          return;
-        }
-
-        setTenants(tenantsPayload.data ?? []);
-        setSubtenants(subtenantsPayload.data ?? []);
-        setActiveTenantIdx(0);
-      } catch (loadError) {
-        if (!active) {
-          return;
-        }
-
-        setError(loadError instanceof Error ? loadError.message : '빌링 화면 데이터를 불러오지 못했습니다.');
-      }
+        if (active) { setTenants(tp.data ?? []); setSubtenants(sp.data ?? []); setActiveTenantIdx(0); }
+      } catch (err) { if (active) setError(err instanceof Error ? err.message : '데이터 로드 실패'); }
     };
-
-    void loadStaticData();
-
-    return () => {
-      active = false;
-    };
-  }, [initialSubtenantRecords.length, initialTenantRecords.length]);
+    loadStaticData();
+    return () => { active = false; };
+  }, [initialTenantRecords.length]);
 
   const selectedTenant = tenants[activeTenantIdx] ?? null;
 
   const loadBillings = async (tenantId: string) => {
-    setLoading(true);
-    setError(null);
-
+    setLoading(true); setError(null);
     try {
-      const payload = await readJson<{ data: BillingRecord[] }>(
-        await fetch(`/api/billings?tenantId=${tenantId}`, { cache: 'no-store' }),
-      );
-      setRecords((payload.data ?? []).map((record) => normalizeBillingRecord(record as BillingLikeRecord)));
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : '빌링 목록을 불러오지 못했습니다.');
-      setRecords([]);
-    } finally {
-      setLoading(false);
-    }
+      const p = await readJson<{ data: BillingRecord[] }>(await fetch(`/api/billings?tenantId=${tenantId}`, { cache: 'no-store' }));
+      setRecords((p.data ?? []).map(r => normalizeBillingRecord(r as BillingLikeRecord)));
+    } catch (err) { setError(err instanceof Error ? err.message : '실패'); setRecords([]); }
+    finally { setLoading(false); }
   };
 
   useEffect(() => {
-    if (!selectedTenant?.id) {
-      setRecords([]);
-      setLoading(false);
-      return;
-    }
-
-    if (selectedTenant.id === initialTenantId && normalizedInitialBillings.length > 0) {
-      setRecords(normalizedInitialBillings);
-      setLoading(false);
-      return;
-    }
-
-    void loadBillings(selectedTenant.id);
-  }, [initialTenantId, normalizedInitialBillings, selectedTenant?.id]);
+    if (!selectedTenant?.id) { setRecords([]); setLoading(false); return; }
+    if (selectedTenant.id === initialTenantId && normalizedInitialBillings.length > 0) { setRecords(normalizedInitialBillings); setLoading(false); return; }
+    loadBillings(selectedTenant.id);
+  }, [selectedTenant?.id, initialTenantId, normalizedInitialBillings]);
 
   const tenantSubtenants = useMemo(() => {
-    if (!selectedTenant) {
-      return [];
-    }
-
-    let items = subtenants.filter((subtenant) => subtenant.tenant_id === selectedTenant.id);
-
-    if (currentUser?.role === 'subtenant_member') {
-      items = items.filter((subtenant) => subtenant.id === currentUser.subtenantId);
-    }
-
+    if (!selectedTenant) return [];
+    let items = subtenants.filter(s => s.tenant_id === selectedTenant.id);
+    if (currentUser?.role === 'subtenant_member') items = items.filter(s => s.id === currentUser.subtenantId);
     return items;
-  }, [currentUser?.role, currentUser?.subtenantId, selectedTenant, subtenants]);
+  }, [selectedTenant, subtenants, currentUser]);
 
-  useEffect(() => {
-    setActiveSubtenantIdx(-1);
-    setExpandedRow(null);
-  }, [selectedTenant?.id]);
+  useEffect(() => { setActiveSubtenantIdx(-1); setExpandedRow(null); }, [selectedTenant?.id]);
 
-  const selectedSubtenant = activeSubtenantIdx >= 0 ? (tenantSubtenants[activeSubtenantIdx] ?? null) : null;
-  const allPeriods = useMemo(() => {
-    const periods = Array.from(new Set(records.map((record) => periodKey(record.periodStart)).filter(Boolean)));
-    return periods.sort().reverse();
-  }, [records]);
-  const selectedPeriod = allPeriods[0] ?? '';
-  const periodRecords = selectedPeriod ? records.filter((record) => periodKey(record.periodStart) === selectedPeriod) : records;
-  const visibleRecords = selectedSubtenant
-    ? periodRecords.filter((record) => record.subtenantId === selectedSubtenant.id)
-    : periodRecords;
+  const selectedSubtenant = activeSubtenantIdx >= 0 ? tenantSubtenants[activeSubtenantIdx] : null;
+  const allPeriods = useMemo(() => Array.from(new Set(records.map(r => periodKey(r.periodStart)).filter(Boolean))).sort().reverse(), [records]);
+  const selectedPeriod = allPeriods[0] ?? '2026.03';
+  const periodRecords = records.filter(r => periodKey(r.periodStart) === selectedPeriod);
+  const visibleRecords = selectedSubtenant ? periodRecords.filter(r => r.subtenantId === selectedSubtenant.id) : periodRecords;
 
-  const totalAmount = periodRecords.reduce((sum, record) => sum + record.totalFee, 0);
-  const billingCount = periodRecords.length;
-  const unregisteredSubtenants = tenantSubtenants.filter(
-    (subtenant) => !periodRecords.some((record) => record.subtenantId === subtenant.id),
-  ).length;
-
-  const handleTenantClick = (idx: number) => {
-    if (currentUser?.role === 'tenant_admin' || currentUser?.role === 'subtenant_member') {
-      return;
-    }
-
-    setActiveTenantIdx(idx);
-  };
-
-  const companyItems = tenants.map((tenant) => ({
-    id: tenant.id,
-    name: tenant.name,
-    subCount: subtenants.filter((subtenant) => subtenant.tenant_id === tenant.id).length,
-  }));
+  const totalAmount = useMemo(() => visibleRecords.reduce((sum, r) => sum + r.totalFee, 0), [visibleRecords]);
+  const unregisteredCount = tenantSubtenants.filter(s => !periodRecords.some(r => r.subtenantId === s.id)).length;
 
   return (
-    <div className="flex h-auto min-h-0 flex-col gap-6 text-gray-900 md:flex-row md:h-[calc(100vh-112px)] lg:gap-7">
-      {isModalOpen && selectedTenant && selectedSubtenant ? (
-        <BillingRegistrationModal
-          onClose={() => setIsModalOpen(false)}
-          onSubmit={async (input) => {
-            const response = await fetch('/api/billings', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                tenantId: selectedTenant.id,
-                subtenantId: selectedSubtenant.id,
-                ...input,
-              }),
-            });
-
-            const payload = (await response.json().catch(() => ({}))) as { error?: string };
-
-            if (!response.ok) {
-              throw new Error(payload.error ?? '빌링 등록에 실패했습니다.');
-            }
-
-            setIsModalOpen(false);
-            await loadBillings(selectedTenant.id);
-          }}
-          subtenant={selectedSubtenant}
-          tenant={selectedTenant}
-        />
-      ) : null}
-
-      <CompanyListPanel companies={companyItems} activeIndex={Math.min(activeTenantIdx, Math.max(0, tenants.length - 1))} onCompanyClick={handleTenantClick} />
-
-      <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
-        <div className="mb-5 flex-none shrink-0">
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4 lg:gap-5">
-            <div className="rounded-[10px] border border-gray-200 bg-white p-5 text-left shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] lg:rounded-[12px] lg:p-6 lg:shadow-[0_10px_30px_-18px_rgba(15,23,42,0.18)]">
-              <div className="mb-2 text-sm font-bold text-gray-500">{selectedTenant?.name ?? '-'} 총 청구 금액</div>
-              <div className="mt-1 font-mono text-[24px] font-extrabold tracking-tight text-gray-900 md:text-[28px]">₩ {formatNumber(totalAmount)}</div>
-              <div className="mt-4 text-[12px] font-semibold text-gray-400">{selectedPeriod || '-'} 기준</div>
-            </div>
-            <div className="rounded-[10px] border border-gray-200 bg-white p-5 text-left shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] lg:rounded-[12px] lg:p-6 lg:shadow-[0_10px_30px_-18px_rgba(15,23,42,0.18)]">
-              <div className="mb-2 text-sm font-bold text-gray-500">빌링 등록 건수</div>
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-[24px] font-bold tracking-tight text-primary-600 md:text-[28px]">{billingCount}</span>
-                <span className="text-sm font-medium text-gray-500">건</span>
-              </div>
-              <div className="mt-4 text-[12px] font-semibold text-gray-400">{selectedPeriod || '-'} 완료 건수</div>
-            </div>
-            <div className="rounded-[10px] border border-gray-200 bg-white p-5 text-left shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] lg:rounded-[12px] lg:p-6 lg:shadow-[0_10px_30px_-18px_rgba(15,23,42,0.18)]">
-              <div className="mb-2 text-sm font-bold text-gray-500">미등록 Subtenant</div>
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-[24px] font-bold tracking-tight text-amber-500 md:text-[28px]">{unregisteredSubtenants}</span>
-                <span className="text-sm font-medium text-gray-500">개</span>
-              </div>
-              <div className="mt-4 text-[12px] font-semibold text-gray-400">{selectedPeriod || '-'} 등록 대기</div>
-            </div>
-          </div>
-
-          <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between lg:mt-6">
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              <button
-                onClick={() => setActiveSubtenantIdx(-1)}
-                className={`flex items-center gap-1.5 whitespace-nowrap rounded-lg px-4 py-2 text-[13px] font-bold transition-all outline-none ${
-                  activeSubtenantIdx === -1
-                    ? 'bg-gray-800 text-white shadow-sm ring-2 ring-gray-800 ring-offset-2'
-                    : 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-100'
-                }`}
-                type="button"
-              >
-                전체
-              </button>
-              {tenantSubtenants.map((subtenant, index) => {
-                const hasRecords = periodRecords.some((record) => record.subtenantId === subtenant.id);
+    <div className="flex h-full flex-col bg-[#F8FAFC]">
+      <div className="flex-1 overflow-y-auto w-full">
+        <div className="mx-auto w-full max-w-[1400px] px-6 py-8 space-y-6">
+          <div className="flex h-[48px] shrink-0 items-center justify-between bg-white px-4 rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-1 min-w-0 flex-1">
+              {filteredTenants.map((t, idx) => {
+                const originalIdx = tenants.findIndex(at => at.id === t.id);
+                const isSelected = activeTenantIdx === originalIdx;
                 return (
-                  <button
-                    key={subtenant.id}
-                    onClick={() => setActiveSubtenantIdx(index)}
-                    className={`flex items-center gap-1.5 whitespace-nowrap rounded-lg px-4 py-2 text-[13px] font-bold transition-all outline-none ${
-                      activeSubtenantIdx === index
-                        ? 'bg-gray-800 text-white shadow-sm ring-2 ring-gray-800 ring-offset-2'
-                        : 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-100'
-                    }`}
-                    type="button"
-                  >
-                    <Building2 className={activeSubtenantIdx === index ? 'text-gray-300' : 'text-gray-400'} size={14} />
-                    {subtenant.name}
-                    {!hasRecords ? <span className="ml-0.5 inline-block h-1.5 w-1.5 rounded-full bg-amber-500" /> : null}
+                  <button key={t.id} onClick={() => setActiveTenantIdx(originalIdx)} className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-bold transition-all ${isSelected ? 'bg-primary-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50'}`}>
+                    {t.name}
                   </button>
                 );
               })}
             </div>
+            <div className="hidden md:flex items-center gap-4 pl-4 shrink-0">
+              <div className="h-4 w-px bg-gray-200 shrink-0" />
+              <div className="relative shrink-0">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={13} />
+                <input className="h-[30px] w-36 rounded-full border border-gray-200 bg-white pl-8 pr-4 text-[12px] transition-all focus:w-48 focus:border-blue-300 focus:outline-none" placeholder="테넌트 검색" value={tenantSearchTerm} onChange={e => setTenantSearchTerm(e.target.value)} />
+              </div>
+            </div>
+          </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                className="flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-gray-200 bg-white px-4 py-2 text-[13px] font-bold text-gray-600 shadow-sm transition-all hover:bg-gray-50"
-                onClick={() =>
-                  downloadCsv(
-                    `${selectedTenant?.name ?? 'billing'}-${selectedSubtenant?.name ?? 'all'}-${selectedPeriod || 'all'}.csv`,
-                    visibleRecords.map((record) => ({
-                      period_start: record.periodStart,
-                      period_end: record.periodEnd,
-                      gpu_fee: record.gpuFee,
-                      cpu_fee: record.cpuFee,
-                      storage_fee: record.storageFee,
-                      network_fee: record.networkFee,
-                      credit_deduction: record.creditDeduction,
-                      total_fee: record.totalFee,
-                      registered_at: record.registeredAt,
-                    })),
-                  )
-                }
-                type="button"
-              >
-                <Download size={16} />
-                CSV 다운로드
-              </button>
-              {isAdmin && selectedSubtenant ? (
-                <button
-                  className="flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-primary-600 px-4 py-2 text-[13px] font-bold text-white shadow-sm transition-all hover:bg-primary-700"
-                  onClick={() => setIsModalOpen(true)}
-                  type="button"
-                >
-                  <Plus size={16} />
-                  빌링 등록
-                </button>
-              ) : null}
+          <div className="flex items-center justify-between bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-sm">
+             <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+               <button onClick={() => setActiveSubtenantIdx(-1)} className={`whitespace-nowrap rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-wider transition-all ${activeSubtenantIdx === -1 ? 'bg-gray-900 text-white shadow-lg shadow-gray-200' : 'text-gray-500 hover:bg-gray-100'}`}>전체</button>
+               {tenantSubtenants.map((s, i) => (
+                 <button key={s.id} onClick={() => setActiveSubtenantIdx(i)} className={`flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-wider transition-all border ${activeSubtenantIdx === i ? 'bg-gray-900 text-white border-gray-900 shadow-lg shadow-gray-200' : 'text-gray-500 border-gray-200 hover:bg-gray-50'}`}>
+                   {s.name} {!periodRecords.some(r => r.subtenantId === s.id) && <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
+                 </button>
+               ))}
+             </div>
+             <div className="flex items-center gap-3">
+               <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-[11px] font-black uppercase tracking-wider text-gray-600 hover:bg-gray-50 transition-all active:scale-[0.98]" onClick={() => downloadCsv(`billing-${selectedTenant?.name}.csv`, visibleRecords)}>
+                  <Download size={14} /> CSV 출력
+               </button>
+               {isAdmin && selectedSubtenant && (
+                 <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 rounded-lg text-[11px] font-black uppercase tracking-wider text-white shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all active:scale-[0.98]" onClick={() => setIsModalOpen(true)}>
+                    <Plus size={14} /> 빌링 등록
+                 </button>
+               )}
+             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all hover:shadow-md">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center"><CreditCard size={16} className="text-blue-500" /></div>
+                <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">총 정산 금액</span>
+              </div>
+              <p className="text-2xl font-black text-gray-900 tabular-nums">₩ {formatNumber(totalAmount)}</p>
+              <p className="text-xs text-gray-400 mt-1">{selectedPeriod} 귀속 청구 총액</p>
+            </div>
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all hover:shadow-md">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center"><TrendingUp size={16} className="text-emerald-500" /></div>
+                <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">확정 건수</span>
+              </div>
+              <p className="text-2xl font-black text-emerald-600 tabular-nums">{visibleRecords.length}<span className="text-sm ml-1 text-gray-400">건</span></p>
+              <p className="text-xs text-gray-400 mt-1">인보이스 발행 완료 건수</p>
+            </div>
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all hover:shadow-md">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center"><AlertTriangle size={16} className="text-amber-500" /></div>
+                <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">미등록 파트너</span>
+              </div>
+              <p className="text-2xl font-black text-amber-600 tabular-nums">{unregisteredCount}<span className="text-sm ml-1 text-gray-400">개</span></p>
+              <p className="text-xs text-gray-400 mt-1">당월 정산 대기 데이터</p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/30 flex justify-between items-center">
+               <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest flex items-center gap-2"><FileText size={16} className="text-blue-500" /> 청구 명세서 리스트</h3>
+               <div className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">선택 기간: {selectedPeriod}</div>
+            </div>
+            <div className="overflow-x-auto">
+              {loading ? (
+                <div className="flex h-[200px] items-center justify-center text-sm text-gray-400 italic">로딩 중...</div>
+              ) : (
+                <>
+                  <div className="md:hidden space-y-3 p-4 bg-gray-50/50">
+                    {visibleRecords.length === 0 ? (
+                      <div className="py-12 text-center text-sm text-gray-400 italic">정산 내역이 존재하지 않습니다.</div>
+                    ) : (
+                      visibleRecords.map(r => (
+                        <div key={r.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-4" onClick={() => setExpandedRow(expandedRow === r.id ? null : r.id)}>
+                          <div className="flex justify-between items-start">
+                             <p className="text-sm font-black text-gray-900">{formatPeriod(r.periodStart, r.periodEnd)}</p>
+                             <div className="text-right">
+                                <p className="text-sm font-black text-gray-900">{formatCurrency(r.totalFee)}</p>
+                                {r.creditDeduction > 0 && <p className="text-[10px] font-bold text-red-500">- ₩{formatNumber(r.creditDeduction)}</p>}
+                             </div>
+                          </div>
+                          <div className="flex justify-between items-center pt-2 border-t border-gray-50">
+                             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{r.registeredAt?.slice(0, 10) || '-'}</span>
+                             <div className="flex gap-2" onClick={e => e.stopPropagation()}>
+                                <button className="p-2 rounded-lg bg-gray-50 text-gray-500"><FileText size={14} /></button>
+                                <button className="p-2 rounded-lg bg-gray-50 text-gray-500" onClick={() => downloadCsv(`billing-${r.id}.csv`, [r])}><Download size={14} /></button>
+                             </div>
+                          </div>
+                          {expandedRow === r.id && (
+                            <div className="pt-4 border-t border-gray-100 space-y-4">
+                               <div className="grid grid-cols-2 gap-2 text-[11px] font-bold text-gray-500">
+                                  <div className="flex justify-between"><span>GPU</span><span>{formatCurrency(r.gpuFee)}</span></div>
+                                  <div className="flex justify-between"><span>CPU</span><span>{formatCurrency(r.cpuFee)}</span></div>
+                                  <div className="flex justify-between"><span>Storage</span><span>{formatCurrency(r.storageFee)}</span></div>
+                                  <div className="flex justify-between"><span>Network</span><span>{formatCurrency(r.networkFee)}</span></div>
+                               </div>
+                               {r.memo && (
+                                 <div className="p-3 bg-gray-50 rounded-lg text-[10px] text-gray-600 italic leading-relaxed">
+                                    {r.memo}
+                                 </div>
+                               )}
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  <table className="hidden md:table w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-left bg-gray-50/50">청구 기간</th>
+                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-right bg-gray-50/50">청구 총액</th>
+                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-left bg-gray-50/50">감면 혜택</th>
+                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-left bg-gray-50/50">발행일</th>
+                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-left bg-gray-50/50">문서</th>
+                        {isAdmin && <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-center bg-gray-50/50">관리</th>}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {visibleRecords.length === 0 ? (
+                        <tr><td colSpan={isAdmin ? 6 : 5} className="py-20 text-center text-sm text-gray-400 italic">정산 내역이 존재하지 않습니다.</td></tr>
+                      ) : (
+                        visibleRecords.map(r => (
+                          <React.Fragment key={r.id}>
+                            <tr className={`hover:bg-gray-50 transition-colors cursor-pointer ${expandedRow === r.id ? 'bg-blue-50/30' : ''}`} onClick={() => setExpandedRow(expandedRow === r.id ? null : r.id)}>
+                              <td className="px-6 py-4 font-bold text-gray-900 text-sm tabular-nums">{formatPeriod(r.periodStart, r.periodEnd)}</td>
+                              <td className="px-6 py-4 text-right font-black text-gray-900 tabular-nums">{formatCurrency(r.totalFee)}</td>
+                              <td className="px-6 py-4">
+                                {r.creditDeduction > 0 ? <span className="px-2 py-0.5 rounded-full bg-red-50 text-red-700 text-[10px] font-black border border-red-100">- ₩{formatNumber(r.creditDeduction)}</span> : <span className="text-gray-300">—</span>}
+                              </td>
+                              <td className="px-6 py-4 text-[11px] font-bold text-gray-500 tabular-nums">{r.registeredAt?.slice(0, 10) || '-'}</td>
+                              <td className="px-6 py-4" onClick={e => e.stopPropagation()}>
+                                 <div className="flex gap-2">
+                                   <button className="p-2 rounded-lg bg-white border border-gray-200 text-gray-500 hover:text-blue-600 hover:border-blue-100 transition-all active:scale-[0.95]"><FileText size={15} /></button>
+                                   <button className="p-2 rounded-lg bg-white border border-gray-200 text-gray-500 hover:text-emerald-600 hover:border-emerald-100 transition-all active:scale-[0.95]" onClick={() => downloadCsv(`billing-${r.id}.csv`, [r])}><Download size={15} /></button>
+                                 </div>
+                              </td>
+                              {isAdmin && (
+                                <td className="px-6 py-4 text-center" onClick={e => e.stopPropagation()}>
+                                   <button className="p-2 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all" onClick={async () => { if(confirm('정말 삭제할까요?')) { await fetch(`/api/billings/${r.id}`, {method:'DELETE'}); loadBillings(selectedTenant!.id); }}}><MoreVertical size={16} /></button>
+                                </td>
+                              )}
+                            </tr>
+                            {expandedRow === r.id && (
+                              <tr>
+                                <td colSpan={isAdmin ? 6 : 5} className="bg-gray-50/50 p-6">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm space-y-4">
+                                       <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-l-4 border-blue-500 pl-3">상세 과금 항목</h4>
+                                       <div className="space-y-2 px-1">
+                                         <div className="flex justify-between items-center text-[12px] font-bold"><span className="text-gray-500">GPU 인프라 비용</span><span className="text-gray-900 font-mono">{formatCurrency(r.gpuFee)}</span></div>
+                                         <div className="flex justify-between items-center text-[12px] font-bold"><span className="text-gray-500">CPU 연산 비용</span><span className="text-gray-900 font-mono">{formatCurrency(r.cpuFee)}</span></div>
+                                         <div className="flex justify-between items-center text-[12px] font-bold"><span className="text-gray-500">스토리지 할당 비용</span><span className="text-gray-900 font-mono">{formatCurrency(r.storageFee)}</span></div>
+                                         <div className="flex justify-between items-center text-[12px] font-bold border-b border-gray-50 pb-2"><span className="text-gray-500">네트워크 트래픽 비용</span><span className="text-gray-900 font-mono">{formatCurrency(r.networkFee)}</span></div>
+                                         <div className="flex justify-between items-center text-[12px] font-black pt-1 text-red-600"><span>크레딧 결제 차감</span><span className="font-mono">- {formatCurrency(r.creditDeduction)}</span></div>
+                                       </div>
+                                    </div>
+                                    <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm space-y-4">
+                                       <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-l-4 border-gray-400 pl-3">정산 특이사항</h4>
+                                       <div className="p-3 bg-gray-50 rounded-lg text-xs font-semibold text-gray-600 min-h-[80px] leading-relaxed italic">{r.memo || '저장된 메모 내용이 없습니다.'}</div>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </>
+              )}
             </div>
           </div>
         </div>
-
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[10px] border border-gray-200 bg-white shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] lg:rounded-[12px] lg:shadow-[0_10px_30px_-18px_rgba(15,23,42,0.18)]">
-          <div className="flex-1 overflow-x-auto overflow-y-auto">
-            {loading ? (
-              <div className="px-6 py-16 text-center text-[14px] text-gray-400">빌링 목록을 불러오는 중입니다.</div>
-            ) : error ? (
-              <div className="px-6 py-16 text-center text-[14px] text-rose-500">{error}</div>
-            ) : (
-              <table className="min-w-[900px] w-full border-collapse text-left">
-                <thead className="hidden md:table-header-group">
-                  <tr className="border-b border-gray-200 bg-[#FAFAFA]">
-                    <th className="min-w-[120px] whitespace-nowrap px-6 py-4 text-[12px] font-extrabold uppercase tracking-widest text-gray-500">청구 기간</th>
-                    <th className="min-w-[120px] whitespace-nowrap px-6 py-4 text-right text-[12px] font-extrabold uppercase tracking-widest text-gray-500">청구 금액</th>
-                    <th className="min-w-[100px] whitespace-nowrap px-6 py-4 text-[12px] font-extrabold uppercase tracking-widest text-gray-500">크레딧 차감</th>
-                    <th className="min-w-[120px] whitespace-nowrap px-6 py-4 text-[12px] font-extrabold uppercase tracking-widest text-gray-500">등록일</th>
-                    <th className="min-w-[120px] whitespace-nowrap px-6 py-4 text-[12px] font-extrabold uppercase tracking-widest text-gray-500">다운로드</th>
-                    {isAdmin ? <th className="min-w-[80px] whitespace-nowrap px-6 py-4 text-center text-[12px] font-extrabold uppercase tracking-widest text-gray-500">관리</th> : null}
-                  </tr>
-                </thead>
-                <tbody className="flex flex-col gap-4 p-4 md:table-row-group md:p-0">
-                  {visibleRecords.length === 0 ? (
-                    <tr className="md:table-row">
-                      <td className="px-6 py-16 text-center text-[14px] text-gray-400" colSpan={isAdmin ? 6 : 5}>
-                        해당 Subtenant에 등록된 빌링 내역이 없습니다.
-                      </td>
-                    </tr>
-                  ) : (
-                    visibleRecords.map((record) => (
-                      <React.Fragment key={record.id}>
-                        <tr
-                          className={`group flex flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-colors md:table-row md:rounded-none md:border-0 md:border-b md:p-0 md:shadow-none ${
-                            expandedRow === record.id ? 'border-primary-100 bg-primary-50/30 ring-2 ring-primary-500/20 md:ring-0' : 'border-gray-100 hover:bg-gray-50/50'
-                          }`}
-                          onClick={() => setExpandedRow(expandedRow === record.id ? null : record.id)}
-                        >
-                          <td className="mb-3 border-b border-gray-50 px-0 py-1 pb-2 font-mono text-[15px] font-bold text-gray-700 whitespace-nowrap md:mb-0 md:border-0 md:px-6 md:py-4 md:text-[14px]">
-                            {formatPeriod(record.periodStart, record.periodEnd)}
-                          </td>
-                          <td className="px-0 py-1 text-left font-mono text-[18px] font-extrabold text-gray-900 whitespace-nowrap md:px-6 md:py-4 md:text-right md:text-[15px]">
-                            {formatCurrency(record.totalFee)}
-                          </td>
-                          <td className="px-0 py-1 font-mono font-semibold text-red-500 whitespace-nowrap md:px-6 md:py-4">
-                            {(record.creditDeduction ?? 0) !== 0 ? `-₩ ${formatNumber(record.creditDeduction)}` : <span className="text-gray-300">—</span>}
-                          </td>
-                          <td className="px-0 py-1 text-[13px] font-medium text-gray-500 whitespace-nowrap md:px-6 md:py-4">
-                            {record.registeredAt ? record.registeredAt.slice(0, 10) : '-'}
-                          </td>
-                          <td className="mt-2 border-t border-gray-50 px-0 py-3 md:mt-0 md:border-0 md:px-6 md:py-4" onClick={(event) => event.stopPropagation()}>
-                            <div className="flex gap-2">
-                              <button className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 py-2 text-[11px] font-bold text-gray-600 shadow-sm hover:bg-gray-50 md:flex-none md:py-1.5">
-                                <FileText className={record.invoiceUrl ? 'text-primary-500' : 'text-gray-400'} size={14} />
-                                인보이스
-                              </button>
-                              <button
-                                className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 py-2 text-[11px] font-bold text-gray-600 shadow-sm hover:bg-gray-50 md:flex-none md:py-1.5"
-                                onClick={() =>
-                                  downloadCsv(`billing-${record.id}.csv`, [
-                                    {
-                                      period_start: record.periodStart,
-                                      period_end: record.periodEnd,
-                                      gpu_fee: record.gpuFee,
-                                      cpu_fee: record.cpuFee,
-                                      storage_fee: record.storageFee,
-                                      network_fee: record.networkFee,
-                                      credit_deduction: record.creditDeduction,
-                                      total_fee: record.totalFee,
-                                    },
-                                  ])
-                                }
-                                type="button"
-                              >
-                                <Download className="text-emerald-500" size={14} />
-                                CSV
-                              </button>
-                            </div>
-                          </td>
-                          {isAdmin ? (
-                            <td className="absolute right-5 top-5 px-0 text-center md:static md:px-6 md:py-4" onClick={(event) => event.stopPropagation()}>
-                              <button
-                                className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-800"
-                                onClick={async () => {
-                                  if (!window.confirm('이 빌링 내역을 삭제하시겠습니까?')) {
-                                    return;
-                                  }
-
-                                  await fetch(`/api/billings/${record.id}`, { method: 'DELETE' });
-                                  if (selectedTenant?.id) {
-                                    await loadBillings(selectedTenant.id);
-                                  }
-                                }}
-                                type="button"
-                              >
-                                <MoreVertical size={16} />
-                              </button>
-                            </td>
-                          ) : null}
-                        </tr>
-                        {expandedRow === record.id ? (
-                          <tr className="mx-1 -mt-4 block overflow-hidden rounded-b-xl bg-[#FCFCFC] shadow-inner md:mx-0 md:mt-0 md:table-row">
-                            <td className="p-0" colSpan={isAdmin ? 6 : 5}>
-                              <div className="flex flex-col gap-6 px-6 py-6 md:flex-row md:px-16 md:py-8">
-                                <div className="flex-1 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-                                  <h4 className="mb-4 border-l-4 border-gray-800 pl-2 text-[13px] font-extrabold text-gray-800">청구 항목 상세</h4>
-                                  <div className="space-y-3">
-                                    <div className="flex items-center justify-between border-b border-gray-100 pb-2"><span className="text-[13px] font-semibold text-gray-500">GPU 요금</span><span className="font-mono text-[14px] font-bold text-gray-700">{formatCurrency(record.gpuFee)}</span></div>
-                                    <div className="flex items-center justify-between border-b border-gray-100 pb-2"><span className="text-[13px] font-semibold text-gray-500">CPU 요금</span><span className="font-mono text-[14px] font-bold text-gray-700">{formatCurrency(record.cpuFee)}</span></div>
-                                    <div className="flex items-center justify-between border-b border-gray-100 pb-2"><span className="text-[13px] font-semibold text-gray-500">스토리지 요금</span><span className="font-mono text-[14px] font-bold text-gray-700">{formatCurrency(record.storageFee)}</span></div>
-                                    <div className="flex items-center justify-between border-b border-gray-100 pb-2"><span className="text-[13px] font-semibold text-gray-500">네트워크 요금</span><span className="font-mono text-[14px] font-bold text-gray-700">{formatCurrency(record.networkFee)}</span></div>
-                                    <div className="flex items-center justify-between pt-2"><span className="flex items-center gap-1.5 text-[13px] font-bold text-red-600"><AlertTriangle size={14} />크레딧 차감액</span><span className="font-mono text-[14px] font-bold text-red-600">-₩ {formatNumber(record.creditDeduction)}</span></div>
-                                    <div className="mt-2 flex items-end justify-between border-t-2 border-gray-800 pt-4"><span className="text-[14px] font-extrabold text-gray-900">최종 금액</span><span className="font-mono text-[20px] font-extrabold text-primary-600">{formatCurrency(record.totalFee)}</span></div>
-                                  </div>
-                                </div>
-                                <div className="flex w-full max-w-full flex-col gap-4 md:max-w-[300px]">
-                                  <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-                                    <h4 className="mb-2 text-[12px] font-bold uppercase text-gray-500">인보이스 파일</h4>
-                                    <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
-                                      <FileText className="shrink-0 text-red-400" size={20} />
-                                      <span className="truncate text-[12px] font-medium text-gray-700">{record.invoiceUrl || '첨부 파일 없음'}</span>
-                                    </div>
-                                  </div>
-                                  <div className="flex-1 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-                                    <h4 className="mb-2 text-[12px] font-bold uppercase text-gray-500">특이사항 메모</h4>
-                                    <p className="text-[13px] leading-relaxed text-gray-600">{record.memo || '특이사항 없음.'}</p>
-                                  </div>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        ) : null}
-                      </React.Fragment>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
       </div>
+
+      {isModalOpen && selectedTenant && selectedSubtenant && (
+        <BillingRegistrationModal
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={async (input) => {
+            const resp = await fetch('/api/billings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tenantId: selectedTenant.id, subtenantId: selectedSubtenant.id, ...input }) });
+            if (!resp.ok) throw new Error('등록 실패');
+            setIsModalOpen(false); await loadBillings(selectedTenant.id);
+          }}
+          subtenant={selectedSubtenant}
+          tenant={selectedTenant}
+        />
+      )}
     </div>
   );
 }

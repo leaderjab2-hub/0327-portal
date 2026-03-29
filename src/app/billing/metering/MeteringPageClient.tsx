@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Building2, TerminalSquare } from 'lucide-react';
+import { Building2, Search, TerminalSquare, Cpu, HardDrive, Network, Download } from 'lucide-react';
+
 import {
   Area,
   AreaChart,
@@ -13,7 +14,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import CompanyListPanel from '@/components/CompanyListPanel';
+
 import { useAuth } from '@/contexts/AuthContext';
 
 type TenantRecord = {
@@ -68,24 +69,18 @@ type MeteringPageClientProps = {
 
 async function readJson<T>(response: Response): Promise<T> {
   const payload = (await response.json().catch(() => ({}))) as T & { error?: string };
-
   if (!response.ok) {
     throw new Error(payload.error ?? '요청을 처리하지 못했습니다.');
   }
-
   return payload;
 }
 
-function buildNetworkChartData(
-  outbound: SeriesPoint[],
-  inbound: SeriesPoint[],
-) {
-  const timestamps = Array.from(new Set([...outbound.map((point) => point.timestamp), ...inbound.map((point) => point.timestamp)]));
-
-  return timestamps.map((timestamp) => ({
+function buildNetworkChartData(outbound: SeriesPoint[], inbound: SeriesPoint[]) {
+  const timestamps = Array.from(new Set([...outbound.map(p => p.timestamp), ...inbound.map(p => p.timestamp)]));
+  return timestamps.map(timestamp => ({
     time: timestamp,
-    out: outbound.find((point) => point.timestamp === timestamp)?.value ?? 0,
-    in: inbound.find((point) => point.timestamp === timestamp)?.value ?? 0,
+    out: outbound.find(p => p.timestamp === timestamp)?.value ?? 0,
+    in: inbound.find(p => p.timestamp === timestamp)?.value ?? 0,
   }));
 }
 
@@ -96,50 +91,35 @@ export default function MeteringPageClient({
 }: MeteringPageClientProps) {
   const { currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState<'company' | 'project'>('company');
-  const initialCompanyIdx = Math.max(0, initialTenants.findIndex((tenant) => tenant.id === initialTenantId));
+  const initialCompanyIdx = Math.max(0, initialTenants.findIndex(t => t.id === initialTenantId));
   const [activeCompanyIdx, setActiveCompanyIdx] = useState(initialCompanyIdx);
   const [activeProjIdx, setActiveProjIdx] = useState(0);
   const [tenants, setTenants] = useState<TenantRecord[]>(initialTenants);
   const [metering, setMetering] = useState<MeteringResponse | null>(initialMetering);
   const [loading, setLoading] = useState(initialMetering === null);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     setActiveProjIdx(0);
   }, [activeCompanyIdx, activeTab]);
 
   useEffect(() => {
-    if (initialTenants.length > 0) {
-      return;
-    }
-
+    if (initialTenants.length > 0) return;
     let active = true;
-
     const loadTenants = async () => {
       try {
         const payload = await readJson<{ data: TenantRecord[] }>(await fetch('/api/tenants', { cache: 'no-store' }));
-
-        if (!active) {
-          return;
+        if (active) {
+          setTenants(payload.data ?? []);
+          setActiveCompanyIdx(0);
         }
-
-        setTenants(payload.data ?? []);
-        setActiveCompanyIdx(0);
-      } catch (loadError) {
-        if (!active) {
-          return;
-        }
-
-        setError(loadError instanceof Error ? loadError.message : 'Tenant 목록을 불러오지 못했습니다.');
-        setTenants([]);
+      } catch (err) {
+        if (active) setError(err instanceof Error ? err.message : '실패');
       }
     };
-
-    void loadTenants();
-
-    return () => {
-      active = false;
-    };
+    loadTenants();
+    return () => { active = false; };
   }, [initialTenants.length]);
 
   const selectedTenant = tenants[activeCompanyIdx] ?? null;
@@ -150,84 +130,38 @@ export default function MeteringPageClient({
       setLoading(false);
       return;
     }
-
-    let active = true;
-
     if (selectedTenant.id === initialTenantId && initialMetering) {
+      setMetering(initialMetering);
       setLoading(false);
       return;
     }
-
+    let active = true;
     const loadMetering = async () => {
       setLoading(true);
       setError(null);
-
       try {
         const payload = await readJson<{ data: MeteringResponse }>(
           await fetch(`/api/metering/${selectedTenant.id}`, { cache: 'no-store' }),
         );
-
-        if (!active) {
-          return;
-        }
-
-        setMetering(payload.data);
-      } catch (loadError) {
-        if (!active) {
-          return;
-        }
-
-        setError(loadError instanceof Error ? loadError.message : '미터링 데이터를 불러오지 못했습니다.');
-        setMetering(null);
+        if (active) setMetering(payload.data);
+      } catch (err) {
+        if (active) setError(err instanceof Error ? err.message : '실패');
       } finally {
-        if (active) {
-          setLoading(false);
-        }
+        if (active) setLoading(false);
       }
     };
-
-    void loadMetering();
-
-    return () => {
-      active = false;
-    };
-  }, [initialMetering, initialTenantId, selectedTenant?.id]);
+    loadMetering();
+    return () => { active = false; };
+  }, [selectedTenant?.id, initialTenantId, initialMetering]);
 
   const visibleSubtenants = metering?.subtenants ?? [];
   const safeProjIdx = Math.min(Math.max(0, activeProjIdx), Math.max(0, visibleSubtenants.length - 1));
   const selectedProject = visibleSubtenants[safeProjIdx] ?? null;
 
-  const companyStorageData = useMemo(
-    () => metering?.variable.storage.series.map((point) => ({ time: point.timestamp, usage: point.value })) ?? [],
-    [metering],
-  );
-  const companyNetworkData = useMemo(
-    () =>
-      metering
-        ? buildNetworkChartData(metering.variable.networkOutbound.series, metering.variable.networkInbound.series)
-        : [],
-    [metering],
-  );
-
-  const projectStorageData = useMemo(
-    () => selectedProject?.variable.storage.series.map((point) => ({ time: point.timestamp, usage: point.value })) ?? [],
-    [selectedProject],
-  );
-  const projectNetworkData = useMemo(
-    () =>
-      selectedProject
-        ? buildNetworkChartData(selectedProject.variable.networkOutbound.series, selectedProject.variable.networkInbound.series)
-        : [],
-    [selectedProject],
-  );
-
-  const handleCompanyClick = (idx: number) => {
-    if (currentUser?.role === 'tenant_admin' || currentUser?.role === 'subtenant_member') {
-      return;
-    }
-
-    setActiveCompanyIdx(idx);
-  };
+  const companyStorageData = useMemo(() => metering?.variable.storage.series.map(p => ({ time: p.timestamp, usage: p.value })) ?? [], [metering]);
+  const companyNetworkData = useMemo(() => metering ? buildNetworkChartData(metering.variable.networkOutbound.series, metering.variable.networkInbound.series) : [], [metering]);
+  const projectStorageData = useMemo(() => selectedProject?.variable.storage.series.map(p => ({ time: p.timestamp, usage: p.value })) ?? [], [selectedProject]);
+  const projectNetworkData = useMemo(() => selectedProject ? buildNetworkChartData(selectedProject.variable.networkOutbound.series, selectedProject.variable.networkInbound.series) : [], [selectedProject]);
 
   const renderContent = (
     title: string,
@@ -246,97 +180,123 @@ export default function MeteringPageClient({
     const cpuPercent = Math.min(100, (allocatedCpu / (contractedCpu || 1)) * 100) || 0;
 
     return (
-      <div className="flex min-h-0 w-full flex-col pt-1">
-        <h2 className="mb-6 shrink-0 text-[18px] font-bold text-gray-900 lg:mb-7 lg:text-[20px]">{title}</h2>
-        <div className="flex shrink-0 flex-col space-y-6 pb-10 lg:space-y-7">
-          <div className="shrink-0 rounded-[8px] border border-gray-200 bg-white p-5 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.02)] lg:rounded-[12px] lg:p-6 lg:shadow-[0_10px_30px_-18px_rgba(15,23,42,0.16)]">
-            <h3 className="mb-4 flex items-center gap-2 text-[14px] font-semibold text-gray-900">
-              고정 항목 <span className="text-[11px] font-normal text-gray-400">계약 수량 기준</span>
-            </h3>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:gap-7">
-              <div className="rounded-[8px] border border-gray-100 bg-gray-50 p-5 lg:rounded-[10px] lg:p-6">
-                <div className="mb-3 flex items-end justify-between">
-                  <span className="text-[13px] font-semibold text-gray-600">{isProject ? '할당 CPU 자원' : 'CPU 과금 코어 수'}</span>
-                  <div className="flex items-center gap-1.5 font-mono">
-                    <span className="text-[20px] font-extrabold text-primary-600">{allocatedCpu}</span>
-                    <span className="mb-0.5 text-[13px] font-semibold text-gray-400">/ {contractedCpu} Core</span>
-                  </div>
-                </div>
-                <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-gray-200">
-                  <div className="h-full rounded-full bg-primary-500 transition-all duration-500" style={{ width: `${cpuPercent}%` }} />
-                </div>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-lg font-black text-gray-900 tracking-tight">{title}</h2>
+          <div className="px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-[10px] font-black text-blue-700 uppercase">실시간 분석 활성화</div>
+        </div>
+
+        {/* KPI Cards (Step 2 Implementation) */}
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all hover:shadow-md">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                <Cpu size={16} className="text-blue-500" />
               </div>
-              <div className="rounded-[8px] border border-gray-100 bg-gray-50 p-5 lg:rounded-[10px] lg:p-6">
-                <div className="mb-3 flex items-end justify-between">
-                  <span className="text-[13px] font-semibold text-gray-600">{isProject ? '할당 GPU 인스턴스' : 'GPU 인스턴스 과금 대수'}</span>
-                  <div className="flex items-center gap-1.5 font-mono">
-                    <span className="text-[20px] font-extrabold text-primary-600">{allocatedGpu}</span>
-                    <span className="mb-0.5 text-[13px] font-semibold text-gray-400">/ {contractedGpu} 대</span>
-                  </div>
-                </div>
-                <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-gray-200">
-                  <div className="h-full rounded-full bg-primary-500 transition-all duration-500" style={{ width: `${gpuPercent}%` }} />
-                </div>
+              <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">CPU 코어 자원</span>
+            </div>
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="text-2xl font-black text-gray-900 tabular-nums">{allocatedCpu}<span className="text-sm ml-1 text-gray-400">/ {contractedCpu}</span></p>
+                <p className="text-xs text-gray-400 mt-1">{isProject ? '할당량 기준' : '계약량 기준'}</p>
               </div>
+              <div className="text-xs font-black text-blue-600 mb-1">{Math.round(cpuPercent)}%</div>
+            </div>
+            <div className="mt-4 h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+              <div className="h-full bg-blue-500 rounded-full transition-all duration-500" style={{ width: `${cpuPercent}%` }} />
             </div>
           </div>
 
-          <div className="flex min-h-[400px] shrink-0 flex-col rounded-[8px] border border-gray-200 bg-white p-5 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.02)]">
-            <h3 className="mb-4 flex items-center gap-2 text-[14px] font-semibold text-gray-900">
-              변동 항목 <span className="text-[11px] font-normal text-gray-400">실시간 측정 기반</span>
-            </h3>
-            <div className="grid flex-1 grid-cols-1 gap-6 md:grid-cols-2">
-              <div className="flex min-h-[300px] flex-col rounded-[8px] border border-gray-200 bg-white shadow-sm">
-                <div className="shrink-0 border-b border-gray-100 p-4">
-                  <span className="text-[13px] font-semibold text-gray-900">스토리지 사용량 (월 평균)</span>
-                  <div className="mt-1 font-mono text-[22px] font-bold text-primary-600">{storageUsage.toLocaleString()} TB</div>
-                </div>
-                <div className="relative m-2 flex-1 rounded-[6px] border border-dashed border-primary-200 bg-gradient-to-br from-[#F8F9FF] to-[#EFF6FF] p-4 min-h-[220px]">
-                  <div className="absolute inset-0 p-4">
-                    <ResponsiveContainer height="100%" width="100%">
-                      <AreaChart data={storageData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
-                        <defs>
-                          <linearGradient id="colorStorage" x1="0" x2="0" y1="0" y2="1">
-                            <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.2} />
-                            <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid stroke="#E5E7EB" strokeDasharray="3 3" vertical={false} />
-                        <XAxis axisLine={false} dataKey="time" dy={5} tick={{ fontSize: 10, fill: '#9CA3AF' }} tickLine={false} />
-                        <YAxis axisLine={false} domain={['dataMin - 100', 'dataMax + 100']} tick={{ fontSize: 10, fill: '#9CA3AF' }} tickLine={false} />
-                        <RechartsTooltip contentStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB', fontSize: '11px', fontWeight: 600 }} />
-                        <Area activeDot={{ r: 4 }} dataKey="usage" fill="url(#colorStorage)" fillOpacity={1} stroke="#3B82F6" strokeWidth={2} type="monotone" />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all hover:shadow-md">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
+                <TerminalSquare size={16} className="text-indigo-500" />
               </div>
-              <div className="flex min-h-[300px] flex-col rounded-[8px] border border-gray-200 bg-white shadow-sm">
-                <div className="flex shrink-0 justify-between border-b border-gray-100 p-4">
-                  <div>
-                    <span className="text-[13px] font-semibold text-gray-900">네트워크 트래픽 Outbound (GB)</span>
-                    <div className="mt-1 font-mono text-[22px] font-bold text-primary-600">{networkOutUsage.toLocaleString()} GB</div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[13px] font-semibold text-gray-900">Inbound (GB)</span>
-                    <div className="mt-1 font-mono text-[18px] font-bold text-gray-600">{networkInUsage.toLocaleString()} GB</div>
-                  </div>
-                </div>
-                <div className="relative m-2 flex-1 rounded-[6px] border border-dashed border-primary-200 bg-gradient-to-br from-[#F8F9FF] to-[#EFF6FF] p-4 min-h-[220px]">
-                  <div className="absolute inset-0 p-4">
-                    <ResponsiveContainer height="100%" width="100%">
-                      <LineChart data={networkData} margin={{ top: 5, right: 0, left: -10, bottom: 0 }}>
-                        <CartesianGrid stroke="#E5E7EB" strokeDasharray="3 3" vertical={false} />
-                        <XAxis axisLine={false} dataKey="time" dy={5} tick={{ fontSize: 10, fill: '#9CA3AF' }} tickLine={false} />
-                        <YAxis axisLine={false} domain={[0, 'auto']} tick={{ fontSize: 10, fill: '#9CA3AF' }} tickLine={false} />
-                        <RechartsTooltip contentStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB', fontSize: '11px', fontWeight: 600 }} />
-                        <Line activeDot={{ r: 4 }} dataKey="out" dot={false} stroke="#3B82F6" strokeWidth={2} type="monotone" />
-                        <Line activeDot={{ r: 4 }} dataKey="in" dot={false} stroke="#10B981" strokeWidth={2} type="monotone" />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
+              <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">GPU 인스턴스</span>
+            </div>
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="text-2xl font-black text-gray-900 tabular-nums">{allocatedGpu}<span className="text-sm ml-1 text-gray-400">/ {contractedGpu}</span></p>
+                <p className="text-xs text-gray-400 mt-1">{isProject ? '할당 인스턴스' : '과금 인스턴스'}</p>
               </div>
+              <div className="text-xs font-black text-indigo-600 mb-1">{Math.round(gpuPercent)}%</div>
+            </div>
+            <div className="mt-4 h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+              <div className="h-full bg-indigo-500 rounded-full transition-all duration-500" style={{ width: `${gpuPercent}%` }} />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all hover:shadow-md">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+                <HardDrive size={16} className="text-emerald-500" />
+              </div>
+              <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">스토리지 사용</span>
+            </div>
+            <p className="text-2xl font-black text-emerald-600 tabular-nums">{storageUsage.toLocaleString()}<span className="text-sm ml-1 text-gray-400">TB</span></p>
+            <p className="text-xs text-gray-400 mt-1">월 평균 실사용 누계</p>
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all hover:shadow-md">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                <Network size={16} className="text-amber-500" />
+              </div>
+              <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">네트워크 트래픽</span>
+            </div>
+            <p className="text-2xl font-black text-amber-600 tabular-nums">{(networkOutUsage + networkInUsage).toLocaleString()}<span className="text-sm ml-1 text-gray-400">GB</span></p>
+            <p className="text-xs text-gray-400 mt-1">In/Out bound 트래픽 합계</p>
+          </div>
+        </div>
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[400px]">
+            <div className="px-5 py-4 border-b border-gray-100 bg-gray-50/30 flex justify-between items-center">
+              <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                <HardDrive size={14} className="text-emerald-500" /> 스토리지 사용량 트렌드 (TB)
+              </h3>
+            </div>
+            <div className="flex-1 p-6">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={storageData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorStorage" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.1}/>
+                      <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                  <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94A3B8' }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94A3B8' }} />
+                  <RechartsTooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '11px' }} />
+                  <Area type="monotone" dataKey="usage" stroke="#10B981" fillOpacity={1} fill="url(#colorStorage)" strokeWidth={2.5} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[400px]">
+            <div className="px-5 py-4 border-b border-gray-100 bg-gray-50/30 flex justify-between items-center">
+              <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                <Network size={14} className="text-blue-500" /> 네트워크 트래픽 분석 (GB)
+              </h3>
+              <div className="flex gap-4">
+                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-blue-500" /><span className="text-[10px] font-bold text-gray-500">Outbound</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-[10px] font-bold text-gray-500">Inbound</span></div>
+              </div>
+            </div>
+            <div className="flex-1 p-6">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={networkData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                  <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94A3B8' }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94A3B8' }} />
+                  <RechartsTooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '11px' }} />
+                  <Line type="monotone" dataKey="out" stroke="#3B82F6" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="in" stroke="#10B981" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </div>
@@ -344,122 +304,156 @@ export default function MeteringPageClient({
     );
   };
 
+  const filteredTenantsForTabs = useMemo(() => {
+    if (!searchTerm) return tenants;
+    return tenants.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [tenants, searchTerm]);
+
   return (
-    <div className="flex h-auto min-h-0 flex-col gap-6 pb-2 text-gray-900 md:flex-row md:h-[calc(100vh-112px)]">
-      <CompanyListPanel
-        companies={tenants.map((tenant) => ({ id: tenant.id, name: tenant.name, subCount: 0 }))}
-        activeIndex={Math.min(activeCompanyIdx, Math.max(0, tenants.length - 1))}
-        onCompanyClick={handleCompanyClick}
-      />
-
-      <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden rounded-[10px] border border-gray-200 bg-white shadow-[0_2px_10px_-3px_rgba(0,0,0,0.02)]">
-        <div className="flex shrink-0 flex-col gap-3 border-b border-gray-200 bg-white px-4 py-3 md:h-[52px] md:flex-row md:items-center md:gap-0 md:py-0">
-          <div className="flex h-[40px] border-b border-gray-100 pb-2 md:h-full md:border-none md:pb-0">
-            <button
-              onClick={() => setActiveTab('company')}
-              className={`flex h-full items-center whitespace-nowrap border-b-[2px] px-5 text-[13px] font-bold transition-colors outline-none ${
-                activeTab === 'company'
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-900'
-              }`}
-              type="button"
-            >
-              회사별
-            </button>
-            <button
-              onClick={() => setActiveTab('project')}
-              className={`flex h-full items-center whitespace-nowrap border-b-[2px] px-5 text-[13px] font-bold transition-colors outline-none ${
-                activeTab === 'project'
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-900'
-              }`}
-              type="button"
-            >
-              프로젝트별
-            </button>
-          </div>
-          <div className="hidden flex-1 md:block" />
-          <div className="flex items-center gap-2">
-            <select className="h-[36px] w-full rounded-[8px] border border-gray-200 bg-white px-3 text-[13px] font-bold focus:border-primary-500 focus:outline-none sm:w-[110px]">
-              <option>2026.03</option>
-            </select>
-            <button className="h-[36px] rounded-[8px] bg-gray-100 px-4 text-[13px] font-bold text-gray-700 shadow-sm active:scale-[0.98] hover:bg-gray-200">
-              다운로드
-            </button>
-          </div>
-        </div>
-
-        {activeTab === 'project' ? (
-          <div className="shrink-0 border-b border-gray-200 bg-[#FAFAFA] px-4 py-4 md:px-6">
-            <div className="flex gap-2 overflow-x-auto">
-              {visibleSubtenants.length > 0 ? (
-                visibleSubtenants.map((subtenant, index) => (
+    <div className="flex h-full flex-col bg-[#F8FAFC]">
+      <div className="flex-1 overflow-y-auto w-full">
+        <div className="mx-auto w-full max-w-[1400px] px-6 py-8 space-y-6">
+          
+          <div className="flex h-[48px] shrink-0 items-center justify-between bg-white px-4 rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-1 min-w-0 flex-1">
+              {filteredTenantsForTabs.map((t) => {
+                const idx = tenants.findIndex(at => at.id === t.id);
+                const isSelected = activeCompanyIdx === idx;
+                return (
                   <button
-                    key={subtenant.subtenantId}
-                    onClick={() => {
-                      if (currentUser?.role !== 'subtenant_member') {
-                        setActiveProjIdx(index);
-                      }
-                    }}
-                    className={`z-10 flex items-center gap-1.5 rounded-lg px-4 py-2 text-[13px] font-bold transition-all outline-none ${
-                      safeProjIdx === index
-                        ? 'bg-gray-800 text-white shadow-sm ring-2 ring-gray-800 ring-offset-2'
-                        : 'border border-gray-200 bg-white text-gray-600 opacity-90 hover:bg-gray-100'
-                    } ${currentUser?.role === 'subtenant_member' && safeProjIdx !== index ? 'hidden' : ''}`}
-                    type="button"
+                    key={t.id}
+                    onClick={() => setActiveCompanyIdx(idx)}
+                    className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-bold transition-all ${
+                      isSelected ? 'bg-primary-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50'
+                    }`}
                   >
-                    <Building2 className={safeProjIdx === index ? 'text-gray-300' : 'text-gray-400'} size={14} />
-                    {subtenant.name}
+                    {t.name}
                   </button>
-                ))
-              ) : (
-                <div className="py-1 text-[13px] italic text-gray-400">등록된 Subtenant가 없습니다.</div>
+                );
+              })}
+            </div>
+            <div className="hidden md:flex items-center gap-4 pl-4 shrink-0">
+              <div className="h-4 w-px bg-gray-200 shrink-0" />
+              <div className="relative shrink-0">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={13} />
+                <input
+                  className="h-[30px] w-36 rounded-full border border-gray-200 bg-white pl-8 pr-4 text-[12px] transition-all focus:w-48 focus:border-blue-300 focus:outline-none"
+                  placeholder="Tenant 검색"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Combined Sub Filter Bar (Requirement 4 Implementation) */}
+          <div className="flex h-[48px] shrink-0 items-center justify-between bg-white px-4 rounded-xl border border-gray-100 shadow-sm">
+            <div className="flex items-center gap-1 select-none">
+              <div className="flex items-center rounded-full bg-slate-50 p-1 border border-slate-100">
+                <button
+                  onClick={() => setActiveTab('company')}
+                  className={`rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-wider transition-all ${
+                    activeTab === 'company'
+                      ? 'bg-white text-blue-600 shadow-sm ring-1 ring-slate-200'
+                      : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  회사별
+                </button>
+                <button
+                  onClick={() => setActiveTab('project')}
+                  className={`rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-wider transition-all ${
+                    activeTab === 'project'
+                      ? 'bg-white text-blue-600 shadow-sm ring-1 ring-slate-200'
+                      : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  프로젝트별
+                </button>
+              </div>
+
+              {activeTab === 'project' && (
+                <>
+                  <div className="mx-3 h-4 w-px bg-gray-200 shrink-0" />
+                  <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                    {visibleSubtenants.length > 0 ? (
+                      visibleSubtenants.map((subtenant, index) => (
+                        <button
+                          key={subtenant.subtenantId}
+                          onClick={() => {
+                            if (currentUser?.role !== 'subtenant_member') setActiveProjIdx(index);
+                          }}
+                          className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[11px] font-bold transition-all border ${
+                            safeProjIdx === index
+                              ? 'bg-blue-50 text-blue-600 border-blue-100 shadow-sm'
+                              : 'text-gray-500 border-transparent hover:bg-gray-50'
+                          } ${currentUser?.role === 'subtenant_member' && safeProjIdx !== index ? 'hidden' : ''}`}
+                        >
+                          <Building2 size={12} className={safeProjIdx === index ? 'text-blue-600' : 'text-gray-400'} />
+                          {subtenant.name}
+                        </button>
+                      ))
+                    ) : (
+                      <span className="text-[11px] font-bold italic text-gray-300 px-2 tracking-tighter">No Subtenants</span>
+                    )}
+                  </div>
+                </>
               )}
             </div>
-          </div>
-        ) : null}
 
-        <div className="flex flex-1 flex-col overflow-auto bg-[#FAFAFA] p-4 md:p-6">
-          {loading ? (
-            <div className="flex min-h-[300px] flex-1 items-center justify-center text-[14px] font-medium text-gray-400">
-              미터링 데이터를 불러오는 중입니다.
+            <div className="flex items-center gap-2">
+              <select className="h-[32px] w-[110px] rounded-lg border border-gray-200 bg-white px-2.5 text-[12px] font-black text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-100 transition-all cursor-pointer">
+                <option>2026.03</option>
+                <option>2026.02</option>
+                <option>2026.01</option>
+              </select>
+              <button className="h-[32px] px-4 rounded-lg bg-gray-900 shadow-lg shadow-gray-200 text-[11px] font-black uppercase tracking-wider text-white hover:bg-gray-800 transition-all active:scale-[0.98] flex items-center gap-2">
+                <Download size={13} /> 다운로드
+              </button>
             </div>
-          ) : error ? (
-            <div className="rounded-[10px] border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] text-rose-700">{error}</div>
-          ) : activeTab === 'company' && metering ? (
-            renderContent(
-              `${metering.tenantName} ${metering.period} 미터링 내역`,
-              false,
-              metering.fixed.gpu.contracted,
-              metering.fixed.gpu.contracted,
-              metering.fixed.cpu.contracted,
-              metering.fixed.cpu.contracted,
-              metering.variable.storage.usage,
-              metering.variable.networkOutbound.usage,
-              metering.variable.networkInbound.usage,
-              companyStorageData,
-              companyNetworkData,
-            )
-          ) : activeTab === 'project' && selectedProject ? (
-            renderContent(
-              `${selectedProject.name} (${metering?.tenantName ?? '-'}) ${metering?.period ?? '2026.03'} 미터링 내역`,
-              true,
-              selectedProject.fixed.gpu.contracted,
-              selectedProject.fixed.gpu.allocated,
-              selectedProject.fixed.cpu.contracted,
-              selectedProject.fixed.cpu.allocated,
-              selectedProject.variable.storage.usage,
-              selectedProject.variable.networkOutbound.usage,
-              selectedProject.variable.networkInbound.usage,
-              projectStorageData,
-              projectNetworkData,
-            )
-          ) : activeTab === 'project' ? (
-            <div className="flex min-h-[300px] flex-1 flex-col items-center justify-center text-gray-400">
-              <TerminalSquare className="mb-4 opacity-30" size={48} />
-              <p className="text-[14px] font-medium">조회할 하위 프로젝트 내역이 없습니다.</p>
-            </div>
-          ) : null}
+          </div>
+
+          {/* Main Content Area */}
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 min-h-[600px]">
+            {loading ? (
+              <div className="flex h-[400px] items-center justify-center text-sm text-gray-400 italic">데이터 로딩 중...</div>
+            ) : error ? (
+              <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>
+            ) : activeTab === 'company' && metering ? (
+              renderContent(
+                `${metering.tenantName} - ${metering.period} 통합 미터링 내역`,
+                false,
+                metering.fixed.gpu.contracted,
+                metering.fixed.gpu.contracted,
+                metering.fixed.cpu.contracted,
+                metering.fixed.cpu.contracted,
+                metering.variable.storage.usage,
+                metering.variable.networkOutbound.usage,
+                metering.variable.networkInbound.usage,
+                companyStorageData,
+                companyNetworkData,
+              )
+            ) : activeTab === 'project' && selectedProject ? (
+              renderContent(
+                `${selectedProject.name} - ${metering?.period ?? '2026.03'} 프로젝트 미터링 내역`,
+                true,
+                selectedProject.fixed.gpu.contracted,
+                selectedProject.fixed.gpu.allocated,
+                selectedProject.fixed.cpu.contracted,
+                selectedProject.fixed.cpu.allocated,
+                selectedProject.variable.storage.usage,
+                selectedProject.variable.networkOutbound.usage,
+                selectedProject.variable.networkInbound.usage,
+                projectStorageData,
+                projectNetworkData,
+              )
+            ) : (
+              <div className="flex h-[400px] flex-col items-center justify-center text-gray-400 bg-gray-50/30 rounded-xl border border-dashed border-gray-200">
+                <TerminalSquare className="mb-4 opacity-20" size={48} />
+                <p className="text-sm font-bold uppercase tracking-wider">조회할 데이터가 없습니다.</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

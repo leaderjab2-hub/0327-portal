@@ -124,19 +124,20 @@ export default function MobileHeader() {
     <div className="md:hidden">
       {/* Mobile Topbar */}
       <div className="sticky top-0 z-30 flex h-[52px] w-full items-center justify-between border-b border-[#E5E7EB] bg-white/95 px-3 backdrop-blur-sm">
-        <Link href="/" className="flex items-center">
-          <Image src="/logo1.svg" alt="Logo" width={96} height={28} className="object-contain" />
-        </Link>
         <button onClick={toggleSidebar} className="rounded-lg p-2 text-gray-700 active:bg-gray-100">
           <Menu size={24} />
         </button>
+        <Link href="/" className="flex items-center absolute left-1/2 -translate-x-1/2">
+          <Image src="/logo1.svg" alt="Logo" width={96} height={28} className="object-contain" />
+        </Link>
+        <div className="w-10" /> {/* Spacer to balance the Menu button */}
       </div>
 
       {/* Overlay & Drawer */}
       {isOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 transition-opacity" onClick={toggleSidebar}>
           <div 
-            className="fixed inset-y-0 right-0 z-50 flex w-[86vw] max-w-[320px] flex-col bg-white p-0 shadow-xl transition-transform duration-300 ease-in-out"
+            className="fixed inset-y-0 left-0 z-50 flex w-[86vw] max-w-[320px] flex-col bg-white p-0 shadow-xl transition-transform duration-300 ease-in-out"
             onClick={e => e.stopPropagation()}
           >
             <div className="flex h-[52px] shrink-0 items-center justify-between border-b border-[#E5E7EB] px-4">
