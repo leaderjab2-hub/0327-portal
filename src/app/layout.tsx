@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import AppShell from "@/components/AppShell";
-import MswProvider from "@/components/MswProvider";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { Providers } from "./providers";
 import { getCurrentUser } from "@/lib/auth";
 
 export const metadata: Metadata = {
@@ -24,13 +23,11 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="ko">
+    <html lang="ko" suppressHydrationWarning>
       <body className="antialiased font-sans">
-        <MswProvider>
-          <AuthProvider initialUser={currentUser}>
-            <AppShell>{children}</AppShell>
-          </AuthProvider>
-        </MswProvider>
+        <Providers initialUser={currentUser}>
+          <AppShell>{children}</AppShell>
+        </Providers>
       </body>
     </html>
   );

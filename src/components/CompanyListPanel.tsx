@@ -26,7 +26,7 @@ export default function CompanyListPanel({ companies, activeIndex, onCompanyClic
   return (
     <>
       {/* ── Mobile: horizontal scrollable tab strip (hidden on md+) ── */}
-      <div className="mb-3 w-full overflow-hidden rounded-[10px] border border-gray-200 bg-white shadow-[0_2px_10px_-3px_rgba(0,0,0,0.02)] md:hidden">
+      <div className="mb-3 w-full overflow-hidden rounded-[10px] border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.02)] md:hidden">
         <div className="flex gap-2 overflow-x-auto p-2.5 scrollbar-none snap-x snap-mandatory">
           {companies.map((c, idx) => {
             const isActive = idx === activeIndex;
@@ -34,10 +34,10 @@ export default function CompanyListPanel({ companies, activeIndex, onCompanyClic
               <button
                 key={c.id}
                 onClick={() => onCompanyClick(idx)}
-                className={`shrink-0 snap-start whitespace-nowrap rounded-[8px] px-3 py-2 text-[12px] font-bold transition-colors ${
+                className={`shrink-0 snap-start whitespace-nowrap rounded-[8px] px-3 py-2 text-[12px] font-bold transition-all ${
                   isActive
                     ? 'bg-primary-500 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-gray-100 text-gray-600 border border-gray-100 dark:bg-slate-600 dark:text-slate-100 dark:border-slate-500 hover:bg-gray-200'
                 }`}
               >
                 {c.name}
@@ -48,10 +48,10 @@ export default function CompanyListPanel({ companies, activeIndex, onCompanyClic
       </div>
 
       {/* ── Desktop: vertical panel (hidden below md) ── */}
-      <div className="hidden h-full w-60 shrink-0 flex-col overflow-hidden rounded-[12px] border border-gray-200 bg-white shadow-[0_6px_20px_-12px_rgba(15,23,42,0.12)] md:flex">
-        <div className="flex flex-none flex-col gap-3 border-b border-gray-100 p-4 lg:gap-4 lg:p-5">
+      <div className="hidden h-full w-60 shrink-0 flex-col overflow-hidden rounded-[12px] border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-[0_6px_20px_-12px_rgba(15,23,42,0.12)] md:flex">
+        <div className="flex flex-none flex-col gap-3 border-b border-gray-100 dark:border-slate-700 dark:border-slate-700 p-4 lg:gap-4 lg:p-5">
           <div className="flex justify-between items-center mb-1">
-            <h2 className="text-[14px] font-semibold text-gray-900">{title}</h2>
+            <h2 className="text-[14px] font-semibold text-gray-900 dark:text-slate-100">{title}</h2>
           </div>
           <div className="relative">
             <input
@@ -59,19 +59,19 @@ export default function CompanyListPanel({ companies, activeIndex, onCompanyClic
               placeholder="회사 명 검색"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-[34px] border border-gray-200 rounded-[7px] text-[13px] px-3 pl-8 focus:outline-none focus:border-primary-500 bg-white"
+              className="w-full h-[34px] border border-gray-200 dark:border-slate-700 rounded-[7px] text-[13px] px-3 pl-8 focus:outline-none focus:border-primary-500 bg-white dark:bg-slate-800"
             />
-            <Search size={14} className="absolute left-3 top-2.5 text-gray-400" />
+            <Search size={14} className="absolute left-3 top-2.5 text-gray-400 dark:text-slate-500" />
           </div>
           <div className="flex justify-end gap-2 mt-1">
             <button
               onClick={() => setSearchTerm('')}
-              className="flex items-center justify-center p-2 rounded-[7px] border border-gray-200 text-gray-600 hover:bg-[#F9FAFB] h-[34px] w-[34px] transition-colors"
+              className="flex items-center justify-center p-2 rounded-[7px] border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-400 hover:bg-[#F9FAFB] h-[34px] w-[34px] transition-all"
               title="검색어 초기화"
             >
               <RotateCcw size={14} />
             </button>
-            <button className="flex-1 h-[34px] bg-primary-500 hover:bg-primary-600 text-white font-semibold text-[13px] rounded-[7px] transition-colors">
+            <button className="flex-1 h-[34px] bg-primary-500 hover:bg-primary-600 text-white font-semibold text-[13px] rounded-[7px] transition-all">
               검색
             </button>
           </div>
@@ -85,22 +85,22 @@ export default function CompanyListPanel({ companies, activeIndex, onCompanyClic
                 <div
                   key={c.id}
                   onClick={() => onCompanyClick(originalIndex)}
-                  className={`flex cursor-pointer items-center justify-between border-b border-gray-100 p-4 transition-colors lg:px-5 lg:py-4 ${
+                  className={`flex cursor-pointer items-center justify-between border-b border-gray-100 dark:border-slate-700 dark:border-slate-700 p-4 transition-all lg:px-5 lg:py-4 ${
                     isActive ? 'bg-primary-50 border-l-[3px] border-l-primary-500' : 'hover:bg-[#F9FAFB] border-l-[3px] border-l-transparent'
                   }`}
                 >
                   <div className="flex flex-col">
-                    <span className={`text-[13px] font-bold ${isActive ? 'text-primary-600' : 'text-gray-700'}`}>{c.name}</span>
-                    <span className="text-[11px] font-medium text-gray-400 mt-0.5">서브테넌트 {c.subCount}개</span>
+                    <span className={`text-[13px] font-bold ${isActive ? 'text-primary-600' : 'text-gray-700 dark:text-slate-300'}`}>{c.name}</span>
+                    <span className="text-[11px] font-medium text-gray-400 dark:text-slate-500 mt-0.5">서브테넌트 {c.subCount}개</span>
                   </div>
-                  <button className="text-gray-400 hover:text-gray-900 outline-none">
+                  <button className="text-gray-400 dark:text-slate-500 hover:text-gray-900 dark:text-slate-100 outline-none">
                     <ChevronRight size={16} className={isActive ? 'text-primary-500' : ''} />
                   </button>
                 </div>
               );
             })
           ) : (
-            <div className="p-6 text-center text-sm text-gray-400">
+            <div className="p-6 text-center text-sm text-gray-400 dark:text-slate-500">
               검색 결과가 없습니다.
             </div>
           )}

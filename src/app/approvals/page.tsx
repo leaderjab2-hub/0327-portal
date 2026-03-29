@@ -184,7 +184,7 @@ export default function ApprovalsPage() {
 
   if (loading || pageLoading) {
     return (
-      <div className="rounded-[14px] border border-gray-200 bg-white p-6 text-[14px] text-gray-500">
+      <div className="rounded-[14px] border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 text-[14px] text-gray-500 dark:text-slate-400">
         가입 승인 목록을 불러오는 중입니다...
       </div>
     );
@@ -197,54 +197,54 @@ export default function ApprovalsPage() {
   return (
     <div className="flex flex-col gap-6">
       {error ? (
-        <div className="rounded-[14px] border border-rose-200 bg-rose-50 px-4 py-3 text-[14px] text-rose-700">
+        <div className="rounded-[14px] border border-rose-200 bg-rose-50 px-4 py-4 text-[14px] text-rose-700">
           {error}
         </div>
       ) : null}
 
-      <div className="rounded-[14px] border border-gray-200 bg-white p-5 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)]">
+      <div className="rounded-[14px] border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)]">
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="flex items-center gap-2 text-[20px] font-bold text-gray-900">
+            <h1 className="flex items-center gap-2 text-[20px] font-bold text-gray-900 dark:text-slate-100">
               <ShieldCheck size={20} className="text-primary-600" />
               가입 승인
             </h1>
-            <p className="mt-1 text-[13px] text-gray-500">
+            <p className="mt-1 text-[13px] text-gray-500 dark:text-slate-400">
               pending 상태 사용자 계정을 검토하고 권한을 부여합니다.
             </p>
           </div>
-          <div className="rounded-full border border-gray-200 px-3 py-1 text-[12px] font-semibold text-gray-500">
+          <div className="rounded-full border border-gray-200 dark:border-slate-700 px-3 py-1 text-[12px] font-semibold text-gray-500 dark:text-slate-400">
             Total {pendingUsers.length}
           </div>
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-[14px] border border-gray-200 bg-white shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)]">
+      <div className="overflow-hidden rounded-[14px] border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)]">
         <div className="overflow-x-auto">
           <table className="min-w-full text-left">
-            <thead className="bg-[#FAFAFA]">
-              <tr className="border-b border-gray-200">
-                <th className="whitespace-nowrap px-5 py-3 text-[12px] font-bold uppercase tracking-wide text-gray-500">이메일</th>
-                <th className="whitespace-nowrap px-5 py-3 text-[12px] font-bold uppercase tracking-wide text-gray-500">이름</th>
-                <th className="whitespace-nowrap px-5 py-3 text-[12px] font-bold uppercase tracking-wide text-gray-500">소속 회사</th>
-                <th className="whitespace-nowrap px-5 py-3 text-[12px] font-bold uppercase tracking-wide text-gray-500">가입 일시</th>
-                <th className="whitespace-nowrap px-5 py-3 text-[12px] font-bold uppercase tracking-wide text-gray-500">액션</th>
+            <thead className="bg-[#FAFAFA] dark:bg-slate-900/50">
+              <tr className="border-b border-gray-200 dark:border-slate-700">
+                <th className="whitespace-nowrap px-5 py-4 text-[12px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">이메일</th>
+                <th className="whitespace-nowrap px-5 py-4 text-[12px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">이름</th>
+                <th className="whitespace-nowrap px-5 py-4 text-[12px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">소속 회사</th>
+                <th className="whitespace-nowrap px-5 py-4 text-[12px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">가입 일시</th>
+                <th className="whitespace-nowrap px-5 py-4 text-[12px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">액션</th>
               </tr>
             </thead>
             <tbody>
               {pendingUsers.length === 0 ? (
                 <tr>
-                  <td className="px-5 py-14 text-center text-[14px] text-gray-400" colSpan={5}>
+                  <td className="px-5 py-14 text-center text-[14px] text-gray-400 dark:text-slate-500" colSpan={5}>
                     승인 대기 중인 사용자가 없습니다.
                   </td>
                 </tr>
               ) : (
                 pendingUsers.map((user) => (
-                  <tr key={user.id} className="border-b border-gray-100">
-                    <td className="px-5 py-4 text-[13px] font-medium text-gray-900">{user.email ?? "-"}</td>
-                    <td className="px-5 py-4 text-[13px] text-gray-700">{user.name ?? "-"}</td>
-                    <td className="px-5 py-4 text-[13px] text-gray-700">{user.tenantName ?? "-"}</td>
-                    <td className="px-5 py-4 text-[13px] text-gray-500">{formatDateTime(user.createdAt)}</td>
+                  <tr key={user.id} className="border-b border-gray-100 dark:border-slate-700">
+                    <td className="px-5 py-4 text-[13px] font-medium text-gray-900 dark:text-slate-100">{user.email ?? "-"}</td>
+                    <td className="px-5 py-4 text-[13px] text-gray-700 dark:text-slate-300">{user.name ?? "-"}</td>
+                    <td className="px-5 py-4 text-[13px] text-gray-700 dark:text-slate-300">{user.tenantName ?? "-"}</td>
+                    <td className="px-5 py-4 text-[13px] text-gray-500 dark:text-slate-400">{formatDateTime(user.createdAt)}</td>
                     <td className="px-5 py-4">
                       <div className="flex gap-2">
                         <button
@@ -293,11 +293,11 @@ export default function ApprovalsPage() {
 
       {modal.open && modal.user ? (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-2xl overflow-hidden rounded-[16px] bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
-              <h2 className="text-[18px] font-bold text-gray-900">가입 승인</h2>
+          <div className="mx-4 w-full max-w-2xl overflow-hidden rounded-[16px] bg-white dark:bg-slate-800 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-700 px-6 py-4">
+              <h2 className="text-[18px] font-bold text-gray-900 dark:text-slate-100">가입 승인</h2>
               <button
-                className="text-gray-400 transition hover:text-gray-900"
+                className="text-gray-400 dark:text-slate-500 transition hover:text-gray-900 dark:text-slate-100"
                 onClick={() => setModal(defaultModalState)}
                 type="button"
               >
@@ -308,21 +308,21 @@ export default function ApprovalsPage() {
             <div className="space-y-4 px-6 py-5">
               <div className="grid gap-4">
                 <label className="block">
-                  <span className="mb-1 block text-[12px] font-semibold text-gray-500">이메일</span>
-                  <input className="h-11 w-full rounded-[10px] border border-gray-200 bg-gray-50 px-4 text-[14px]" readOnly value={modal.user.email ?? ""} />
+                  <span className="mb-1 block text-[12px] font-semibold text-gray-500 dark:text-slate-400">이메일</span>
+                  <input className="bg-white dark:bg-slate-900 h-11 w-full rounded-[10px] border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 px-4 text-[14px]" readOnly value={modal.user.email ?? ""} />
                 </label>
                 <label className="block">
-                  <span className="mb-1 block text-[12px] font-semibold text-gray-500">이름</span>
-                  <input className="h-11 w-full rounded-[10px] border border-gray-200 bg-gray-50 px-4 text-[14px]" readOnly value={modal.user.name ?? ""} />
+                  <span className="mb-1 block text-[12px] font-semibold text-gray-500 dark:text-slate-400">이름</span>
+                  <input className="bg-white dark:bg-slate-900 h-11 w-full rounded-[10px] border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 px-4 text-[14px]" readOnly value={modal.user.name ?? ""} />
                 </label>
                 <label className="block">
-                  <span className="mb-1 block text-[12px] font-semibold text-gray-500">소속 회사</span>
-                  <input className="h-11 w-full rounded-[10px] border border-gray-200 bg-gray-50 px-4 text-[14px]" readOnly value={modal.user.tenantName ?? ""} />
+                  <span className="mb-1 block text-[12px] font-semibold text-gray-500 dark:text-slate-400">소속 회사</span>
+                  <input className="bg-white dark:bg-slate-900 h-11 w-full rounded-[10px] border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 px-4 text-[14px]" readOnly value={modal.user.tenantName ?? ""} />
                 </label>
                 <label className="block">
-                  <span className="mb-1 block text-[12px] font-semibold text-gray-500">승인 대상</span>
+                  <span className="mb-1 block text-[12px] font-semibold text-gray-500 dark:text-slate-400">승인 대상</span>
                   <select
-                    className="h-11 w-full rounded-[10px] border border-gray-200 px-4 text-[14px]"
+                    className="h-11 w-full rounded-[10px] border border-gray-200 dark:border-slate-700 px-4 text-[14px]"
                     disabled={modal.loadingTargets}
                     onChange={(event) =>
                       setModal((prev) => ({
@@ -348,9 +348,9 @@ export default function ApprovalsPage() {
 
                 {selectedOption?.role === "subtenant_member" ? (
                   <label className="block">
-                    <span className="mb-1 block text-[12px] font-semibold text-gray-500">구성원 역할</span>
+                    <span className="mb-1 block text-[12px] font-semibold text-gray-500 dark:text-slate-400">구성원 역할</span>
                     <select
-                      className="h-11 w-full rounded-[10px] border border-gray-200 px-4 text-[14px]"
+                      className="h-11 w-full rounded-[10px] border border-gray-200 dark:border-slate-700 px-4 text-[14px]"
                       onChange={(event) =>
                         setModal((prev) => ({
                           ...prev,
@@ -367,9 +367,9 @@ export default function ApprovalsPage() {
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 border-t border-gray-100 bg-gray-50/70 px-6 py-4">
+            <div className="flex justify-end gap-2 border-t border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/70 px-6 py-4">
               <button
-                className="rounded-[10px] border border-gray-200 bg-white px-4 py-2 text-[13px] font-semibold text-gray-600"
+                className="rounded-[10px] border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-[13px] font-semibold text-gray-600 dark:text-slate-400"
                 onClick={() => setModal(defaultModalState)}
                 type="button"
               >
@@ -413,8 +413,8 @@ export default function ApprovalsPage() {
         </div>
       ) : null}
 
-      <div className="rounded-[14px] border border-gray-200 bg-white p-5 text-[13px] text-gray-500">
-        <div className="flex items-center gap-2 font-semibold text-gray-700">
+      <div className="rounded-[14px] border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 text-[13px] text-gray-500 dark:text-slate-400">
+        <div className="flex items-center gap-2 font-semibold text-gray-700 dark:text-slate-300">
           <Users size={16} className="text-primary-600" />
           권한 규칙
         </div>

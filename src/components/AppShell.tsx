@@ -41,15 +41,15 @@ export default function AppShell({ children }: { children: ReactNode }) {
   }, [currentUser, isAuthRoute, loading, pathname, router]);
 
   if (isAuthRoute) {
-    return <div className="min-h-screen bg-[#F5F7FB]">{children}</div>;
+    return <div className="min-h-screen bg-gray-50 dark:bg-slate-900 dark:bg-slate-900 transition-all">{children}</div>;
   }
 
   if (loading || !currentUser) {
-    return <div className="min-h-screen bg-[#F5F7FB]" />;
+    return <div className="min-h-screen bg-gray-50 dark:bg-slate-900 dark:bg-slate-900 transition-all" />;
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#F5F7FB]">
+    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-slate-900 dark:bg-slate-900 transition-all">
       <Sidebar
         collapsed={isSidebarCollapsed}
         onToggle={() => {
@@ -63,8 +63,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <MobileHeader />
         <Topbar />
-        <div className="min-w-0 flex-1 overflow-auto bg-[#F9FAFB]">
-          <main className="mx-auto w-full min-w-0 max-w-full px-3 py-3 md:px-6 md:py-6 xl:px-8">
+        <div className="min-w-0 flex-1 overflow-auto bg-gray-50 dark:bg-slate-900 dark:bg-slate-900 transition-all">
+          <main className="mx-auto w-full min-w-0 max-w-full px-3 pt-3 pb-6 md:px-6 md:pt-4 md:pb-8 xl:px-8">
             {children}
           </main>
         </div>

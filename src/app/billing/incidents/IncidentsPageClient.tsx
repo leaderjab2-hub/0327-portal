@@ -153,29 +153,29 @@ function IncidentModal({
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center bg-gray-950/45 p-4 backdrop-blur-sm">
-      <div className="flex w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
-          <h2 className="text-xl font-black text-gray-900 tracking-tight flex items-center gap-2"><AlertTriangle className="text-red-500" size={20} /> 장애/PM 등록</h2>
-          <button className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors" onClick={onClose}>
+      <div className="flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xl">
+        <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-700 px-6 py-4 shrink-0">
+          <h2 className="text-xl font-black text-gray-900 dark:text-slate-100 tracking-tight flex items-center gap-2"><AlertTriangle className="text-red-500" size={20} /> 장애/PM 등록</h2>
+          <button className="rounded-full p-2 text-gray-400 dark:text-slate-500 hover:bg-gray-100 hover:text-gray-900 dark:text-slate-100 transition-all" onClick={onClose}>
             <X size={20} />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto space-y-6 p-6 scroll-smooth bg-gray-50/50">
-          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm space-y-4">
-            <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest border-l-4 border-blue-500 pl-3">상세 유형 및 시간</h3>
+        <div className="flex-1 overflow-y-auto space-y-6 p-4 sm:p-6 scroll-smooth bg-gray-50 dark:bg-slate-900/50">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-5 shadow-sm card-depth space-y-4">
+            <h3 className="text-xs font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest border-l-4 border-blue-500 pl-3">상세 유형 및 시간</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="mb-1.5 block text-[10px] font-black text-gray-400 uppercase tracking-tight">구분</label>
-                <select className="w-full rounded-lg border border-gray-200 p-2 text-[13px] font-bold focus:border-blue-500 outline-none" value={form.type} onChange={e => onChange({ type: e.target.value as FormState['type'] })}>
+                <label className="mb-1.5 block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-tight">구분</label>
+                <select className="bg-white dark:bg-slate-900 w-full rounded-lg border border-gray-200 dark:border-slate-700 p-2 text-[13px] font-bold focus:border-blue-500 outline-none" value={form.type} onChange={e => onChange({ type: e.target.value as FormState['type'] })}>
                   <option value="incident">장애</option>
                   <option value="urgent_pm">긴급 PM</option>
                   <option value="regular_pm">정기 PM</option>
                 </select>
               </div>
               <div>
-                <label className="mb-1.5 block text-[10px] font-black text-gray-400 uppercase tracking-tight">노드 유형</label>
-                <select className="w-full rounded-lg border border-gray-200 p-2 text-[13px] font-bold focus:border-blue-500 outline-none" value={form.nodeType} onChange={e => onChange({ nodeType: e.target.value })}>
+                <label className="mb-1.5 block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-tight">노드 유형</label>
+                <select className="bg-white dark:bg-slate-900 w-full rounded-lg border border-gray-200 dark:border-slate-700 p-2 text-[13px] font-bold focus:border-blue-500 outline-none" value={form.nodeType} onChange={e => onChange({ nodeType: e.target.value })}>
                   <option value="GPU">GPU</option>
                   <option value="CPU">CPU</option>
                   <option value="Storage">Storage</option>
@@ -183,29 +183,29 @@ function IncidentModal({
                 </select>
               </div>
               <div>
-                <label className="mb-1.5 block text-[10px] font-black text-gray-400 uppercase tracking-tight">발생 시점</label>
-                <input className="w-full rounded-lg border border-gray-200 p-2 text-[13px] font-bold focus:border-blue-500 outline-none" type="datetime-local" value={form.occurredAt} onChange={e => onChange({ occurredAt: e.target.value })} />
+                <label className="mb-1.5 block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-tight">발생 시점</label>
+                <input className="bg-white dark:bg-slate-900 w-full rounded-lg border border-gray-200 dark:border-slate-700 p-2 text-[13px] font-bold focus:border-blue-500 outline-none" type="datetime-local" value={form.occurredAt} onChange={e => onChange({ occurredAt: e.target.value })} />
               </div>
               <div>
-                <label className="mb-1.5 block text-[10px] font-black text-gray-400 uppercase tracking-tight">복구 시점</label>
-                <input className="w-full rounded-lg border border-gray-200 p-2 text-[13px] font-bold focus:border-blue-500 outline-none" type="datetime-local" value={form.recoveredAt} onChange={e => onChange({ recoveredAt: e.target.value })} />
+                <label className="mb-1.5 block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-tight">복구 시점</label>
+                <input className="bg-white dark:bg-slate-900 w-full rounded-lg border border-gray-200 dark:border-slate-700 p-2 text-[13px] font-bold focus:border-blue-500 outline-none" type="datetime-local" value={form.recoveredAt} onChange={e => onChange({ recoveredAt: e.target.value })} />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm space-y-4">
-             <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest border-l-4 border-emerald-500 pl-3">인스턴스 및 고객사 매핑</h3>
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-5 shadow-sm card-depth space-y-4">
+             <h3 className="text-xs font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest border-l-4 border-emerald-500 pl-3">인스턴스 및 고객사 매핑</h3>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                <div>
-                  <label className="mb-1.5 block text-[10px] font-black text-gray-400 uppercase tracking-tight">인스턴스 선택</label>
-                  <select className="w-full rounded-lg border border-gray-200 p-2 text-[13px] font-bold focus:border-blue-500 outline-none" value={form.nodeId} onChange={e => onChange({ nodeId: e.target.value })}>
+                  <label className="mb-1.5 block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-tight">인스턴스 선택</label>
+                  <select className="bg-white dark:bg-slate-900 w-full rounded-lg border border-gray-200 dark:border-slate-700 p-2 text-[13px] font-bold focus:border-blue-500 outline-none" value={form.nodeId} onChange={e => onChange({ nodeId: e.target.value })}>
                     <option value="">인스턴스 선택</option>
                     {allocations.map(a => <option key={a.id} value={a.node_id}>{a.node?.label || a.node_id}</option>)}
                   </select>
                </div>
                <div>
-                  <label className="mb-1.5 block text-[10px] font-black text-gray-400 uppercase tracking-tight">총 소요 시간</label>
-                  <div className={`rounded-lg p-2 text-[13px] font-black tabular-nums border ${hasDurationError ? 'bg-red-50 border-red-100 text-red-600' : 'bg-gray-50 border-gray-100 text-gray-700'}`}>{durationText}</div>
+                  <label className="mb-1.5 block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-tight">총 소요 시간</label>
+                  <div className={`rounded-lg p-2 text-[13px] font-black tabular-nums border ${hasDurationError ? 'bg-red-50 border-red-100 text-red-600' : 'bg-gray-50 dark:bg-slate-900 border-gray-100 dark:border-slate-700 text-gray-700 dark:text-slate-300'}`}>{durationText}</div>
                </div>
              </div>
              {mappedCustomer ? (
@@ -220,9 +220,9 @@ function IncidentModal({
                  </div>
                </div>
              ) : (
-               <div className="mt-3 p-8 border border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center bg-white">
+               <div className="mt-3 p-8 border border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center bg-white dark:bg-slate-800">
                   <Server className="text-gray-300 mb-2" size={32} />
-                  <p className="text-xs font-bold text-gray-400 italic">노드를 선택하면 고객사 정보가 매핑됩니다.</p>
+                  <p className="text-xs font-bold text-gray-400 dark:text-slate-500 italic">노드를 선택하면 고객사 정보가 매핑됩니다.</p>
                </div>
              )}
           </div>
@@ -234,19 +234,19 @@ function IncidentModal({
 
           <div className="space-y-4">
              <div>
-                <label className="mb-1.5 block text-[10px] font-black text-gray-400 uppercase tracking-tight">상세 장애 메모</label>
-                <textarea className="w-full rounded-xl border border-gray-200 p-3 text-sm h-24 resize-none transition-all focus:border-blue-500 outline-none" placeholder="장애 발생 원인, 증상 등..." value={form.memo} onChange={e => onChange({ memo: e.target.value })} />
+                <label className="mb-1.5 block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-tight">상세 장애 메모</label>
+                <textarea className="bg-white dark:bg-slate-900 w-full rounded-xl border border-gray-200 dark:border-slate-700 p-3 text-sm h-24 resize-none transition-all focus:border-blue-500 outline-none" placeholder="장애 발생 원인, 증상 등..." value={form.memo} onChange={e => onChange({ memo: e.target.value })} />
              </div>
              <div>
-                <label className="mb-1.5 block text-[10px] font-black text-gray-400 uppercase tracking-tight">복구 조치 내역</label>
-                <textarea className="w-full rounded-xl border border-gray-200 p-3 text-sm h-24 resize-none transition-all focus:border-blue-500 outline-none" placeholder="조치 사항 및 재발 방지 대책..." value={form.recoveryNote} onChange={e => onChange({ recoveryNote: e.target.value })} />
+                <label className="mb-1.5 block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-tight">복구 조치 내역</label>
+                <textarea className="bg-white dark:bg-slate-900 w-full rounded-xl border border-gray-200 dark:border-slate-700 p-3 text-sm h-24 resize-none transition-all focus:border-blue-500 outline-none" placeholder="조치 사항 및 재발 방지 대책..." value={form.recoveryNote} onChange={e => onChange({ recoveryNote: e.target.value })} />
              </div>
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 bg-white border-t border-gray-100 px-8 py-5">
-           <button className="px-6 py-2.5 rounded-lg text-sm font-bold text-gray-500 hover:bg-gray-50 transition-colors" onClick={onClose}>취소</button>
-           <button className="px-10 py-2.5 rounded-lg bg-red-600 text-sm font-black uppercase tracking-wider text-white shadow-xl shadow-red-100 hover:bg-black transition-all active:scale-[0.98] disabled:bg-gray-200" disabled={!mappedCustomer || !form.occurredAt || !form.recoveredAt || !form.nodeId || saving || hasDurationError} onClick={onSubmit}>
+        <div className="flex justify-end gap-3 bg-white dark:bg-slate-800 border-t border-gray-100 dark:border-slate-700 px-6 sm:px-8 py-4 sm:py-5 shrink-0">
+           <button className="px-6 py-2.5 rounded-lg text-sm font-bold text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700 dark:bg-slate-900 transition-all" onClick={onClose}>취소</button>
+           <button className="px-10 py-2.5 rounded-lg bg-red-600 text-sm font-black uppercase tracking-wider text-white shadow-sm card-depth hover:bg-black transition-all active:scale-[0.98] disabled:bg-gray-200" disabled={!mappedCustomer || !form.occurredAt || !form.recoveredAt || !form.nodeId || saving || hasDurationError} onClick={onSubmit}>
              {saving ? '등록 중...' : '장애 확정 등록'}
            </button>
         </div>
@@ -376,16 +376,16 @@ export default function IncidentsPageClient({
   };
 
   return (
-    <div className="flex h-full flex-col bg-[#F8FAFC]">
+    <div className="flex h-full flex-col bg-[#F8FAFC] dark:bg-slate-900">
       <div className="flex-1 overflow-y-auto w-full">
-        <div className="mx-auto w-full max-w-[1400px] px-6 py-8 space-y-6">
-          <div className="flex h-[48px] shrink-0 items-center justify-between bg-white px-4 rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="mx-auto w-full max-w-[1400px] px-6 pb-8 space-y-6">
+          <div className="flex h-[48px] shrink-0 items-center justify-between bg-white dark:bg-slate-800 px-4 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm card-depth overflow-hidden">
             <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-1 min-w-0 flex-1">
               {filteredTenants.map((t, idx) => {
                 const originalIdx = tenants.findIndex(at => at.id === t.id);
                 const isSelected = activeTenantIdx === originalIdx;
                 return (
-                  <button key={t.id} onClick={() => setActiveTenantIdx(originalIdx)} className={`whitespace-nowrap rounded-full px-4 py-1.5 text-[12px] font-bold transition-all ${isSelected ? 'bg-primary-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50'}`}>
+                  <button key={t.id} onClick={() => setActiveTenantIdx(originalIdx)} className={`whitespace-nowrap rounded-full px-4 py-1.5 text-[12px] font-bold transition-all ${isSelected ? 'bg-primary-50 text-blue-600' : 'text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700 dark:bg-slate-900'}`}>
                     {t.name}
                   </button>
                 );
@@ -394,80 +394,80 @@ export default function IncidentsPageClient({
             <div className="hidden md:flex items-center gap-4 pl-4 shrink-0">
               <div className="h-4 w-px bg-gray-200 shrink-0" />
               <div className="relative shrink-0">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={13} />
-                <input className="h-[30px] w-36 rounded-full border border-gray-200 bg-white pl-8 pr-4 text-[12px] transition-all focus:w-48 focus:border-blue-300 focus:outline-none" placeholder="테넌트 검색" value={tenantSearchTerm} onChange={e => setTenantSearchTerm(e.target.value)} />
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={13} />
+                <input className="bg-white dark:bg-slate-900 h-[30px] w-36 rounded-full border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 pl-8 pr-4 text-[12px] transition-all focus:w-48 focus:border-blue-300 focus:outline-none" placeholder="테넌트 검색" value={tenantSearchTerm} onChange={e => setTenantSearchTerm(e.target.value)} />
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all hover:shadow-md">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center"><AlertTriangle size={16} className="text-red-500" /></div>
-                <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">전체 등록 건수</span>
+          <div className="grid grid-cols-3 gap-2 md:grid-cols-3 md:gap-4">
+             <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm card-depth p-2.5 sm:p-5 transition-all hover:shadow-md min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-3">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-red-100/50 dark:bg-red-900/20 flex items-center justify-center shrink-0"><AlertTriangle size={12} className="sm:size-[16px] text-red-500" /></div>
+                <span className="text-[9px] sm:text-sm text-gray-500 dark:text-slate-400 font-bold uppercase tracking-tight truncate">전체 등록</span>
               </div>
-              <p className="text-2xl font-black text-gray-900 tabular-nums">{summary.total}<span className="text-sm ml-1 text-gray-400 font-bold">건</span></p>
-              <div className="mt-2 flex gap-2">
-                 <span className="text-[10px] font-black text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-100">장애 {summary.incident}</span>
-                 <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">PM {summary.pm}</span>
+              <p className="text-[13px] sm:text-2xl font-black text-gray-900 dark:text-slate-100 tabular-nums truncate">{summary.total}<span className="text-[10px] sm:text-sm ml-0.5 text-gray-400 dark:text-slate-500 font-bold italic">건</span></p>
+              <div className="mt-1.5 sm:mt-2 hidden sm:flex gap-2">
+                 <span className="text-[10px] font-black text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-100 shrink-0">장애 {summary.incident}</span>
+                 <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100 shrink-0">PM {summary.pm}</span>
               </div>
             </div>
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all hover:shadow-md">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center"><Activity size={16} className="text-emerald-500" /></div>
-                <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">누적 보상 규모</span>
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm card-depth p-2.5 sm:p-5 transition-all hover:shadow-md min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-3">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-emerald-100/50 dark:bg-emerald-900/20 flex items-center justify-center shrink-0"><Activity size={12} className="sm:size-[16px] text-emerald-500" /></div>
+                <span className="text-[9px] sm:text-sm text-gray-500 dark:text-slate-400 font-bold uppercase tracking-tight truncate">누적 보상</span>
               </div>
-              <p className="text-2xl font-black text-emerald-600 tabular-nums">+ ₩ {summary.credits.toLocaleString()}</p>
-              <p className="text-xs text-gray-400 mt-1">SLA 준수 보상 산출액 합계</p>
+              <p className="text-[11px] sm:text-2xl font-black text-emerald-600 tabular-nums truncate">+ ₩{summary.credits.toLocaleString()}</p>
+              <p className="hidden sm:block text-[11px] text-gray-400 dark:text-slate-500 mt-1 truncate">SLA 준수 보상 합계</p>
             </div>
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all hover:shadow-md">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center"><TrendingUp size={16} className="text-amber-500" /></div>
-                <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">당월 신규 등록</span>
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm card-depth p-2.5 sm:p-5 transition-all hover:shadow-md min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-3">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-amber-100/50 dark:bg-amber-900/20 flex items-center justify-center shrink-0"><TrendingUp size={12} className="sm:size-[16px] text-amber-500" /></div>
+                <span className="text-[9px] sm:text-sm text-gray-500 dark:text-slate-400 font-bold uppercase tracking-tight truncate">당월 신규</span>
               </div>
-              <p className="text-2xl font-black text-amber-600 tabular-nums">{summary.monthly}<span className="text-sm ml-1 text-gray-400 font-bold">건</span></p>
-              <p className="text-xs text-gray-400 mt-1">최근 30일 이내 발생 건수</p>
+              <p className="text-[13px] sm:text-2xl font-black text-amber-600 tabular-nums truncate">{summary.monthly}<span className="text-[10px] sm:text-sm ml-0.5 text-gray-400 dark:text-slate-500 font-bold italic">건</span></p>
+              <p className="hidden sm:block text-[11px] text-gray-400 dark:text-slate-500 mt-1 truncate">30일 이내 발생 건수</p>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/30 flex justify-between items-center">
-               <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest flex items-center gap-2"><RotateCcw size={16} className="text-blue-500" /> 장애 및 점검 내역</h3>
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm card-depth overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/30 flex justify-between items-center">
+               <h3 className="text-sm font-black text-gray-900 dark:text-slate-100 uppercase tracking-widest flex items-center gap-2"><RotateCcw size={16} className="text-blue-500" /> 장애 및 점검 내역</h3>
                <div className="flex gap-2">
-                  <button className="p-2 rounded-lg bg-white border border-gray-200 text-gray-500 hover:text-blue-600 transition-all active:scale-[0.95]" onClick={() => loadTenantData(activeTenant!.id)}><RotateCcw size={14} /></button>
+                  <button className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-500 dark:text-slate-400 hover:text-blue-600 transition-all active:scale-[0.95]" onClick={() => loadTenantData(activeTenant!.id)}><RotateCcw size={14} /></button>
                   {isAdmin && (
-                    <button className="flex items-center gap-2 px-4 py-2 bg-red-600 rounded-lg text-[11px] font-black uppercase tracking-wider text-white shadow-xl shadow-red-100 hover:bg-black transition-all active:scale-[0.98]" onClick={() => setIsModalOpen(true)}>
+                    <button className="flex items-center gap-2 px-4 py-2 bg-red-600 rounded-lg text-[11px] font-black uppercase tracking-wider text-white shadow-sm card-depth hover:bg-black transition-all active:scale-[0.98]" onClick={() => setIsModalOpen(true)}>
                       <Plus size={14} /> 장애 등록
                     </button>
                   )}
                </div>
             </div>
             <div className="overflow-x-auto">
-              {loading ? <div className="p-20 text-center text-sm text-gray-400 italic">데이터 로딩 중...</div> : (
+              {loading ? <div className="p-20 text-center text-sm text-gray-400 dark:text-slate-500 italic">데이터 로딩 중...</div> : (
                 <>
-                  <div className="md:hidden space-y-3 p-4 bg-gray-50/50">
+                  <div className="md:hidden space-y-3 p-4 bg-gray-50 dark:bg-slate-900/50">
                     {incidents.length === 0 ? (
-                      <div className="py-12 text-center text-sm text-gray-400 italic">등록된 내역이 없습니다.</div>
+                      <div className="py-12 text-center text-sm text-gray-400 dark:text-slate-500 italic">등록된 내역이 없습니다.</div>
                     ) : (
                       incidents.map(i => (
-                        <div key={i.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-4">
+                        <div key={i.id} className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm card-depth p-4 space-y-4">
                           <div className="flex justify-between items-start">
                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${getTypeBadgeClass(i.type)}`}>{getTypeLabel(i.type)}</span>
                              <span className="text-sm font-black text-emerald-600 font-mono">+ ₩ {i.totalCreditAmount.toLocaleString()}</span>
                           </div>
                           <div className="space-y-3">
                              <div className="flex items-center justify-between">
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">발생 시점</p>
-                                <p className="text-xs font-bold text-gray-600 tabular-nums">{formatDate(i.occurredAt)}</p>
+                                <p className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest">발생 시점</p>
+                                <p className="text-xs font-bold text-gray-600 dark:text-slate-400 tabular-nums">{formatDate(i.occurredAt)}</p>
                              </div>
                              <div className="flex items-center justify-between">
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">소요 시간</p>
-                                <p className="text-xs font-black text-gray-900">{formatDuration(i.durationMinutes)}</p>
+                                <p className="text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest">소요 시간</p>
+                                <p className="text-xs font-black text-gray-900 dark:text-slate-100">{formatDuration(i.durationMinutes)}</p>
                              </div>
-                             <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
-                                <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-50 border border-gray-100">
-                                   <Server size={12} className="text-gray-400" />
-                                   <span className="text-[11px] font-bold text-gray-600">{i.instanceName || i.nodeId}</span>
+                             <div className="pt-3 border-t border-gray-100 dark:border-slate-700 flex items-center justify-between">
+                                <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-50 dark:bg-slate-900 border border-gray-100 dark:border-slate-700">
+                                   <Server size={12} className="text-gray-400 dark:text-slate-500" />
+                                   <span className="text-[11px] font-bold text-gray-600 dark:text-slate-400">{i.instanceName || i.nodeId}</span>
                                 </div>
                                 {isAdmin && (
                                   <button className="p-2 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all" onClick={() => handleDelete(i.id)}><Trash2 size={15}/></button>
@@ -480,32 +480,32 @@ export default function IncidentsPageClient({
                   </div>
                   <table className="hidden md:table w-full">
                     <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-left bg-gray-50/50">유형</th>
-                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-left bg-gray-50/50">발생 시점</th>
-                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-left bg-gray-50/50">소요</th>
-                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-left bg-gray-50/50">관련 인스턴스</th>
-                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-left bg-gray-50/50">고객사</th>
-                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-right bg-gray-50/50">보상액</th>
-                        {isAdmin && <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-center bg-gray-50/50">관리</th>}
+                      <tr className="border-b border-gray-200 dark:border-slate-700">
+                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider text-left bg-gray-50 dark:bg-slate-900/50">유형</th>
+                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider text-left bg-gray-50 dark:bg-slate-900/50">발생 시점</th>
+                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider text-left bg-gray-50 dark:bg-slate-900/50">소요</th>
+                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider text-left bg-gray-50 dark:bg-slate-900/50">관련 인스턴스</th>
+                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider text-left bg-gray-50 dark:bg-slate-900/50">고객사</th>
+                        <th className="px-6 py-4 text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider text-right bg-gray-50 dark:bg-slate-900/50">보상액</th>
+                        {isAdmin && <th className="px-6 py-4 text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider text-center bg-gray-50 dark:bg-slate-900/50">관리</th>}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                      {incidents.length === 0 ? <tr><td colSpan={isAdmin ? 7 : 6} className="py-20 text-center text-sm text-gray-400 italic">등록된 내역이 없습니다.</td></tr> :
+                      {incidents.length === 0 ? <tr><td colSpan={isAdmin ? 7 : 6} className="py-20 text-center text-sm text-gray-400 dark:text-slate-500 italic">등록된 내역이 없습니다.</td></tr> :
                         incidents.map(i => (
-                          <tr key={i.id} className="hover:bg-gray-50 transition-colors">
-                            <td className="px-6 py-4">
+                          <tr key={i.id} className="hover:bg-gray-50 dark:hover:bg-slate-700 dark:bg-slate-900 transition-all">
+                            <td className="px-6 py-4 shrink-0">
                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${getTypeBadgeClass(i.type)}`}>{getTypeLabel(i.type)}</span>
                             </td>
-                            <td className="px-6 py-4 text-[11px] font-bold text-gray-500 tabular-nums">{formatDate(i.occurredAt)}</td>
-                            <td className="px-6 py-4 text-xs font-black text-gray-900">{formatDuration(i.durationMinutes)}</td>
-                            <td className="px-6 py-4">
-                               <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-100 border border-gray-200 w-fit">
-                                  <Server size={12} className="text-gray-400" />
-                                  <span className="text-[11px] font-bold text-gray-600">{i.instanceName || i.nodeId}</span>
+                            <td className="px-6 py-4 text-[11px] font-bold text-gray-500 dark:text-slate-400 tabular-nums">{formatDate(i.occurredAt)}</td>
+                            <td className="px-6 py-4 text-xs font-black text-gray-900 dark:text-slate-100">{formatDuration(i.durationMinutes)}</td>
+                            <td className="px-6 py-4 shrink-0">
+                               <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-100 border border-gray-200 dark:bg-slate-600 dark:border-slate-500 w-fit">
+                                  <Server size={12} className="text-gray-400 dark:text-slate-500" />
+                                  <span className="text-[11px] font-bold text-gray-600 dark:text-slate-400">{i.instanceName || i.nodeId}</span>
                                </div>
                             </td>
-                            <td className="px-6 py-4 text-xs font-bold text-gray-700">
+                            <td className="px-6 py-4 text-xs font-bold text-gray-700 dark:text-slate-300">
                                {i.customers.map(c => subtenantNameById[c.subtenantId || ''] || c.subtenantId).join(', ')}
                             </td>
                             <td className="px-6 py-4 text-right">

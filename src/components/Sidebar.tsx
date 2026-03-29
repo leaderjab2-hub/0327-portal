@@ -151,13 +151,13 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`relative z-40 hidden h-screen flex-col overflow-visible border-r border-[#E5E7EB] bg-white transition-[width] duration-200 md:flex ${
+      className={`relative z-40 hidden h-screen flex-col overflow-visible border-r border-gray-200 dark:border-slate-700 dark:border-slate-700 bg-white dark:bg-slate-800 dark:bg-slate-800 transition-[width] duration-200 md:flex ${
         collapsed ? 'w-16' : 'w-60'
       }`}
     >
       <div
-        className={`flex h-16 shrink-0 items-center border-b border-[#E5E7EB] ${
-          collapsed ? 'justify-center px-2' : 'justify-between px-4'
+        className={`flex h-16 shrink-0 items-center justify-between px-4 border-b border-gray-200 dark:border-slate-700 ${
+          collapsed ? 'justify-center px-2' : ''
         }`}
       >
         {collapsed ? (
@@ -165,7 +165,7 @@ export default function Sidebar({
             <button
               type="button"
               onClick={onToggle}
-              className="flex h-10 w-10 items-center justify-center rounded-md text-gray-500 transition hover:bg-[#F9FAFB] hover:text-gray-700"
+              className="flex h-10 w-10 items-center justify-center rounded-md text-gray-500 dark:text-slate-400 transition hover:bg-[#F9FAFB] hover:text-gray-700 dark:text-slate-300"
               aria-label="사이드바 열기"
             >
               <Image
@@ -193,7 +193,7 @@ export default function Sidebar({
             <button
               type="button"
               onClick={onToggle}
-              className="rounded-md p-1.5 text-gray-400 transition hover:bg-[#F9FAFB] hover:text-gray-700"
+              className="rounded-md p-1.5 text-gray-400 dark:text-slate-500 transition hover:bg-[#F9FAFB] hover:text-gray-700 dark:text-slate-300"
               aria-label="사이드바 접기"
               title="사이드바 접기"
             >
@@ -213,7 +213,7 @@ export default function Sidebar({
                   <Link
                     href={menu.href}
                     className={`mx-auto flex h-9 w-12 items-center justify-center rounded-md text-[13px] ${
-                      isActive ? 'bg-primary-50 text-primary-600' : 'text-gray-900 hover:bg-[#F9FAFB]'
+                      isActive ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400' : 'text-gray-900 dark:text-slate-100 dark:text-slate-100 hover:bg-[#F9FAFB] dark:hover:bg-slate-700'
                     }`}
                     title={menu.name}
                   >
@@ -232,8 +232,8 @@ export default function Sidebar({
                   <div key={menu.name} className="relative mb-1">
                     <button
                       onClick={() => toggleMenu(menu.name)}
-                      className={`flex h-9 w-full items-center justify-between px-4 py-2 text-[13px] hover:bg-[#F9FAFB] ${
-                        isActive ? 'font-semibold text-primary-600' : 'text-gray-900'
+                      className={`flex h-9 w-full items-center justify-between px-4 py-2 text-[13px] hover:bg-[#F9FAFB] dark:hover:bg-slate-700 ${
+                        isActive ? 'font-semibold text-primary-600 dark:text-primary-400' : 'text-gray-900 dark:text-slate-100 dark:text-slate-100'
                       }`}
                       type="button"
                     >
@@ -242,9 +242,9 @@ export default function Sidebar({
                         <span>{menu.name}</span>
                       </div>
                       {openMenus[menu.name] ? (
-                        <ChevronDown size={14} className="text-gray-400" />
+                        <ChevronDown size={14} className="text-gray-400 dark:text-slate-500 dark:text-slate-500" />
                       ) : (
-                        <ChevronRight size={14} className="text-gray-400" />
+                        <ChevronRight size={14} className="text-gray-400 dark:text-slate-500 dark:text-slate-500" />
                       )}
                     </button>
                     {openMenus[menu.name] ? (
@@ -256,10 +256,10 @@ export default function Sidebar({
                             <Link
                               href={submenu.href}
                               key={submenu.name}
-                              className={`block border-l-[2px] py-[8px] pl-[36px] text-[12px] hover:bg-[#F9FAFB] ${
+                              className={`block border-l-[2px] py-[8px] pl-[36px] text-[12px] hover:bg-[#F9FAFB] dark:hover:bg-slate-700 ${
                                 isSubActive
-                                  ? 'border-primary-500 bg-primary-50 font-semibold text-primary-600'
-                                  : 'border-transparent text-gray-600'
+                                  ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/10 font-semibold text-primary-600 dark:text-primary-400'
+                                  : 'border-transparent text-gray-600 dark:text-slate-400'
                               }`}
                             >
                               {submenu.name}
@@ -279,7 +279,7 @@ export default function Sidebar({
                   className={`mb-1 flex h-9 items-center gap-2 border-l-[2px] px-4 text-[13px] hover:bg-[#F9FAFB] ${
                     isActive
                       ? 'border-primary-500 bg-primary-50 font-semibold text-primary-600'
-                      : 'border-transparent text-gray-900'
+                      : 'border-transparent text-gray-900 dark:text-slate-100'
                   }`}
                 >
                   <menu.icon size={16} />
@@ -290,7 +290,7 @@ export default function Sidebar({
       </nav>
 
       {!collapsed ? (
-        <div className="flex-shrink-0 border-t border-[#E5E7EB] py-3">
+        <div className="flex-shrink-0 border-t border-[#E5E7EB] py-4">
           {bottomMenus.map((menu) => {
             const isActive = pathname === menu.href;
 
@@ -301,7 +301,7 @@ export default function Sidebar({
                 className={`flex items-center gap-2 border-l-[2px] px-4 py-2 text-[13px] ${
                   isActive
                     ? 'border-primary-500 bg-primary-50 font-semibold text-primary-600'
-                    : 'border-transparent text-gray-900 hover:bg-[#F9FAFB]'
+                    : 'border-transparent text-gray-900 dark:text-slate-100 hover:bg-[#F9FAFB]'
                 }`}
               >
                 <menu.icon size={16} />

@@ -13,12 +13,12 @@ export default function RouteErrorFallback({
 }: RouteErrorFallbackProps) {
   return (
     <div className="flex min-h-[320px] items-center justify-center px-6 py-12">
-      <div className="w-full max-w-lg rounded-[18px] border border-rose-100 bg-white p-8 text-center shadow-sm">
+      <div className="w-full max-w-lg rounded-[18px] border border-rose-100 bg-white dark:bg-slate-800 p-8 text-center shadow-sm card-depth">
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-rose-50 text-rose-500">
           !
         </div>
-        <h2 className="text-[20px] font-bold text-gray-900">{title}</h2>
-        <p className="mt-2 text-[14px] text-gray-500">{message}</p>
+        <h2 className="text-[20px] font-bold text-gray-900 dark:text-slate-100">{title}</h2>
+        <p className="mt-2 text-[14px] text-gray-500 dark:text-slate-400">{message}</p>
         <button
           className="mt-6 rounded-[10px] bg-primary-600 px-5 py-2.5 text-[14px] font-semibold text-white transition hover:bg-primary-700"
           onClick={reset}

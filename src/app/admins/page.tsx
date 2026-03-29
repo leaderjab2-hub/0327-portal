@@ -53,26 +53,26 @@ function CreateAdminModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="relative flex max-h-full w-full max-w-2xl flex-col overflow-hidden rounded-[16px] bg-white shadow-2xl transition-all">
-        <div className="flex items-center justify-between border-b border-gray-100 p-5 sm:p-8">
-          <h2 className="text-[18px] font-extrabold text-gray-900 sm:text-[20px]">관리자 계정 생성</h2>
-          <button onClick={onClose} className="text-gray-400 transition-colors hover:text-gray-900"><X size={20}/></button>
+      <div className="relative flex max-h-full w-full max-w-2xl flex-col overflow-hidden rounded-[16px] bg-white dark:bg-slate-800 shadow-2xl transition-all">
+        <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-700 p-5 sm:p-8">
+          <h2 className="text-[18px] font-extrabold text-gray-900 dark:text-slate-100 sm:text-[20px]">관리자 계정 생성</h2>
+          <button onClick={onClose} className="text-gray-400 dark:text-slate-500 transition-all hover:text-gray-900 dark:text-slate-100"><X size={20}/></button>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-8">
           <div className="flex flex-col gap-4 sm:gap-5">
             <div>
-              <label className="mb-1.5 block text-[12px] font-bold text-gray-700 sm:text-[13px]">이름 <span className="text-red-500">*</span></label>
-              <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="이름을 입력하세요" className="w-full rounded-[10px] border border-gray-200 p-2.5 text-[13px] font-medium text-gray-900 placeholder:text-gray-400 transition-all focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 sm:p-3" />
+              <label className="mb-1.5 block text-[12px] font-bold text-gray-700 dark:text-slate-300 sm:text-[13px]">이름 <span className="text-red-500">*</span></label>
+              <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="이름을 입력하세요" className="w-full rounded-[10px] border border-gray-200 dark:border-slate-700 p-2.5 text-[13px] font-medium text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:text-slate-500 transition-all focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 sm:p-3" />
             </div>
             <div>
-              <label className="mb-1.5 block text-[12px] font-bold text-gray-700 sm:text-[13px]">이메일 <span className="text-red-500">*</span></label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="example@skt.com" className={`w-full rounded-[10px] border p-2.5 text-[13px] font-medium text-gray-900 placeholder:text-gray-400 transition-all focus:outline-none sm:p-3 ${emailError ? 'border-red-300 bg-red-50/20 focus:border-red-500 focus:ring-2 focus:ring-red-500/20' : 'border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20'}`} />
+              <label className="mb-1.5 block text-[12px] font-bold text-gray-700 dark:text-slate-300 sm:text-[13px]">이메일 <span className="text-red-500">*</span></label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="example@skt.com" className={`w-full rounded-[10px] border p-2.5 text-[13px] font-medium text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:text-slate-500 transition-all focus:outline-none sm:p-3 ${emailError ? 'border-red-300 bg-red-50/20 focus:border-red-500 focus:ring-2 focus:ring-red-500/20' : 'border-gray-200 dark:border-slate-700 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20'}`} />
               {emailError && <p className="mt-1.5 flex items-center gap-1.5 text-[11px] font-bold text-red-500"><X size={12}/> {emailError}</p>}
             </div>
             <div>
-              <label className="mb-1.5 block text-[12px] font-bold text-gray-700 sm:text-[13px]">권한 <span className="text-red-500">*</span></label>
-              <select value={role} onChange={e => setRole(e.target.value)} className="w-full cursor-pointer rounded-[10px] border border-gray-200 bg-white p-2.5 text-[13px] font-bold text-gray-900 transition-all focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 sm:p-3">
+              <label className="mb-1.5 block text-[12px] font-bold text-gray-700 dark:text-slate-300 sm:text-[13px]">권한 <span className="text-red-500">*</span></label>
+              <select value={role} onChange={e => setRole(e.target.value)} className="w-full cursor-pointer rounded-[10px] border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2.5 text-[13px] font-bold text-gray-900 dark:text-slate-100 transition-all focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 sm:p-3">
                 <option value="관리자">관리자</option>
                 <option value="인프라 관리자">인프라 관리자</option>
               </select>
@@ -80,10 +80,10 @@ function CreateAdminModal({
           </div>
         </div>
 
-        <div className="shrink-0 border-t border-gray-100 bg-gray-50/50 p-5 sm:p-8">
+        <div className="shrink-0 border-t border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/50 p-5 sm:p-8">
           <div className="flex justify-end gap-2.5">
-            <button onClick={onClose} className="rounded-[10px] border border-gray-200 bg-white px-5 py-2.5 text-[13px] font-bold text-gray-600 transition-colors hover:bg-gray-50">취소</button>
-            <button onClick={handleSubmit} disabled={!isFormValid} className={`rounded-[10px] px-6 py-2.5 text-[13px] font-extrabold transition-all outline-none ${isFormValid ? 'bg-gray-900 text-white shadow-lg shadow-black/10 hover:bg-black active:scale-95' : 'cursor-not-allowed bg-gray-200 text-gray-400'}`}>확인</button>
+            <button onClick={onClose} className="rounded-[10px] border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-2.5 text-[13px] font-bold text-gray-600 dark:text-slate-400 transition-all hover:bg-gray-50 dark:hover:bg-slate-700 dark:bg-slate-900">취소</button>
+            <button onClick={handleSubmit} disabled={!isFormValid} className={`rounded-[10px] px-6 py-2.5 text-[13px] font-extrabold transition-all outline-none ${isFormValid ? 'bg-gray-900 text-white shadow-lg shadow-black/10 hover:bg-black active:scale-95' : 'cursor-not-allowed bg-gray-200 text-gray-400 dark:text-slate-500'}`}>확인</button>
           </div>
         </div>
       </div>
@@ -142,63 +142,107 @@ export default function Admins() {
     <div className="relative flex h-full flex-col gap-6">
       <CreateAdminModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
 
-      <div className="flex flex-col gap-4 rounded-[14px] border border-gray-200 bg-white p-4 text-left shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center justify-between md:border-r md:border-gray-200 md:pr-5">
-          <div className="text-[14px] font-bold text-gray-900">플랫폼 관리자 <span className="ml-2 font-normal text-gray-400">Total {filteredAdmins.length}</span></div>
+      <div className="flex h-[48px] shrink-0 items-center justify-between bg-white dark:bg-slate-800 px-4 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm card-depth">
+        <div className="flex items-center gap-3">
+          <div className="text-[14px] font-black text-gray-900 dark:text-slate-100 uppercase tracking-tight">
+            플랫폼 관리자 <span className="ml-2 text-[11px] font-bold text-gray-400 dark:text-slate-500 italic">TOTAL {filteredAdmins.length}</span>
+          </div>
         </div>
 
-        <div className="flex flex-1 flex-col items-stretch gap-3 md:px-5 sm:flex-row md:items-center">
-          <div className="relative flex-1 sm:max-w-[320px]">
+        <div className="flex items-center gap-3">
+          <div className="relative flex items-center">
+            <Search className="absolute left-3 text-gray-400 dark:text-slate-500" size={13} />
             <input
               type="text"
               placeholder="관리자 명 검색"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              className="h-[36px] w-full rounded-[8px] border border-gray-200 bg-white px-3 pl-8 text-[13px] shadow-sm transition-all focus:border-primary-500 focus:outline-none"
+              className="h-[30px] w-40 rounded-full border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-8 text-[12px] font-medium text-gray-900 dark:text-slate-100 transition-all focus:w-56 focus:border-blue-400 focus:outline-none"
             />
-            <Search size={14} className="absolute left-3 top-[11px] text-gray-400" />
           </div>
-        </div>
-
-        <div className="flex items-center gap-2 border-t border-gray-50 pt-3 md:border-none md:pt-0">
-          <button onClick={() => void loadAdmins()} className="flex h-[36px] w-[36px] items-center justify-center rounded-[8px] border border-gray-200 text-gray-500 transition-colors hover:bg-gray-50">
-            <RotateCcw size={14} />
-          </button>
-          <button className="flex h-[36px] items-center justify-center whitespace-nowrap rounded-[8px] bg-gray-100 px-4 text-[13px] font-bold text-gray-700 transition-colors hover:bg-gray-200">
-            검색
-          </button>
-          <div className="mx-1 h-[16px] w-[1px] bg-gray-200"></div>
-          <button onClick={() => setIsModalOpen(true)} className="flex h-[36px] flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-[8px] bg-primary-600 px-4 text-[13px] font-bold text-white shadow-sm shadow-primary-500/10 transition-all hover:bg-primary-700 active:scale-[0.98] md:flex-none">
-            <Plus size={14} /> <span>생성</span>
+          <div className="h-4 w-px bg-gray-200 dark:bg-slate-700 mx-1" />
+          <button 
+            onClick={() => setIsModalOpen(true)} 
+            className="flex h-8 items-center gap-1.5 px-4 bg-primary-600 rounded-full text-[11px] font-black uppercase text-white shadow-sm card-depth hover:bg-black transition-all duration-150 active:scale-[0.98]"
+          >
+            <Plus size={14} /> 생성
           </button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden rounded-[10px] border border-gray-200 bg-white shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)]">
+      <div className="flex-1 overflow-hidden rounded-[10px] border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.4)]">
         <div className="h-full overflow-x-auto">
-          <table className="w-full border-collapse text-left">
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-3 p-4 bg-gray-50 dark:bg-slate-900/50">
+            {error ? (
+              <div className="py-20 text-center text-xs font-bold text-rose-500 italic">{error}</div>
+            ) : loading ? (
+              <div className="py-20 text-center text-xs font-bold text-gray-400 dark:text-slate-500 italic">관리자를 불러오는 중...</div>
+            ) : filteredAdmins.length === 0 ? (
+              <div className="py-20 text-center text-xs font-bold text-gray-400 dark:text-slate-500 italic">등록된 관리자가 없습니다.</div>
+            ) : (
+              filteredAdmins.map((row) => {
+                const roleLabel = row.adminRole ?? '관리자';
+                const roleBg = roleLabel === '인프라 관리자' ? 'bg-purple-50 text-purple-600 border-purple-100' : 'bg-blue-50 text-blue-600 border-blue-100';
+
+                return (
+                  <div key={row.id} className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm card-depth p-4 space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-sm font-black text-gray-900 dark:text-slate-100">{row.name ?? '-'}</span>
+                        <span className={`w-fit px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter border ${roleBg}`}>
+                          {roleLabel}
+                        </span>
+                      </div>
+                      <button className="p-1.5 text-gray-400"><MoreVertical size={16}/></button>
+                    </div>
+                    
+                    <div className="space-y-2">
+                       <div className="flex items-center gap-2 text-[11px] font-medium text-gray-500 dark:text-slate-400">
+                          <span className="w-12 text-gray-400 dark:text-slate-500 font-bold uppercase tracking-tight">Email</span>
+                          <span className="text-gray-900 dark:text-slate-100">{row.email ?? '-'}</span>
+                       </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-gray-100 dark:border-slate-700 grid grid-cols-2 gap-2">
+                      <div className="flex flex-col">
+                        <span className="text-[9px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-tight">등록일시</span>
+                        <span className="text-[10px] font-mono font-bold text-gray-600 dark:text-slate-400 tabular-nums">{formatDateTime(row.created_at)}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[9px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-tight">최근로그인</span>
+                        <span className="text-[10px] font-mono font-bold text-gray-600 dark:text-slate-400 tabular-nums">{formatDateTime(row.last_sign_in_at)}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Desktop Table View */}
+          <table className="hidden md:table w-full border-collapse text-left">
             <thead>
-              <tr className="border-b border-gray-200 bg-[#FAFAFA]">
-                <th className="whitespace-nowrap px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500">관리자 명</th>
-                <th className="whitespace-nowrap px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500">이메일</th>
-                <th className="whitespace-nowrap px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500">권한</th>
-                <th className="whitespace-nowrap px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500">등록 일시</th>
-                <th className="whitespace-nowrap px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500">최근 로그인</th>
-                <th className="w-10 px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500"></th>
+              <tr className="border-b border-gray-200 dark:border-slate-700 bg-[#FAFAFA] dark:bg-slate-900/50">
+                <th className="whitespace-nowrap px-[20px] py-4 text-[12px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">관리자 명</th>
+                <th className="whitespace-nowrap px-[20px] py-4 text-[12px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">이메일</th>
+                <th className="whitespace-nowrap px-[20px] py-4 text-[12px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">등록 일시</th>
+                <th className="whitespace-nowrap px-[20px] py-4 text-[12px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">최근 로그인</th>
+                <th className="w-10 px-[20px] py-4 text-[12px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400"></th>
               </tr>
             </thead>
             <tbody>
               {error ? (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-sm font-medium text-rose-500">{error}</td>
+                  <td colSpan={5} className="py-10 text-center text-sm font-medium text-rose-500">{error}</td>
                 </tr>
               ) : loading ? (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-sm font-medium text-gray-400">관리자 목록을 불러오는 중입니다.</td>
+                  <td colSpan={5} className="py-10 text-center text-sm font-medium text-gray-400 dark:text-slate-500">관리자 목록을 불러오는 중입니다.</td>
                 </tr>
               ) : filteredAdmins.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-sm font-medium text-gray-400">등록된 관리자가 없습니다.</td>
+                  <td colSpan={5} className="py-10 text-center text-sm font-medium text-gray-400 dark:text-slate-500">등록된 관리자가 없습니다.</td>
                 </tr>
               ) : (
                 filteredAdmins.map((row) => {
@@ -206,22 +250,21 @@ export default function Admins() {
                   const roleBg = roleLabel === '인프라 관리자' ? 'bg-[#F5F3FF] text-[#7C3AED]' : 'bg-[#EFF6FF] text-[#2563EB]';
 
                   return (
-                    <tr key={row.id} className="border-b border-gray-100 transition-colors hover:bg-gray-50/50">
-                      <td className="px-[20px] py-[14px] text-[13px] font-bold text-gray-900 whitespace-nowrap">
+                    <tr key={row.id} className="border-b border-gray-100 dark:border-slate-700 transition-all duration-150 hover:bg-gray-50 dark:hover:bg-slate-700 dark:bg-slate-900/50">
+                      <td className="px-[20px] py-4 text-[13px] font-bold text-gray-900 dark:text-slate-100 whitespace-nowrap">
                         {row.name ?? '-'}
                         <span className={`ml-3 rounded-[4px] px-2 py-0.5 text-[10px] font-bold ${roleBg}`}>{roleLabel}</span>
                       </td>
-                      <td className="whitespace-nowrap px-[20px] py-[14px] text-[13px] font-medium text-gray-600">
+                      <td className="whitespace-nowrap px-[20px] py-4 text-[13px] font-medium text-gray-600 dark:text-slate-400">
                         {row.email ?? '-'}
                       </td>
-                      <td className="hidden px-[20px] md:table-cell" />
-                      <td className="whitespace-nowrap px-[20px] py-[14px] font-mono text-[12px] text-gray-500">
+                      <td className="whitespace-nowrap px-[20px] py-4 font-mono text-[12px] text-gray-500 dark:text-slate-400">
                         {formatDateTime(row.created_at)}
                       </td>
-                      <td className="whitespace-nowrap px-[20px] py-[14px] font-mono text-[12px] text-gray-500">
+                      <td className="whitespace-nowrap px-[20px] py-4 font-mono text-[12px] text-gray-500 dark:text-slate-400">
                         {formatDateTime(row.last_sign_in_at)}
                       </td>
-                      <td className="px-[20px] text-gray-400 hover:text-gray-900 cursor-pointer">
+                      <td className="px-[20px] text-gray-400 dark:text-slate-500 hover:text-gray-900 dark:text-slate-100 cursor-pointer transition-all duration-150">
                         <MoreVertical size={16} />
                       </td>
                     </tr>

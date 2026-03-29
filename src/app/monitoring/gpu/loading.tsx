@@ -4,7 +4,7 @@ export default function Loading() {
       <div className="flex flex-col items-center gap-3">
         <div className="w-8 h-8 border-2 border-blue-500 
           border-t-transparent rounded-full animate-spin" />
-        <p className="text-sm text-gray-400">불러오는 중...</p>
+        <p className="text-sm text-gray-400 dark:text-slate-500">불러오는 중...</p>
       </div>
     </div>
   )

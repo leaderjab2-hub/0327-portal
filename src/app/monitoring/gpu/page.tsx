@@ -12,6 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useTheme } from "next-themes";
 import { tenants } from "@/lib/mockData";
 import { mockGpuNodes } from "@/lib/mockMonitoringData";
 
@@ -150,6 +151,7 @@ function buildChartData(
 }
 
 export default function GPUMonitoring() {
+  const { resolvedTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<"gpu" | "cpu">("gpu");
   const [selectedTenantId, setSelectedTenantId] = useState<string>(tenants[0]?.id ?? "");
   const [selectedSubtenantId, setSelectedSubtenantId] = useState<string>("all");
@@ -159,6 +161,9 @@ export default function GPUMonitoring() {
   const [loadingNodes, setLoadingNodes] = useState(true);
   const [loadingMetrics, setLoadingMetrics] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     const loadNodes = async () => {
@@ -272,12 +277,13 @@ export default function GPUMonitoring() {
   }, [metricsMap, selectedInstances]);
 
   return (
-    <div className="flex h-full flex-col items-start gap-6 md:flex-row overflow-hidden">
-      <div className="flex w-full flex-col overflow-hidden rounded-xl border border-gray-200 bg-white md:sticky md:top-0 md:h-full md:w-60 md:shrink-0 shadow-sm">
-        <div className="flex flex-col gap-3 border-b border-gray-100 p-4">
+    <div className="mx-auto w-full max-w-[1400px] px-3 md:px-6 pt-4 pb-8">
+      <div className="flex flex-col gap-6 md:flex-row md:items-start">
+      <div className="flex w-full flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 md:sticky md:top-0 md:h-full md:w-60 md:shrink-0 shadow-sm card-depth">
+        <div className="flex flex-col gap-3 border-b border-gray-100 dark:border-slate-700 p-4">
           <div className="flex gap-2">
             <select
-              className="h-[38px] flex-1 min-w-0 rounded-lg border border-gray-200 bg-white px-3 text-sm font-bold text-gray-700 focus:border-blue-500 focus:outline-none transition-colors"
+              className="h-[38px] flex-1 min-w-0 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-sm font-bold text-gray-700 dark:text-slate-200 dark:text-slate-200 focus:border-blue-500 focus:outline-none transition-all"
               value={selectedTenantId}
               onChange={(event) => {
                 setSelectedTenantId(event.target.value);
@@ -294,7 +300,7 @@ export default function GPUMonitoring() {
           </div>
 
           <select
-            className="h-[38px] w-full rounded-lg border border-gray-200 bg-white px-3 text-sm font-bold text-gray-700 focus:border-blue-500 focus:outline-none transition-colors"
+            className="h-[38px] w-full rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-sm font-bold text-gray-700 dark:text-slate-200 dark:text-slate-200 focus:border-blue-500 focus:outline-none transition-all"
             value={selectedSubtenantId}
             onChange={(event) => {
               setSelectedSubtenantId(event.target.value);
@@ -310,25 +316,25 @@ export default function GPUMonitoring() {
           </select>
 
           <div className="flex md:mt-1 gap-2">
-            <button className="flex h-[38px] w-[38px] items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 transition-colors">
+            <button className="flex h-[38px] w-[38px] items-center justify-center rounded-lg border border-gray-200 dark:border-slate-700 text-gray-400 dark:text-slate-500 hover:bg-gray-50 dark:hover:bg-slate-700 dark:bg-slate-900 transition-all">
               <RotateCcw size={16} />
             </button>
-            <button className="h-[38px] flex-1 rounded-lg bg-blue-600 text-[13px] font-black uppercase tracking-wider text-white hover:bg-blue-700 shadow-sm transition-all active:scale-[0.98]">
+            <button className="h-[38px] flex-1 rounded-lg bg-blue-600 text-[13px] font-black uppercase tracking-wider text-white hover:bg-blue-700 shadow-sm card-depth transition-all active:scale-[0.98]">
               필터 적용
             </button>
           </div>
         </div>
 
-        <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50 p-4">
-          <span className="text-[12px] font-semibold text-gray-900">Total {filteredNodes.length}</span>
-          <span className="text-[12px] text-gray-600">{selectedInstances.length}개 선택됨</span>
+        <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 p-4">
+          <span className="text-[12px] font-semibold text-gray-900 dark:text-slate-100">Total {filteredNodes.length}</span>
+          <span className="text-[12px] text-gray-600 dark:text-slate-400">{selectedInstances.length}개 선택됨</span>
         </div>
 
         <div className="max-h-[40vh] min-h-0 flex-1 overflow-y-auto md:max-h-none">
           {loadingNodes ? (
-            <div className="p-4 text-[13px] text-gray-400">노드 목록을 불러오는 중입니다...</div>
+            <div className="p-4 text-[13px] text-gray-400 dark:text-slate-500">노드 목록을 불러오는 중입니다...</div>
           ) : filteredNodes.length === 0 ? (
-            <div className="p-4 text-[13px] text-gray-400">선택한 조건의 노드가 없습니다.</div>
+            <div className="p-4 text-[13px] text-gray-400 dark:text-slate-500">선택한 조건의 노드가 없습니다.</div>
           ) : (
             filteredNodes.map((node) => {
               const isSelected = selectedInstances.includes(node.id);
@@ -339,8 +345,8 @@ export default function GPUMonitoring() {
               return (
                 <button
                   key={node.id}
-                  className={`flex w-full items-center gap-3 border-b border-gray-100 p-4 text-left ${
-                    isSelected ? "bg-primary-50" : "hover:bg-gray-50"
+                  className={`flex w-full items-center gap-3 border-b border-gray-100 dark:border-slate-700 p-4 text-left ${
+                    isSelected ? "bg-primary-50" : "hover:bg-gray-50 dark:hover:bg-slate-700 dark:bg-slate-900"
                   }`}
                   onClick={() => toggleInstance(node.id)}
                   type="button"
@@ -352,8 +358,8 @@ export default function GPUMonitoring() {
                     type="checkbox"
                   />
                   <div className="min-w-0 flex-1">
-                    <div className="mb-1 truncate text-[11px] text-gray-400">{subName}</div>
-                    <div className="text-[13px] font-semibold leading-none text-gray-900">
+                    <div className="mb-1 truncate text-[11px] text-gray-400 dark:text-slate-500">{subName}</div>
+                    <div className="text-[13px] font-semibold leading-none text-gray-900 dark:text-slate-100">
                       {node.name.split("-").pop()?.toUpperCase()}
                     </div>
                   </div>
@@ -373,14 +379,14 @@ export default function GPUMonitoring() {
         </div>
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-[10px] border border-gray-200 bg-white">
-        <div className="border-b border-gray-200 bg-white">
-          <div className="flex border-b border-gray-100 md:border-b-0">
+      <div className="flex w-full min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm card-depth">
+        <div className="border-b border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+          <div className="flex bg-gray-100 dark:bg-slate-800 border-b border-gray-100 dark:border-slate-700 md:border-b-0">
             <button
               className={`flex-1 px-5 py-4 text-[13px] font-black uppercase tracking-widest transition-all ${
                 activeTab === "gpu"
-                  ? "border-b-[3px] border-blue-600 text-blue-600 bg-blue-50/30"
-                  : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+                  ? "border-b-[3px] border-blue-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100"
+                  : "text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-900"
               }`}
               onClick={() => setActiveTab("gpu")}
               type="button"
@@ -390,8 +396,8 @@ export default function GPUMonitoring() {
             <button
               className={`flex-1 px-5 py-4 text-[13px] font-black uppercase tracking-widest transition-all ${
                 activeTab === "cpu"
-                  ? "border-b-[3px] border-blue-600 text-blue-600 bg-blue-50/30"
-                  : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+                  ? "border-b-[3px] border-blue-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100"
+                  : "text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-900"
               }`}
               onClick={() => setActiveTab("cpu")}
               type="button"
@@ -401,18 +407,18 @@ export default function GPUMonitoring() {
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-2 p-3 md:justify-end md:pr-4">
-            <div className="flex h-[34px] overflow-hidden rounded-lg border border-gray-200 bg-gray-50 text-[10px] font-black shadow-sm">
-              <button className="border-r border-gray-200 px-3 py-1 text-gray-400 uppercase">1D</button>
-              <button className="border-r border-gray-200 px-3 py-1 text-gray-400 uppercase">3D</button>
-              <button className="border-r border-gray-200 bg-white px-3 py-1 text-blue-600 uppercase">1W</button>
-              <button className="px-3 py-1 text-gray-400 uppercase">1M</button>
+            <div className="flex h-[34px] overflow-hidden rounded-lg border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 text-[10px] font-black shadow-sm card-depth">
+              <button className="border-r border-gray-200 dark:border-slate-700 px-3 py-1 text-gray-400 dark:text-slate-500 uppercase">1D</button>
+              <button className="border-r border-gray-200 dark:border-slate-700 px-3 py-1 text-gray-400 dark:text-slate-500 uppercase">3D</button>
+              <button className="border-r border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1 text-blue-600 uppercase">1W</button>
+              <button className="px-3 py-1 text-gray-400 dark:text-slate-500 uppercase">1M</button>
             </div>
             <div className="flex items-center gap-2">
-              <div className="flex h-[34px] items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 shadow-sm">
-                <Calendar className="text-gray-400" size={13} />
-                <span className="truncate text-[10px] font-black uppercase tracking-tight text-gray-500">Last 30 Points</span>
+              <div className="flex h-[34px] items-center gap-2 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 shadow-sm card-depth">
+                <Calendar className="text-gray-400 dark:text-slate-500" size={13} />
+                <span className="truncate text-[10px] font-black uppercase tracking-tight text-gray-500 dark:text-slate-400">Last 30 Points</span>
               </div>
-              <button className="flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-gray-200 text-gray-400 transition hover:rotate-180 hover:bg-gray-50 shadow-sm">
+              <button className="flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-gray-200 dark:border-slate-700 text-gray-400 dark:text-slate-500 transition hover:rotate-180 hover:bg-gray-50 dark:hover:bg-slate-700 dark:bg-slate-900 shadow-sm card-depth">
                 <RotateCcw size={14} />
               </button>
             </div>
@@ -421,26 +427,26 @@ export default function GPUMonitoring() {
 
         <div className="flex-1 overflow-y-auto p-5">
           {error ? (
-            <div className="rounded-[10px] border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] text-rose-700">
+            <div className="rounded-[10px] border border-rose-200 bg-rose-50 px-4 py-4 text-[13px] text-rose-700">
               {error}
             </div>
           ) : null}
 
           {selectedInstances.length === 0 ? (
-            <div className="flex h-full min-h-[420px] items-center justify-center text-[14px] text-gray-400">
+            <div className="flex h-full min-h-[420px] items-center justify-center text-[14px] text-gray-400 dark:text-slate-500">
               좌측에서 인스턴스를 1개 이상 선택해 주세요.
             </div>
           ) : loadingMetrics ? (
-            <div className="flex h-full min-h-[420px] items-center justify-center text-[14px] text-gray-400">
+            <div className="flex h-full min-h-[420px] items-center justify-center text-[14px] text-gray-400 dark:text-slate-500">
               메트릭을 불러오는 중입니다...
             </div>
           ) : (
             <div className={`grid gap-5 ${charts.length > 2 ? "md:grid-cols-2" : "grid-cols-1 md:grid-cols-2"}`}>
               {charts.map((chart) => (
-                <div key={chart.key} className="flex min-h-[320px] flex-col rounded-[10px] border border-gray-200 bg-white p-5">
+                <div key={chart.key} className="flex min-h-[320px] flex-col rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm card-depth transition-all hover:shadow-md">
                   <div className="mb-6 flex items-center justify-between">
-                    <h3 className="text-[14px] font-semibold text-gray-900">{chart.title}</h3>
-                    <button className="text-gray-400 hover:text-gray-900" type="button">
+                    <h3 className="text-[14px] font-semibold text-gray-900 dark:text-slate-100">{chart.title}</h3>
+                    <button className="text-gray-400 dark:text-slate-500 hover:text-gray-900 dark:text-slate-100" type="button">
                       <MoreVertical size={16} />
                     </button>
                   </div>
@@ -448,17 +454,19 @@ export default function GPUMonitoring() {
                   <div className="min-h-[220px] flex-1">
                     <ResponsiveContainer height="100%" width="100%">
                       <LineChart data={chartDataByKey[chart.key]} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
-                        <CartesianGrid stroke="#F3F4F6" strokeDasharray="3 3" vertical={false} />
+                        <CartesianGrid stroke="#F3F4F6" className="dark:stroke-slate-700" strokeDasharray="3 3" vertical={false} />
                         <XAxis axisLine={false} dataKey="timestamp" dy={10} minTickGap={10} tick={{ fontSize: 11, fill: "#9CA3AF" }} tickLine={false} />
                         <YAxis axisLine={false} domain={chart.domain} tick={{ fontSize: 11, fill: "#9CA3AF" }} tickFormatter={(value) => `${value}${chart.unit}`} tickLine={false} />
                         <RechartsTooltip
                           contentStyle={{
                             borderRadius: "8px",
-                            border: "1px solid #E5E7EB",
+                            border: mounted && resolvedTheme === 'dark' ? "1px solid #334155" : "1px solid #E5E7EB",
+                            backgroundColor: mounted && resolvedTheme === 'dark' ? "#1E293B" : "#ffffff",
                             fontSize: "12px",
                             fontWeight: 600,
-                            color: "#111827",
+                            color: mounted && resolvedTheme === 'dark' ? "#F1F5F9" : "#111827",
                           }}
+                          itemStyle={{ color: mounted && resolvedTheme === 'dark' ? "#F1F5F9" : "#111827" }}
                         />
                         <Legend iconType="circle" wrapperStyle={{ fontSize: "11px", paddingTop: "10px" }} />
 
@@ -484,5 +492,6 @@ export default function GPUMonitoring() {
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 }

@@ -172,9 +172,9 @@ export default function SignupForm() {
       {!isInviteMode ? (
         <>
           <label className="block">
-            <span className="mb-2 block text-[13px] font-medium text-gray-700">소속 회사</span>
+            <span className="mb-2 block text-[13px] font-medium text-gray-700 dark:text-slate-300">소속 회사</span>
             <select
-              className="h-11 w-full rounded-[10px] border border-gray-200 px-4 text-[14px] outline-none transition focus:border-primary-500"
+              className="h-11 w-full rounded-[10px] border border-gray-200 dark:border-slate-700 px-4 text-[14px] outline-none transition focus:border-primary-500"
               value={tenantName}
               onChange={(event) => setTenantName(event.target.value)}
               required
@@ -188,9 +188,9 @@ export default function SignupForm() {
           </label>
 
           <label className="block">
-            <span className="mb-2 block text-[13px] font-medium text-gray-700">이름</span>
+            <span className="mb-2 block text-[13px] font-medium text-gray-700 dark:text-slate-300">이름</span>
             <input
-              className="h-11 w-full rounded-[10px] border border-gray-200 px-4 text-[14px] outline-none transition focus:border-primary-500"
+              className="h-11 w-full rounded-[10px] border border-gray-200 dark:border-slate-700 px-4 text-[14px] outline-none transition focus:border-primary-500"
               value={name}
               onChange={(event) => setName(event.target.value)}
               required
@@ -198,9 +198,9 @@ export default function SignupForm() {
           </label>
 
           <label className="block">
-            <span className="mb-2 block text-[13px] font-medium text-gray-700">이메일</span>
+            <span className="mb-2 block text-[13px] font-medium text-gray-700 dark:text-slate-300">이메일</span>
             <input
-              className="h-11 w-full rounded-[10px] border border-gray-200 px-4 text-[14px] outline-none transition focus:border-primary-500"
+              className="h-11 w-full rounded-[10px] border border-gray-200 dark:border-slate-700 px-4 text-[14px] outline-none transition focus:border-primary-500"
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
@@ -213,9 +213,9 @@ export default function SignupForm() {
       {isInviteMode ? (
         <>
           <label className="block">
-            <span className="mb-2 block text-[13px] font-medium text-gray-700">이름</span>
+            <span className="mb-2 block text-[13px] font-medium text-gray-700 dark:text-slate-300">이름</span>
             <input
-              className="h-11 w-full rounded-[10px] border border-gray-200 px-4 text-[14px] outline-none transition focus:border-primary-500"
+              className="h-11 w-full rounded-[10px] border border-gray-200 dark:border-slate-700 px-4 text-[14px] outline-none transition focus:border-primary-500"
               value={name}
               onChange={(event) => setName(event.target.value)}
               required
@@ -223,9 +223,9 @@ export default function SignupForm() {
           </label>
 
           <label className="block">
-            <span className="mb-2 block text-[13px] font-medium text-gray-700">이메일</span>
+            <span className="mb-2 block text-[13px] font-medium text-gray-700 dark:text-slate-300">이메일</span>
             <input
-              className="h-11 w-full rounded-[10px] border border-gray-200 bg-gray-50 px-4 text-[14px] text-gray-500 outline-none"
+              className="h-11 w-full rounded-[10px] border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 px-4 text-[14px] text-gray-500 dark:text-slate-400 outline-none"
               type="email"
               value={inviteEmail}
               readOnly
@@ -235,10 +235,10 @@ export default function SignupForm() {
       ) : null}
 
       <label className="block">
-        <span className="mb-2 block text-[13px] font-medium text-gray-700">비밀번호</span>
+        <span className="mb-2 block text-[13px] font-medium text-gray-700 dark:text-slate-300">비밀번호</span>
         <div className="relative">
           <input
-            className="h-11 w-full rounded-[10px] border border-gray-200 px-4 pr-12 text-[14px] outline-none transition focus:border-primary-500"
+            className="h-11 w-full rounded-[10px] border border-gray-200 dark:border-slate-700 px-4 pr-12 text-[14px] outline-none transition focus:border-primary-500"
             type={showPassword ? "text" : "password"}
             minLength={8}
             value={password}
@@ -247,7 +247,7 @@ export default function SignupForm() {
           />
           <button
             aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 표시"}
-            className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-gray-400 transition hover:text-gray-700"
+            className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-gray-400 dark:text-slate-500 transition hover:text-gray-700 dark:text-slate-300"
             onClick={() => setShowPassword((prev) => !prev)}
             type="button"
           >
@@ -258,10 +258,10 @@ export default function SignupForm() {
 
       {isInviteMode ? (
         <label className="block">
-          <span className="mb-2 block text-[13px] font-medium text-gray-700">비밀번호 확인</span>
+          <span className="mb-2 block text-[13px] font-medium text-gray-700 dark:text-slate-300">비밀번호 확인</span>
           <div className="relative">
             <input
-              className="h-11 w-full rounded-[10px] border border-gray-200 px-4 pr-12 text-[14px] outline-none transition focus:border-primary-500"
+              className="h-11 w-full rounded-[10px] border border-gray-200 dark:border-slate-700 px-4 pr-12 text-[14px] outline-none transition focus:border-primary-500"
               type={showConfirmPassword ? "text" : "password"}
               minLength={8}
               value={confirmPassword}
@@ -270,7 +270,7 @@ export default function SignupForm() {
             />
             <button
               aria-label={showConfirmPassword ? "비밀번호 숨기기" : "비밀번호 표시"}
-              className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-gray-400 transition hover:text-gray-700"
+              className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-gray-400 dark:text-slate-500 transition hover:text-gray-700 dark:text-slate-300"
               onClick={() => setShowConfirmPassword((prev) => !prev)}
               type="button"
             >
@@ -294,7 +294,7 @@ export default function SignupForm() {
         {submitting ? "처리 중..." : isInviteMode ? "가입 완료" : "회원가입"}
       </button>
 
-      <p className="text-center text-[13px] text-gray-500">
+      <p className="text-center text-[13px] text-gray-500 dark:text-slate-400">
         이미 계정이 있나요?{" "}
         <Link className="font-semibold text-primary-600" href="/login">
           로그인

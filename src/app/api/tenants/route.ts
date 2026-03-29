@@ -5,13 +5,20 @@ import type { Database } from "@/types/database";
 
 type TenantInsert = Database["public"]["Tables"]["tenants"]["Insert"];
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const currentUser = await requireCurrentUser();
+    const { searchParams } = new URL(request.url);
+    const searchQuery = searchParams.get("query");
+
     const query = supabaseAdmin.from("tenants").select("*").order("created_at", { ascending: false });
 
     if (currentUser.role !== "admin") {
       query.eq("id", currentUser.tenantId ?? "");
+    }
+
+    if (searchQuery) {
+      query.ilike("name", `%${searchQuery}%`);
     }
 
     const { data, error } = await query;

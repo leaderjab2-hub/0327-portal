@@ -73,7 +73,7 @@ function getTypeBadgeClass(type: string) {
     return 'bg-primary-50 text-primary-600';
   }
 
-  return 'bg-[#F3F4F6] text-gray-600';
+  return 'bg-[#F3F4F6] text-gray-600 dark:bg-slate-600 dark:text-slate-100';
 }
 
 function NoticeModal({
@@ -105,23 +105,23 @@ function NoticeModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-2xl rounded-[16px] bg-white p-6 shadow-2xl">
+      <div className="w-full max-w-2xl rounded-[16px] bg-white dark:bg-slate-800 p-6 shadow-2xl">
         <div className="mb-5 flex items-center justify-between sm:mb-6">
-          <h2 className="text-[18px] font-extrabold text-gray-900 sm:text-[20px]">
+          <h2 className="text-[18px] font-extrabold text-gray-900 dark:text-slate-100 sm:text-[20px]">
             {mode === 'create' ? '공지사항 작성' : '공지사항 수정'}
           </h2>
-          <button onClick={onClose} className="rounded-lg p-2 text-gray-400 hover:bg-gray-50 hover:text-gray-700">
+          <button onClick={onClose} className="rounded-lg p-2 text-gray-400 dark:text-slate-500 hover:bg-gray-50 dark:hover:bg-slate-700 dark:bg-slate-900 hover:text-gray-700 dark:text-slate-300">
             <X size={18} />
           </button>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="mb-1.5 block text-[13px] font-bold text-gray-700">유형</label>
+            <label className="mb-1.5 block text-[13px] font-bold text-gray-700 dark:text-slate-300">유형</label>
             <select
               value={form.type}
               onChange={(event) => setForm((previous) => ({ ...previous, type: event.target.value as NoticeType }))}
-              className="w-full rounded-[10px] border border-gray-200 p-3 text-[13px] font-medium text-gray-900 focus:border-primary-500 focus:outline-none"
+              className="w-full rounded-[10px] border border-gray-200 dark:border-slate-700 p-3 text-[13px] font-medium text-gray-900 dark:text-slate-100 focus:border-primary-500 focus:outline-none"
             >
               <option value="일반">일반</option>
               <option value="점검">점검</option>
@@ -130,39 +130,39 @@ function NoticeModal({
           </div>
 
           <div>
-            <label className="mb-1.5 block text-[13px] font-bold text-gray-700">제목</label>
+            <label className="mb-1.5 block text-[13px] font-bold text-gray-700 dark:text-slate-300">제목</label>
             <input
               value={form.title}
               onChange={(event) =>
                 setForm((previous) => ({ ...previous, title: event.target.value.slice(0, 100) }))
               }
-              className="w-full rounded-[10px] border border-gray-200 p-3 text-[13px] font-medium text-gray-900 focus:border-primary-500 focus:outline-none"
+              className="w-full rounded-[10px] border border-gray-200 dark:border-slate-700 p-3 text-[13px] font-medium text-gray-900 dark:text-slate-100 focus:border-primary-500 focus:outline-none"
               placeholder="제목을 입력하세요"
             />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-[13px] font-bold text-gray-700">내용</label>
+            <label className="mb-1.5 block text-[13px] font-bold text-gray-700 dark:text-slate-300">내용</label>
             <textarea
               value={form.content}
               onChange={(event) => setForm((previous) => ({ ...previous, content: event.target.value }))}
-              className="h-[200px] w-full resize-none rounded-[10px] border border-gray-200 p-3 text-[13px] font-medium text-gray-900 focus:border-primary-500 focus:outline-none sm:h-[240px] sm:p-4"
+              className="h-[200px] w-full resize-none rounded-[10px] border border-gray-200 dark:border-slate-700 p-3 text-[13px] font-medium text-gray-900 dark:text-slate-100 focus:border-primary-500 focus:outline-none sm:h-[240px] sm:p-4"
               placeholder="공지 내용을 입력하세요"
             />
           </div>
         </div>
 
-        <div className="mt-5 flex flex-col-reverse gap-2.5 border-t border-gray-100 pt-4 sm:mt-6 sm:flex-row sm:justify-end">
+        <div className="mt-5 flex flex-col-reverse gap-2.5 border-t border-gray-100 dark:border-slate-700 pt-4 sm:mt-6 sm:flex-row sm:justify-end">
           <button
             onClick={onClose}
-            className="rounded-[10px] border border-gray-200 px-5 py-2.5 text-[13px] font-bold text-gray-600 hover:bg-gray-50"
+            className="rounded-[10px] border border-gray-200 dark:border-slate-700 px-5 py-2.5 text-[13px] font-bold text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700 dark:bg-slate-900"
           >
             취소
           </button>
           <button
             onClick={() => void onSubmit(form)}
             disabled={!isValid || saving}
-            className="rounded-[10px] bg-primary-600 px-6 py-2.5 text-[13px] font-bold text-white disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
+            className="rounded-[10px] bg-primary-600 px-6 py-2.5 text-[13px] font-bold text-white disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 dark:text-slate-500"
           >
             {saving ? '저장 중...' : mode === 'create' ? '공지 등록' : '수정 저장'}
           </button>
@@ -344,11 +344,11 @@ export default function NoticesPageClient({ initialNotices = [] }: NoticesPageCl
       />
 
       {selectedNotice ? (
-        <div className="flex flex-1 flex-col rounded-[12px] border border-gray-200 bg-white p-8 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)]">
+        <div className="flex flex-1 flex-col rounded-[12px] border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-8 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)]">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <button
               onClick={() => setSelectedNotice(null)}
-              className="rounded-lg border border-gray-200 px-4 py-2 text-[13px] font-bold text-gray-600 hover:bg-gray-50"
+              className="rounded-lg border border-gray-200 dark:border-slate-700 px-4 py-2 text-[13px] font-bold text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700 dark:bg-slate-900"
             >
               &larr; 목록으로 돌아가기
             </button>
@@ -356,7 +356,7 @@ export default function NoticesPageClient({ initialNotices = [] }: NoticesPageCl
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => openEditModal(selectedNotice)}
-                  className="rounded-lg border border-gray-200 px-3 py-2 text-[13px] font-bold text-gray-700 hover:bg-gray-50"
+                  className="rounded-lg border border-gray-200 dark:border-slate-700 px-3 py-2 text-[13px] font-bold text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 dark:bg-slate-900"
                 >
                   수정
                 </button>
@@ -374,28 +374,28 @@ export default function NoticesPageClient({ initialNotices = [] }: NoticesPageCl
             <span className={`rounded-[6px] px-2.5 py-1 text-[12px] font-bold ${getTypeBadgeClass(selectedNotice.type)}`}>
               {selectedNotice.type}
             </span>
-            <h2 className="text-[24px] font-extrabold text-gray-900">{selectedNotice.title}</h2>
+            <h2 className="text-[24px] font-extrabold text-gray-900 dark:text-slate-100">{selectedNotice.title}</h2>
           </div>
 
-          <div className="mb-6 flex flex-wrap items-center gap-4 border-b border-gray-200 pb-6 text-[13px] font-medium text-gray-500">
+          <div className="mb-6 flex flex-wrap items-center gap-4 border-b border-gray-200 dark:border-slate-700 pb-6 text-[13px] font-medium text-gray-500 dark:text-slate-400">
             <span>등록 일시: <span className="font-mono">{formatDate(selectedNotice.created_at)}</span></span>
             <div className="h-[12px] w-[1px] bg-gray-300" />
             <span>작성자: {selectedNotice.author_name ?? '-'}</span>
           </div>
 
-          <div className="flex-1 rounded-[10px] border border-gray-100 bg-[#FAFAFA] p-6 text-[14px] leading-relaxed text-gray-800 whitespace-pre-wrap">
+          <div className="flex-1 rounded-[10px] border border-gray-100 dark:border-slate-700 bg-[#FAFAFA] dark:bg-slate-900/50 p-6 text-[14px] leading-relaxed text-gray-800 whitespace-pre-wrap">
             {selectedNotice.content || '상세 내용이 없습니다.'}
           </div>
         </div>
       ) : (
         <>
-          <div className="rounded-[14px] border border-gray-200 bg-white p-4 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)]">
+          <div className="rounded-[14px] border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)]">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="flex items-center justify-between md:border-r md:border-gray-200 md:pr-5">
-                <div className="text-[14px] font-bold text-gray-900">
-                  공지사항 <span className="ml-2 font-normal text-gray-400">Total {filteredNotices.length}</span>
+              <div className="flex items-center justify-between md:border-r md:border-gray-200 dark:border-slate-700 md:pr-5">
+                <div className="text-[14px] font-bold text-gray-900 dark:text-slate-100">
+                  공지사항 <span className="ml-2 font-normal text-gray-400 dark:text-slate-500">Total {filteredNotices.length}</span>
                 </div>
-                <button className="md:hidden rounded-[7px] p-2 text-gray-400 hover:bg-gray-50 hover:text-gray-900">
+                <button className="md:hidden rounded-[7px] p-2 text-gray-400 dark:text-slate-500 hover:bg-gray-50 dark:hover:bg-slate-700 dark:bg-slate-900 hover:text-gray-900 dark:text-slate-100">
                   <Settings size={18} />
                 </button>
               </div>
@@ -404,7 +404,7 @@ export default function NoticesPageClient({ initialNotices = [] }: NoticesPageCl
                 <select
                   value={typeFilter}
                   onChange={(event) => setTypeFilter(event.target.value as '전체' | NoticeType)}
-                  className="h-[36px] rounded-[8px] border border-gray-200 px-3 text-[13px] focus:border-primary-500 focus:outline-none md:w-[140px]"
+                  className="h-[36px] rounded-[8px] border border-gray-200 dark:border-slate-700 px-3 text-[13px] focus:border-primary-500 focus:outline-none md:w-[140px]"
                 >
                   <option value="전체">전체 유형</option>
                   <option value="일반">일반</option>
@@ -412,12 +412,12 @@ export default function NoticesPageClient({ initialNotices = [] }: NoticesPageCl
                   <option value="업데이트">업데이트</option>
                 </select>
                 <div className="relative flex-1 md:max-w-[320px]">
-                  <Search size={14} className="absolute left-3 top-[11px] text-gray-400" />
+                  <Search size={14} className="absolute left-3 top-[11px] text-gray-400 dark:text-slate-500" />
                   <input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
                     placeholder="제목 검색"
-                    className="h-[36px] w-full rounded-[8px] border border-gray-200 pl-8 pr-3 text-[13px] focus:border-primary-500 focus:outline-none"
+                    className="h-[36px] w-full rounded-[8px] border border-gray-200 dark:border-slate-700 pl-8 pr-3 text-[13px] focus:border-primary-500 focus:outline-none"
                   />
                 </div>
               </div>
@@ -429,7 +429,7 @@ export default function NoticesPageClient({ initialNotices = [] }: NoticesPageCl
                     setTypeFilter('전체');
                     void fetchNotices();
                   }}
-                  className="flex h-[36px] w-[36px] items-center justify-center rounded-[8px] border border-gray-200 text-gray-500 hover:bg-gray-50"
+                  className="flex h-[36px] w-[36px] items-center justify-center rounded-[8px] border border-gray-200 dark:border-slate-700 text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700 dark:bg-slate-900"
                 >
                   <RotateCcw size={14} />
                 </button>
@@ -447,39 +447,75 @@ export default function NoticesPageClient({ initialNotices = [] }: NoticesPageCl
           </div>
 
           {errorMessage ? (
-            <div className="rounded-[10px] border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] text-rose-600">
+            <div className="rounded-[10px] border border-rose-200 bg-rose-50 px-4 py-4 text-[13px] text-rose-600">
               {errorMessage}
             </div>
           ) : null}
 
-          <div className="flex-1 overflow-hidden rounded-[10px] border border-gray-200 bg-white shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)]">
+          <div className="flex-1 overflow-hidden rounded-[10px] border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.4)] transition-all">
             <div className="h-full overflow-x-auto">
-              <table className="w-full border-collapse text-left">
+              {/* Mobile Card View */}
+              <div className="md:hidden space-y-3 p-4 bg-gray-50 dark:bg-slate-900/50">
+                {loading ? (
+                  <div className="py-20 text-center text-xs font-bold text-gray-400 dark:text-slate-500 italic">공지사항을 불러오는 중...</div>
+                ) : pagedNotices.length === 0 ? (
+                  <div className="py-20 text-center text-xs font-bold text-gray-400 dark:text-slate-500 italic">표시할 공지사항이 없습니다.</div>
+                ) : (
+                  pagedNotices.map((notice) => (
+                    <div key={notice.id} onClick={() => setSelectedNotice(notice)} className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm card-depth p-4 space-y-4 cursor-pointer active:scale-[0.98] transition-all">
+                      <div className="flex justify-between items-start">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter border ${getTypeBadgeClass(notice.type)}`}>
+                          {notice.type}
+                        </span>
+                        {isAdmin && (
+                           <div className="flex gap-2">
+                             <button onClick={(e) => { e.stopPropagation(); openEditModal(notice); }} className="p-1.5 text-gray-400 hover:text-blue-600"><Pencil size={14}/></button>
+                             <button onClick={(e) => { e.stopPropagation(); void handleDelete(notice.id); }} className="p-1.5 text-gray-400 hover:text-rose-600"><Trash2 size={14}/></button>
+                           </div>
+                        )}
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="text-sm font-black text-gray-900 dark:text-slate-100 leading-snug line-clamp-2">{notice.title}</h4>
+                      </div>
+                      <div className="pt-3 border-t border-gray-100 dark:border-slate-700 flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-5 h-5 rounded-full bg-gray-100 dark:bg-slate-900 flex items-center justify-center text-[9px] font-black text-gray-400 dark:text-slate-500 border border-gray-100 dark:border-slate-700">{(notice.author_name || '?')[0]}</div>
+                          <span className="text-[11px] font-bold text-gray-600 dark:text-slate-400">{notice.author_name}</span>
+                        </div>
+                        <span className="text-[10px] font-mono font-bold text-gray-400 dark:text-slate-500 tabular-nums">{formatDate(notice.created_at)}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Desktop Table View */}
+              <table className="hidden md:table w-full border-collapse text-left">
                 <thead>
-                  <tr className="border-b border-gray-200 bg-[#FAFAFA]">
-                    <th className="whitespace-nowrap px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500">유형</th>
-                    <th className="whitespace-nowrap px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500">제목</th>
-                    <th className="whitespace-nowrap px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500">작성자</th>
-                    <th className="whitespace-nowrap px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500">등록 일시</th>
-                    <th className="w-10 px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500" />
+                  <tr className="border-b border-gray-200 dark:border-slate-700 bg-[#FAFAFA] dark:bg-slate-900/50">
+                    <th className="whitespace-nowrap px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">유형</th>
+                    <th className="whitespace-nowrap px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">제목</th>
+                    <th className="whitespace-nowrap px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">작성자</th>
+                    <th className="whitespace-nowrap px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">등록 일시</th>
+                    <th className="w-10 px-[20px] py-[14px] text-[12px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400" />
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={5} className="px-6 py-14 text-center text-[13px] text-gray-400">
+                      <td colSpan={5} className="px-6 py-14 text-center text-[13px] text-gray-400 dark:text-slate-500">
                         공지사항을 불러오는 중입니다.
                       </td>
                     </tr>
                   ) : pagedNotices.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-6 py-14 text-center text-[13px] text-gray-400">
+                      <td colSpan={5} className="px-6 py-14 text-center text-[13px] text-gray-400 dark:text-slate-500">
                         표시할 공지사항이 없습니다.
                       </td>
                     </tr>
                   ) : (
                     pagedNotices.map((notice) => (
-                      <tr key={notice.id} className="border-b border-gray-100 transition-colors hover:bg-gray-50/60">
+                      <tr key={notice.id} className="border-b border-gray-100 dark:border-slate-700 transition-all hover:bg-gray-50 dark:hover:bg-slate-700 dark:bg-slate-900/60">
                         <td className="px-[20px] py-[16px]">
                           <span className={`rounded-[4px] px-2 py-0.5 text-[11px] font-bold ${getTypeBadgeClass(notice.type)}`}>
                             {notice.type}
@@ -487,20 +523,20 @@ export default function NoticesPageClient({ initialNotices = [] }: NoticesPageCl
                         </td>
                         <td
                           onClick={() => setSelectedNotice(notice)}
-                          className="cursor-pointer whitespace-nowrap px-[20px] py-[16px] text-[13px] font-bold text-gray-900 hover:text-primary-600"
+                          className="cursor-pointer whitespace-nowrap px-[20px] py-[16px] text-[13px] font-bold text-gray-900 dark:text-slate-100 hover:text-primary-600"
                         >
                           {notice.title}
                         </td>
-                        <td className="px-[20px] py-[16px] text-[13px] font-medium text-gray-600 whitespace-nowrap">
+                        <td className="px-[20px] py-[16px] text-[13px] font-medium text-gray-600 dark:text-slate-400 whitespace-nowrap">
                           {notice.author_name ?? '-'}
                         </td>
-                        <td className="px-[20px] py-[16px] text-[12px] font-mono text-gray-500 whitespace-nowrap">
+                        <td className="px-[20px] py-[16px] text-[12px] font-mono text-gray-500 dark:text-slate-400 whitespace-nowrap">
                           {formatDate(notice.created_at)}
                         </td>
-                        <td className="px-[20px] py-[16px] text-right text-gray-400">
+                        <td className="px-[20px] py-[16px] text-right text-gray-400 dark:text-slate-500">
                           {isAdmin ? (
                             <div className="flex justify-end gap-2">
-                              <button onClick={() => openEditModal(notice)} className="hover:text-gray-700">
+                              <button onClick={() => openEditModal(notice)} className="hover:text-gray-700 dark:text-slate-300">
                                 <Pencil size={15} />
                               </button>
                               <button onClick={() => void handleDelete(notice.id)} className="hover:text-rose-600">
@@ -518,11 +554,11 @@ export default function NoticesPageClient({ initialNotices = [] }: NoticesPageCl
               </table>
             </div>
 
-            <div className="flex h-[60px] items-center justify-center gap-1.5 border-t border-gray-100 bg-[#FAFAFA]">
+            <div className="flex h-[60px] items-center justify-center gap-1.5 border-t border-gray-100 dark:border-slate-700 bg-[#FAFAFA] dark:bg-slate-900/50">
               <button
                 onClick={() => setPage((previous) => Math.max(1, previous - 1))}
                 disabled={page === 1}
-                className="h-[32px] w-[32px] rounded-[6px] border border-gray-200 bg-white font-bold text-gray-600 disabled:text-gray-300"
+                className="h-[32px] w-[32px] rounded-[6px] border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold text-gray-600 dark:text-slate-400 disabled:text-gray-300"
               >
                 &lt;
               </button>
@@ -533,7 +569,7 @@ export default function NoticesPageClient({ initialNotices = [] }: NoticesPageCl
                   className={`h-[32px] w-[32px] rounded-[6px] border text-[13px] font-bold ${
                     pageNumber === page
                       ? 'border-primary-500 bg-primary-500 text-white'
-                      : 'border-gray-200 bg-white text-gray-600'
+                      : 'border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-400'
                   }`}
                 >
                   {pageNumber}
@@ -542,7 +578,7 @@ export default function NoticesPageClient({ initialNotices = [] }: NoticesPageCl
               <button
                 onClick={() => setPage((previous) => Math.min(totalPages, previous + 1))}
                 disabled={page === totalPages}
-                className="h-[32px] w-[32px] rounded-[6px] border border-gray-200 bg-white font-bold text-gray-600 disabled:text-gray-300"
+                className="h-[32px] w-[32px] rounded-[6px] border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold text-gray-600 dark:text-slate-400 disabled:text-gray-300"
               >
                 &gt;
               </button>

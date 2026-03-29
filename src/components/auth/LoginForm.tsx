@@ -65,9 +65,9 @@ export default function LoginForm() {
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
       <label className="block">
-        <span className="mb-2 block text-[13px] font-medium text-gray-700">이메일</span>
+        <span className="mb-2 block text-[13px] font-medium text-gray-700 dark:text-slate-300">이메일</span>
         <input
-          className="h-11 w-full rounded-[10px] border border-gray-200 px-4 text-[14px] outline-none transition focus:border-primary-500"
+          className="h-11 w-full rounded-[10px] border border-gray-200 dark:border-slate-700 px-4 text-[14px] outline-none transition focus:border-primary-500"
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
@@ -76,10 +76,10 @@ export default function LoginForm() {
       </label>
 
       <label className="block">
-        <span className="mb-2 block text-[13px] font-medium text-gray-700">비밀번호</span>
+        <span className="mb-2 block text-[13px] font-medium text-gray-700 dark:text-slate-300">비밀번호</span>
         <div className="relative">
           <input
-            className="h-11 w-full rounded-[10px] border border-gray-200 px-4 pr-12 text-[14px] outline-none transition focus:border-primary-500"
+            className="h-11 w-full rounded-[10px] border border-gray-200 dark:border-slate-700 px-4 pr-12 text-[14px] outline-none transition focus:border-primary-500"
             type={showPassword ? "text" : "password"}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
@@ -87,7 +87,7 @@ export default function LoginForm() {
           />
           <button
             aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 표시"}
-            className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-gray-400 transition hover:text-gray-700"
+            className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-gray-400 dark:text-slate-500 transition hover:text-gray-700 dark:text-slate-300"
             onClick={() => setShowPassword((prev) => !prev)}
             type="button"
           >
@@ -96,7 +96,7 @@ export default function LoginForm() {
         </div>
       </label>
 
-      <label className="flex items-center gap-2 text-[13px] text-gray-600">
+      <label className="flex items-center gap-2 text-[13px] text-gray-600 dark:text-slate-400">
         <input
           checked={rememberEmail}
           className="h-4 w-4 rounded border-gray-300"
@@ -120,7 +120,7 @@ export default function LoginForm() {
         {submitting ? "로그인 중..." : "로그인"}
       </button>
 
-      <p className="text-center text-[13px] text-gray-500">
+      <p className="text-center text-[13px] text-gray-500 dark:text-slate-400">
         아직 계정이 없나요?{" "}
         <Link className="font-semibold text-primary-600" href="/signup">
           회원가입

@@ -123,8 +123,8 @@ export default function MobileHeader() {
   return (
     <div className="md:hidden">
       {/* Mobile Topbar */}
-      <div className="sticky top-0 z-30 flex h-[52px] w-full items-center justify-between border-b border-[#E5E7EB] bg-white/95 px-3 backdrop-blur-sm">
-        <button onClick={toggleSidebar} className="rounded-lg p-2 text-gray-700 active:bg-gray-100">
+      <div className="sticky top-0 z-30 flex h-[52px] w-full items-center justify-between border-b border-[#E5E7EB] bg-white dark:bg-slate-800/95 px-3 backdrop-blur-sm">
+        <button onClick={toggleSidebar} className="rounded-lg p-2 text-gray-700 dark:text-slate-300 active:bg-gray-100">
           <Menu size={24} />
         </button>
         <Link href="/" className="flex items-center absolute left-1/2 -translate-x-1/2">
@@ -137,12 +137,12 @@ export default function MobileHeader() {
       {isOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 transition-opacity" onClick={toggleSidebar}>
           <div 
-            className="fixed inset-y-0 left-0 z-50 flex w-[86vw] max-w-[320px] flex-col bg-white p-0 shadow-xl transition-transform duration-300 ease-in-out"
+            className="fixed inset-y-0 left-0 z-50 flex w-[86vw] max-w-[320px] flex-col bg-white dark:bg-slate-800 p-0 shadow-xl transition-transform duration-300 ease-in-out"
             onClick={e => e.stopPropagation()}
           >
             <div className="flex h-[52px] shrink-0 items-center justify-between border-b border-[#E5E7EB] px-4">
               <span className="font-semibold text-[15px]">전체 메뉴</span>
-              <button onClick={toggleSidebar} className="rounded-lg p-1 text-gray-700 active:bg-gray-100">
+              <button onClick={toggleSidebar} className="rounded-lg p-1 text-gray-700 dark:text-slate-300 active:bg-gray-100">
                 <X size={20} />
               </button>
             </div>
@@ -156,18 +156,18 @@ export default function MobileHeader() {
                     <div key={menu.name} className="mb-1">
                       <button
                         onClick={() => toggleMenu(menu.name)}
-                        className={`flex w-full items-center justify-between rounded-[10px] px-3 py-3 text-[14px] hover:bg-[#F9FAFB] ${
-                          isActive ? 'text-primary-600 font-semibold' : 'text-gray-900'
+                        className={`flex w-full items-center justify-between rounded-[10px] px-3 py-4 text-[14px] hover:bg-[#F9FAFB] ${
+                          isActive ? 'text-primary-600 font-semibold' : 'text-gray-900 dark:text-slate-100'
                         }`}
                       >
                         <div className="flex items-center gap-2">
                           <menu.icon size={18} />
                           <span>{menu.name}</span>
                         </div>
-                        {openMenus[menu.name] ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />}
+                        {openMenus[menu.name] ? <ChevronDown size={16} className="text-gray-400 dark:text-slate-500" /> : <ChevronRight size={16} className="text-gray-400 dark:text-slate-500" />}
                       </button>
                       {openMenus[menu.name] && (
-                        <div className="mx-1 rounded-[10px] bg-gray-50 py-1">
+                        <div className="mx-1 rounded-[10px] bg-gray-50 dark:bg-slate-900 py-1">
                           {menu.submenus.map((sub) => {
                             const isSubActive = pathname === sub.href;
                             return (
@@ -178,7 +178,7 @@ export default function MobileHeader() {
                                 className={`block rounded-[8px] py-[10px] pl-[38px] text-[13px] ${
                                   isSubActive 
                                     ? 'text-primary-600 font-semibold' 
-                                    : 'text-gray-600'
+                                    : 'text-gray-600 dark:text-slate-400'
                                 }`}
                               >
                                 {sub.name}
@@ -196,10 +196,10 @@ export default function MobileHeader() {
                     href={menu.href as string}
                     key={menu.name}
                     onClick={toggleSidebar}
-                    className={`mb-1 flex items-center gap-2 rounded-[10px] px-3 py-3 text-[14px] hover:bg-[#F9FAFB] ${
+                    className={`mb-1 flex items-center gap-2 rounded-[10px] px-3 py-4 text-[14px] hover:bg-[#F9FAFB] ${
                       isActive 
                         ? 'text-primary-600 font-semibold' 
-                        : 'text-gray-900'
+                        : 'text-gray-900 dark:text-slate-100'
                     }`}
                   >
                     <menu.icon size={18} />
@@ -218,8 +218,8 @@ export default function MobileHeader() {
                     href={menu.href}
                     key={menu.name}
                     onClick={toggleSidebar}
-                    className={`flex items-center gap-2 rounded-[10px] px-3 py-3 text-[14px] ${
-                      isActive ? 'text-primary-600 font-semibold' : 'text-gray-900'
+                    className={`flex items-center gap-2 rounded-[10px] px-3 py-4 text-[14px] ${
+                      isActive ? 'text-primary-600 font-semibold' : 'text-gray-900 dark:text-slate-100'
                     }`}
                   >
                     <menu.icon size={18} />

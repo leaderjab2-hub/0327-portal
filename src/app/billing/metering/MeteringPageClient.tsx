@@ -16,6 +16,7 @@ import {
 } from 'recharts';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from 'next-themes';
 
 type TenantRecord = {
   id: string;
@@ -90,6 +91,7 @@ export default function MeteringPageClient({
   initialTenantId = null,
 }: MeteringPageClientProps) {
   const { currentUser } = useAuth();
+  const { resolvedTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<'company' | 'project'>('company');
   const initialCompanyIdx = Math.max(0, initialTenants.findIndex(t => t.id === initialTenantId));
   const [activeCompanyIdx, setActiveCompanyIdx] = useState(initialCompanyIdx);
@@ -99,6 +101,9 @@ export default function MeteringPageClient({
   const [loading, setLoading] = useState(initialMetering === null);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     setActiveProjIdx(0);
@@ -179,26 +184,33 @@ export default function MeteringPageClient({
     const gpuPercent = Math.min(100, (allocatedGpu / (contractedGpu || 1)) * 100) || 0;
     const cpuPercent = Math.min(100, (allocatedCpu / (contractedCpu || 1)) * 100) || 0;
 
+    const [mainTitle, subTitle] = title.split(' - ');
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-lg font-black text-gray-900 tracking-tight">{title}</h2>
-          <div className="px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-[10px] font-black text-blue-700 uppercase">실시간 분석 활성화</div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
+          <div className="flex flex-col">
+            <h2 className="text-base sm:text-lg font-black text-gray-900 dark:text-slate-100 tracking-tight leading-tight flex items-center gap-2 flex-wrap">
+              {mainTitle}
+              <div className="px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 text-[9px] font-black text-blue-700 dark:text-blue-400 uppercase tracking-tighter">실시간 분석 활성화</div>
+              <span className="hidden sm:inline"> - {subTitle}</span>
+            </h2>
+            <span className="sm:hidden text-xs font-bold text-gray-400 dark:text-slate-500 mt-1">{subTitle}</span>
+          </div>
         </div>
 
         {/* KPI Cards (Step 2 Implementation) */}
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all hover:shadow-md">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm card-depth p-5 transition-all hover:shadow-md">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
                 <Cpu size={16} className="text-blue-500" />
               </div>
-              <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">CPU 코어 자원</span>
+              <span className="text-sm text-gray-500 dark:text-slate-400 font-bold uppercase tracking-wider">CPU 코어 자원</span>
             </div>
             <div className="flex items-end justify-between">
               <div>
-                <p className="text-2xl font-black text-gray-900 tabular-nums">{allocatedCpu}<span className="text-sm ml-1 text-gray-400">/ {contractedCpu}</span></p>
-                <p className="text-xs text-gray-400 mt-1">{isProject ? '할당량 기준' : '계약량 기준'}</p>
+                <p className="text-2xl font-black text-gray-900 dark:text-slate-100 tabular-nums">{allocatedCpu}<span className="text-sm ml-1 text-gray-400 dark:text-slate-500">/ {contractedCpu}</span></p>
+                <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">{isProject ? '할당량 기준' : '계약량 기준'}</p>
               </div>
               <div className="text-xs font-black text-blue-600 mb-1">{Math.round(cpuPercent)}%</div>
             </div>
@@ -207,17 +219,17 @@ export default function MeteringPageClient({
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all hover:shadow-md">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm card-depth p-5 transition-all hover:shadow-md">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
                 <TerminalSquare size={16} className="text-indigo-500" />
               </div>
-              <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">GPU 인스턴스</span>
+              <span className="text-sm text-gray-500 dark:text-slate-400 font-bold uppercase tracking-wider">GPU 인스턴스</span>
             </div>
             <div className="flex items-end justify-between">
               <div>
-                <p className="text-2xl font-black text-gray-900 tabular-nums">{allocatedGpu}<span className="text-sm ml-1 text-gray-400">/ {contractedGpu}</span></p>
-                <p className="text-xs text-gray-400 mt-1">{isProject ? '할당 인스턴스' : '과금 인스턴스'}</p>
+                <p className="text-2xl font-black text-gray-900 dark:text-slate-100 tabular-nums">{allocatedGpu}<span className="text-sm ml-1 text-gray-400 dark:text-slate-500">/ {contractedGpu}</span></p>
+                <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">{isProject ? '할당 인스턴스' : '과금 인스턴스'}</p>
               </div>
               <div className="text-xs font-black text-indigo-600 mb-1">{Math.round(gpuPercent)}%</div>
             </div>
@@ -226,34 +238,34 @@ export default function MeteringPageClient({
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all hover:shadow-md">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm card-depth p-5 transition-all hover:shadow-md">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
                 <HardDrive size={16} className="text-emerald-500" />
               </div>
-              <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">스토리지 사용</span>
+              <span className="text-sm text-gray-500 dark:text-slate-400 font-bold uppercase tracking-wider">스토리지 사용</span>
             </div>
-            <p className="text-2xl font-black text-emerald-600 tabular-nums">{storageUsage.toLocaleString()}<span className="text-sm ml-1 text-gray-400">TB</span></p>
-            <p className="text-xs text-gray-400 mt-1">월 평균 실사용 누계</p>
+            <p className="text-2xl font-black text-emerald-600 tabular-nums">{storageUsage.toLocaleString()}<span className="text-sm ml-1 text-gray-400 dark:text-slate-500">TB</span></p>
+            <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">월 평균 실사용 누계</p>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 transition-all hover:shadow-md">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm card-depth p-5 transition-all hover:shadow-md">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
                 <Network size={16} className="text-amber-500" />
               </div>
-              <span className="text-sm text-gray-500 font-bold uppercase tracking-wider">네트워크 트래픽</span>
+              <span className="text-sm text-gray-500 dark:text-slate-400 font-bold uppercase tracking-wider">네트워크 트래픽</span>
             </div>
-            <p className="text-2xl font-black text-amber-600 tabular-nums">{(networkOutUsage + networkInUsage).toLocaleString()}<span className="text-sm ml-1 text-gray-400">GB</span></p>
-            <p className="text-xs text-gray-400 mt-1">In/Out bound 트래픽 합계</p>
+            <p className="text-2xl font-black text-amber-600 tabular-nums">{(networkOutUsage + networkInUsage).toLocaleString()}<span className="text-sm ml-1 text-gray-400 dark:text-slate-500">GB</span></p>
+            <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">In/Out bound 트래픽 합계</p>
           </div>
         </div>
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[400px]">
-            <div className="px-5 py-4 border-b border-gray-100 bg-gray-50/30 flex justify-between items-center">
-              <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm card-depth overflow-hidden flex flex-col min-h-[400px]">
+            <div className="px-5 py-4 border-b border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/30 flex justify-between items-center">
+              <h3 className="text-xs font-black text-gray-900 dark:text-slate-100 uppercase tracking-widest flex items-center gap-2">
                 <HardDrive size={14} className="text-emerald-500" /> 스토리지 사용량 트렌드 (TB)
               </h3>
             </div>
@@ -269,21 +281,28 @@ export default function MeteringPageClient({
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
                   <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94A3B8' }} dy={10} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94A3B8' }} />
-                  <RechartsTooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '11px' }} />
+                  <RechartsTooltip contentStyle={{ 
+                    borderRadius: '12px', 
+                    border: mounted && resolvedTheme === 'dark' ? '1px solid #334155' : 'none', 
+                    backgroundColor: mounted && resolvedTheme === 'dark' ? '#1E293B' : '#ffffff',
+                    boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', 
+                    fontSize: '11px',
+                    color: mounted && resolvedTheme === 'dark' ? '#F1F5F9' : '#111827'
+                  }} />
                   <Area type="monotone" dataKey="usage" stroke="#10B981" fillOpacity={1} fill="url(#colorStorage)" strokeWidth={2.5} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[400px]">
-            <div className="px-5 py-4 border-b border-gray-100 bg-gray-50/30 flex justify-between items-center">
-              <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm card-depth overflow-hidden flex flex-col min-h-[400px]">
+            <div className="px-5 py-4 border-b border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/30 flex justify-between items-center">
+              <h3 className="text-xs font-black text-gray-900 dark:text-slate-100 uppercase tracking-widest flex items-center gap-2">
                 <Network size={14} className="text-blue-500" /> 네트워크 트래픽 분석 (GB)
               </h3>
               <div className="flex gap-4">
-                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-blue-500" /><span className="text-[10px] font-bold text-gray-500">Outbound</span></div>
-                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-[10px] font-bold text-gray-500">Inbound</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-blue-500" /><span className="text-[10px] font-bold text-gray-500 dark:text-slate-400">Outbound</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-[10px] font-bold text-gray-500 dark:text-slate-400">Inbound</span></div>
               </div>
             </div>
             <div className="flex-1 p-6">
@@ -292,7 +311,14 @@ export default function MeteringPageClient({
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
                   <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94A3B8' }} dy={10} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94A3B8' }} />
-                  <RechartsTooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '11px' }} />
+                  <RechartsTooltip contentStyle={{ 
+                    borderRadius: '12px', 
+                    border: mounted && resolvedTheme === 'dark' ? '1px solid #334155' : 'none', 
+                    backgroundColor: mounted && resolvedTheme === 'dark' ? '#1E293B' : '#ffffff',
+                    boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', 
+                    fontSize: '11px',
+                    color: mounted && resolvedTheme === 'dark' ? '#F1F5F9' : '#111827'
+                  }} />
                   <Line type="monotone" dataKey="out" stroke="#3B82F6" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
                   <Line type="monotone" dataKey="in" stroke="#10B981" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
                 </LineChart>
@@ -310,11 +336,11 @@ export default function MeteringPageClient({
   }, [tenants, searchTerm]);
 
   return (
-    <div className="flex h-full flex-col bg-[#F8FAFC]">
+    <div className="flex h-full flex-col bg-[#F8FAFC] dark:bg-slate-900">
       <div className="flex-1 overflow-y-auto w-full">
-        <div className="mx-auto w-full max-w-[1400px] px-6 py-8 space-y-6">
+        <div className="mx-auto w-full max-w-[1400px] px-6 pb-8 space-y-6">
           
-          <div className="flex h-[48px] shrink-0 items-center justify-between bg-white px-4 rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="flex h-[48px] shrink-0 items-center justify-between bg-white dark:bg-slate-800 px-4 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm card-depth overflow-hidden">
             <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-1 min-w-0 flex-1">
               {filteredTenantsForTabs.map((t) => {
                 const idx = tenants.findIndex(at => at.id === t.id);
@@ -324,7 +350,7 @@ export default function MeteringPageClient({
                     key={t.id}
                     onClick={() => setActiveCompanyIdx(idx)}
                     className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-bold transition-all ${
-                      isSelected ? 'bg-primary-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50'
+                      isSelected ? 'bg-primary-50 text-blue-600' : 'text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700 dark:bg-slate-900'
                     }`}
                   >
                     {t.name}
@@ -335,9 +361,9 @@ export default function MeteringPageClient({
             <div className="hidden md:flex items-center gap-4 pl-4 shrink-0">
               <div className="h-4 w-px bg-gray-200 shrink-0" />
               <div className="relative shrink-0">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={13} />
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={13} />
                 <input
-                  className="h-[30px] w-36 rounded-full border border-gray-200 bg-white pl-8 pr-4 text-[12px] transition-all focus:w-48 focus:border-blue-300 focus:outline-none"
+                  className="h-[30px] w-36 rounded-full border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 pl-8 pr-4 text-[12px] transition-all focus:w-48 focus:border-blue-300 focus:outline-none"
                   placeholder="Tenant 검색"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -347,25 +373,25 @@ export default function MeteringPageClient({
           </div>
 
           {/* Combined Sub Filter Bar (Requirement 4 Implementation) */}
-          <div className="flex h-[48px] shrink-0 items-center justify-between bg-white px-4 rounded-xl border border-gray-100 shadow-sm">
-            <div className="flex items-center gap-1 select-none">
-              <div className="flex items-center rounded-full bg-slate-50 p-1 border border-slate-100">
+          <div className="flex flex-col md:flex-row md:h-[48px] shrink-0 items-start md:items-center justify-between bg-white dark:bg-slate-800 p-3 md:px-4 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm card-depth gap-3 md:gap-0">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-1 w-full md:w-auto">
+              <div className="flex items-center rounded-full bg-slate-50 dark:bg-slate-900/50 p-1 border border-slate-100 dark:border-slate-700/50 shrink-0">
                 <button
                   onClick={() => setActiveTab('company')}
-                  className={`rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-wider transition-all ${
+                  className={`rounded-full px-4 py-1.5 text-[10px] md:text-[11px] font-black uppercase tracking-wider transition-all ${
                     activeTab === 'company'
-                      ? 'bg-white text-blue-600 shadow-sm ring-1 ring-slate-200'
-                      : 'text-gray-400 hover:text-gray-600'
+                      ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm card-depth ring-1 ring-slate-200 dark:ring-slate-600'
+                      : 'text-gray-400 dark:text-slate-500 hover:text-gray-600'
                   }`}
                 >
                   회사별
                 </button>
                 <button
                   onClick={() => setActiveTab('project')}
-                  className={`rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-wider transition-all ${
+                  className={`rounded-full px-4 py-1.5 text-[10px] md:text-[11px] font-black uppercase tracking-wider transition-all ${
                     activeTab === 'project'
-                      ? 'bg-white text-blue-600 shadow-sm ring-1 ring-slate-200'
-                      : 'text-gray-400 hover:text-gray-600'
+                      ? 'bg-white dark:bg-slate-800 text-blue-600 shadow-sm card-depth ring-1 ring-slate-200 dark:ring-slate-600'
+                      : 'text-gray-400 dark:text-slate-500 hover:text-gray-600'
                   }`}
                 >
                   프로젝트별
@@ -373,9 +399,9 @@ export default function MeteringPageClient({
               </div>
 
               {activeTab === 'project' && (
-                <>
-                  <div className="mx-3 h-4 w-px bg-gray-200 shrink-0" />
-                  <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                <div className="flex items-center gap-1.5 w-full md:w-auto overflow-hidden">
+                  <div className="hidden md:block mx-3 h-4 w-px bg-gray-200 dark:bg-slate-700 shrink-0" />
+                  <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide w-full md:max-w-md lg:max-w-lg py-0.5">
                     {visibleSubtenants.length > 0 ? (
                       visibleSubtenants.map((subtenant, index) => (
                         <button
@@ -383,40 +409,40 @@ export default function MeteringPageClient({
                           onClick={() => {
                             if (currentUser?.role !== 'subtenant_member') setActiveProjIdx(index);
                           }}
-                          className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[11px] font-bold transition-all border ${
+                          className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[10px] md:text-[11px] font-bold transition-all border ${
                             safeProjIdx === index
-                              ? 'bg-blue-50 text-blue-600 border-blue-100 shadow-sm'
-                              : 'text-gray-500 border-transparent hover:bg-gray-50'
+                              ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 border-blue-100 dark:border-blue-800 shadow-sm card-depth'
+                              : 'text-gray-500 dark:text-slate-400 border-transparent hover:bg-gray-50 dark:hover:bg-slate-700 dark:bg-slate-900'
                           } ${currentUser?.role === 'subtenant_member' && safeProjIdx !== index ? 'hidden' : ''}`}
                         >
-                          <Building2 size={12} className={safeProjIdx === index ? 'text-blue-600' : 'text-gray-400'} />
+                          <Building2 size={12} className={safeProjIdx === index ? 'text-blue-600' : 'text-gray-400 dark:text-slate-500'} />
                           {subtenant.name}
                         </button>
                       ))
                     ) : (
-                      <span className="text-[11px] font-bold italic text-gray-300 px-2 tracking-tighter">No Subtenants</span>
+                      <span className="text-[10px] font-bold italic text-gray-300 px-2 tracking-tighter">No Projects</span>
                     )}
                   </div>
-                </>
+                </div>
               )}
             </div>
 
-            <div className="flex items-center gap-2">
-              <select className="h-[32px] w-[110px] rounded-lg border border-gray-200 bg-white px-2.5 text-[12px] font-black text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-100 transition-all cursor-pointer">
+            <div className="flex items-center justify-between md:justify-end gap-2 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-gray-100 dark:border-slate-700/50">
+              <select className="bg-white dark:bg-slate-900 h-[32px] flex-1 md:flex-none md:w-[110px] rounded-lg border border-gray-200 dark:border-slate-700 px-2.5 text-[12px] font-black text-gray-700 dark:text-slate-300 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-100 transition-all cursor-pointer">
                 <option>2026.03</option>
                 <option>2026.02</option>
                 <option>2026.01</option>
               </select>
-              <button className="h-[32px] px-4 rounded-lg bg-gray-900 shadow-lg shadow-gray-200 text-[11px] font-black uppercase tracking-wider text-white hover:bg-gray-800 transition-all active:scale-[0.98] flex items-center gap-2">
-                <Download size={13} /> 다운로드
+              <button className="h-[32px] flex-1 md:flex-none px-4 rounded-lg bg-gray-900 dark:bg-slate-700 shadow-sm card-depth text-[11px] font-black uppercase tracking-wider text-white hover:bg-gray-800 dark:hover:bg-slate-600 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                <Download size={13} /> <span className="hidden sm:inline">다운로드</span><span className="sm:hidden">PDF</span>
               </button>
             </div>
           </div>
 
           {/* Main Content Area */}
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 min-h-[600px]">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm card-depth p-8 min-h-[600px]">
             {loading ? (
-              <div className="flex h-[400px] items-center justify-center text-sm text-gray-400 italic">데이터 로딩 중...</div>
+              <div className="flex h-[400px] items-center justify-center text-sm text-gray-400 dark:text-slate-500 italic">데이터 로딩 중...</div>
             ) : error ? (
               <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>
             ) : activeTab === 'company' && metering ? (
@@ -448,7 +474,7 @@ export default function MeteringPageClient({
                 projectNetworkData,
               )
             ) : (
-              <div className="flex h-[400px] flex-col items-center justify-center text-gray-400 bg-gray-50/30 rounded-xl border border-dashed border-gray-200">
+              <div className="flex h-[400px] flex-col items-center justify-center text-gray-400 dark:text-slate-500 bg-gray-50 dark:bg-slate-900/30 rounded-xl border border-dashed border-gray-200 dark:border-slate-700">
                 <TerminalSquare className="mb-4 opacity-20" size={48} />
                 <p className="text-sm font-bold uppercase tracking-wider">조회할 데이터가 없습니다.</p>
               </div>
